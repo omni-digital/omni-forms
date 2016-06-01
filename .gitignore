@@ -1,0 +1,4 @@
+*.pyc
+.idea/
+.tox/
+omniforms.egg-info/
