@@ -2,3 +2,5 @@
 .idea/
 .tox/
 omniforms.egg-info/
+*.sqlite3
+*.db
