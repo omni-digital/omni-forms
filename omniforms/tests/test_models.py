@@ -8,6 +8,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.test import TestCase
+from mock import patch
 from omniforms.models import (
     OmniFormBase,
     OmniModelFormBase,
@@ -25,6 +26,7 @@ from omniforms.models import (
     OmniTimeField,
     OmniUrlField,
 )
+from omniforms.tests.factories import OmniModelFormFactory
 from omniforms.tests.models import DummyModel
 
 
@@ -210,6 +212,16 @@ class OmniFieldTestCase(TestCase):
         self.assertFalse(field.blank)
         self.assertFalse(field.null)
 
+    def test_real_type_field(self):
+        """
+        The model should have a real_type field
+        """
+        field = OmniField._meta.get_field('real_type')
+        self.assertIsInstance(field, models.ForeignKey)
+        self.assertEqual(field.rel.to, ContentType)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
     def test_object_id_field(self):
         """
         The model should have a object_id field
@@ -233,12 +245,6 @@ class OmniFieldTestCase(TestCase):
         instance = OmniField(label='Do you like cats?')
         self.assertEqual('{0}'.format(instance), instance.label)
 
-    def test_is_abstract(self):
-        """
-        The model class should be abstract
-        """
-        self.assertTrue(OmniField._meta.abstract)
-
     def test_get_concrete_class_for_model_field(self):
         """
         The get_concrete_class_for_model_field method should return the correct OmniField subclass
@@ -252,6 +258,55 @@ class OmniFieldTestCase(TestCase):
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.IntegerField()), OmniIntegerField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.TimeField()), OmniTimeField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.URLField()), OmniUrlField)
+
+
+class OmniFieldInstanceTestCase(TestCase):
+    """
+    Tests the OmniField model
+    """
+    def setUp(self):
+        super(OmniFieldInstanceTestCase, self).setUp()
+        self.form = OmniModelFormFactory.create()
+        self.field = OmniFloatField(
+            name='Test Field',
+            label='Test Field Label',
+            widget_class='django.forms.widgets.TextInput',
+            form=self.form
+        )
+        self.field.save()
+
+    def test_save_sets_real_type(self):
+        """
+        The OmniField save method should set the real_type field
+        """
+        self.assertEqual(self.field.real_type, ContentType.objects.get_for_model(OmniFloatField))
+
+    def test_specific(self):
+        """
+        The specific property should return the specific instance
+        """
+        base_instance = OmniField.objects.get(pk=self.field.pk)
+        instance = base_instance.specific
+        self.assertIsInstance(base_instance, OmniField)
+        self.assertNotIsInstance(base_instance, OmniFloatField)
+        self.assertIsInstance(instance, OmniFloatField)
+
+    def test_specific_returns_self(self):
+        """
+        The specific property should return the instance if it is already the most specific version
+        """
+        self.assertEqual(self.field, self.field.specific)
+
+    def test_specific_cached(self):
+        """
+        The specific property should cache the result
+        """
+        base_instance = OmniField.objects.get(pk=self.field.pk)
+        with patch.object(base_instance.real_type, 'get_object_for_this_type') as patched_method:
+            patched_method.return_value = self.field
+            base_instance.specific
+            base_instance.specific
+            self.assertEqual(patched_method.call_count, 1)
 
 
 class OmniCharFieldTestCase(TestCase):

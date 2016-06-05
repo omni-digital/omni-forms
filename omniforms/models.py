@@ -4,10 +4,11 @@ Models for the omniforms app
 """
 from __future__ import unicode_literals
 from django import forms
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.functional import cached_property
 import re
 
 
@@ -21,15 +22,10 @@ class OmniField(models.Model):
     help_text = models.TextField(blank=True, null=True)
     required = models.BooleanField(default=False)
     widget_class = models.CharField(max_length=255)
+    real_type = models.ForeignKey(ContentType, related_name='+')
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
-
-    class Meta(object):
-        """
-        Django properties
-        """
-        abstract = True
 
     def __str__(self):
         """
@@ -61,6 +57,47 @@ class OmniField(models.Model):
             models.TimeField: OmniTimeField,
             models.URLField: OmniUrlField
         }.get(model_field.__class__)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        """
+        Custom save method
+        Sets the actual content type on the instance if it doesn't exist already
+
+        :param force_insert: Whether or not to force the insert
+        :type force_insert: bool
+
+        :param force_update: Whether or not to force the update
+        :type force_update: bool
+
+        :param using: Database connection to use
+        :type using: connection
+
+        :param update_fields: Fields to update
+        :type update_fields: list
+
+        :return: Saved instance
+        """
+        if not self.real_type_id:
+            self.real_type = ContentType.objects.get_for_model(self)
+        super(OmniField, self).save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields
+        )
+
+    @cached_property
+    def specific(self):
+        """
+        Method for getting the most specific subclassed version of this instance
+
+        :return: OmniField model subclass instance
+        """
+        real_type = self.real_type
+        if isinstance(self, real_type.model_class()):
+            return self
+        else:
+            return self.real_type.get_object_for_this_type(pk=self.pk)
 
 
 class OmniCharField(OmniField):
@@ -241,9 +278,11 @@ class OmniForm(OmniFormBase):
     """
     Concrete implementation of the omni form
     """
+    fields = GenericRelation(OmniField)
 
 
 class OmniModelForm(OmniModelFormBase):
     """
     Concrete implementation of the omni model form
     """
+    fields = GenericRelation(OmniField)
