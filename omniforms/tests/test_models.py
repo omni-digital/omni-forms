@@ -4,6 +4,7 @@ Tests the omniforms models
 """
 from __future__ import unicode_literals
 from django import forms
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -26,6 +27,8 @@ from omniforms.models import (
     OmniIntegerField,
     OmniTimeField,
     OmniUrlField,
+    OmniManyToManyField,
+    OmniForeignKeyField
 )
 from omniforms.tests.utils import OmniFormTestCaseStub
 from omniforms.tests.models import DummyModel
@@ -673,3 +676,137 @@ class OmniUrlFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.URLInput', OmniUrlField.FORM_WIDGETS)
+
+
+class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):
+    """
+    Tests the OmniManyToManyField
+    """
+    def setUp(self):
+        super(OmniManyToManyFieldTestCase, self).setUp()
+        self.field = OmniManyToManyField(
+            related_type=ContentType.objects.get_for_model(Permission),
+            name='Test Field',
+            label='Test Field Label',
+            help_text='Test help text',
+            required=True,
+            widget_class=OmniManyToManyField.FORM_WIDGETS[0],
+            form=self.omni_form
+        )
+        self.field.save()
+
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniField
+        """
+        self.assertTrue(issubclass(OmniManyToManyField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should have an initial field
+        """
+        self.assertIsNone(OmniManyToManyField.initial)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniManyToManyField.FIELD_CLASS, 'django.forms.ModelMultipleChoiceField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.SelectMultiple', OmniManyToManyField.FORM_WIDGETS)
+        self.assertIn('django.forms.CheckboxSelectMultiple', OmniManyToManyField.FORM_WIDGETS)
+
+    def test_related_type_field(self):
+        """
+        The model should define a related_type field
+        """
+        field = OmniManyToManyField._meta.get_field('related_type')
+        self.assertIsInstance(field, models.ForeignKey)
+        self.assertEqual(field.rel.to, ContentType)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_as_form_field(self):
+        """
+        The as_form_field method should set the queryset
+        """
+        field_class = import_string(self.field.FIELD_CLASS)
+        widget_class = import_string(self.field.widget_class)
+        instance = self.field.as_form_field()
+        self.assertIsInstance(instance, field_class)
+        self.assertEqual(self.field.label, instance.label)
+        self.assertEqual(self.field.help_text, instance.help_text)
+        self.assertTrue(self.field.required)
+        self.assertIsInstance(instance.widget, widget_class)
+        self.assertEquals(list(instance.queryset), list(Permission.objects.all()))
+
+
+class OmniForeignKeyFieldTestCase(OmniFormTestCaseStub):
+    """
+    Tests the OmniForeignKeyField
+    """
+    def setUp(self):
+        super(OmniForeignKeyFieldTestCase, self).setUp()
+        self.field = OmniForeignKeyField(
+            related_type=ContentType.objects.get_for_model(Permission),
+            name='Test Field',
+            label='Test Field Label',
+            help_text='Test help text',
+            required=True,
+            widget_class=OmniForeignKeyField.FORM_WIDGETS[0],
+            form=self.omni_form
+        )
+        self.field.save()
+
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniField
+        """
+        self.assertTrue(issubclass(OmniForeignKeyField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should have an initial field
+        """
+        self.assertIsNone(OmniForeignKeyField.initial)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniForeignKeyField.FIELD_CLASS, 'django.forms.ModelChoiceField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.Select', OmniForeignKeyField.FORM_WIDGETS)
+        self.assertIn('django.forms.RadioSelect', OmniForeignKeyField.FORM_WIDGETS)
+
+    def test_related_type_field(self):
+        """
+        The model should define a related_type field
+        """
+        field = OmniForeignKeyField._meta.get_field('related_type')
+        self.assertIsInstance(field, models.ForeignKey)
+        self.assertEqual(field.rel.to, ContentType)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_as_form_field(self):
+        """
+        The as_form_field method should set the queryset
+        """
+        field_class = import_string(self.field.FIELD_CLASS)
+        widget_class = import_string(self.field.widget_class)
+        instance = self.field.as_form_field()
+        self.assertIsInstance(instance, field_class)
+        self.assertEqual(self.field.label, instance.label)
+        self.assertEqual(self.field.help_text, instance.help_text)
+        self.assertTrue(self.field.required)
+        self.assertIsInstance(instance.widget, widget_class)
+        self.assertEquals(list(instance.queryset), list(Permission.objects.all()))

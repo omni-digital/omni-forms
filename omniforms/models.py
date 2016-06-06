@@ -63,7 +63,9 @@ class OmniField(models.Model):
             models.FloatField: OmniFloatField,
             models.IntegerField: OmniIntegerField,
             models.TimeField: OmniTimeField,
-            models.URLField: OmniUrlField
+            models.URLField: OmniUrlField,
+            models.ForeignKey: OmniForeignKeyField,
+            models.ManyToManyField: OmniManyToManyField
         }.get(model_field.__class__)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
@@ -217,6 +219,49 @@ class OmniUrlField(OmniField):
     initial = models.URLField(blank=True, null=True)
     FIELD_CLASS = 'django.forms.URLField'
     FORM_WIDGETS = ('django.forms.widgets.URLInput',)
+
+
+class OmniRelatedField(OmniField):
+    """
+    Represents a field with relationships
+    """
+    related_type = models.ForeignKey(ContentType, related_name='+')
+
+    def as_form_field(self):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :return: django.forms.fields.Field subclass
+        """
+        field_class = import_string(self.specific.FIELD_CLASS)
+        widget_class = import_string(self.specific.widget_class)
+        return field_class(
+            queryset=self.related_type.model_class().objects.all(),
+            widget=widget_class(),
+            label=self.specific.label,
+            help_text=self.specific.help_text,
+            required=self.specific.required,
+            initial=self.specific.initial
+        )
+
+
+class OmniManyToManyField(OmniRelatedField):
+    """
+    ManyToManyField representation
+    """
+    initial = None
+    FIELD_CLASS = 'django.forms.ModelMultipleChoiceField'
+    FORM_WIDGETS = ('django.forms.SelectMultiple', 'django.forms.CheckboxSelectMultiple')
+
+
+class OmniForeignKeyField(OmniRelatedField):
+    """
+    ForeignKey field representation
+    """
+    initial = None
+    FIELD_CLASS = 'django.forms.ModelChoiceField'
+    FORM_WIDGETS = ('django.forms.Select', 'django.forms.RadioSelect')
 
 
 class FormGeneratorMixin(object):
