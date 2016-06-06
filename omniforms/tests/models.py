@@ -7,7 +7,7 @@ class DummyModel(models.Model):
     """
     title = models.CharField(max_length=255)
     agree = models.BooleanField()
-    some_date = models.DateField()
+    some_date = models.DateField(blank=True, null=True)
     some_datetime = models.DateTimeField()
     some_decimal = models.DecimalField(decimal_places=10, max_digits=12)
     some_email = models.EmailField()
