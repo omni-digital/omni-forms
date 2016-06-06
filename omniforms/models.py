@@ -347,6 +347,18 @@ class OmniModelFormBase(OmniFormBase):
         properties['Meta'] = self._get_form_meta_class()
         return properties
 
+    def get_model_field_choices(self):
+        """
+        Helper method to get field choices for the admin addfield form
+
+        :return: List of (field.name, field.verbose_name) choices for use in the admin form
+        """
+        fields = filter(
+            lambda field: not isinstance(field, models.AutoField),
+            self.content_type.model_class()._meta.get_fields()
+        )
+        return map(lambda f: (f.name, getattr(f, 'verbose_name', f.name)), fields)
+
 
 class OmniForm(OmniFormBase):
     """

@@ -151,6 +151,23 @@ class OmniModelFormTestCase(TestCase):
         self.assertEqual(meta_class.__name__, 'Meta')
         self.assertEqual(meta_class.model, DummyModel)
 
+    def test_get_model_field_choices(self):
+        """
+        The get_model_field_choices method should return the appropriate choice values
+        """
+        choices = self.omniform.get_model_field_choices()
+        self.assertIn(('title', 'title'), choices)
+        self.assertIn(('agree', 'agree'), choices)
+        self.assertIn(('some_date', 'some date'), choices)
+        self.assertIn(('some_datetime', 'some datetime'), choices)
+        self.assertIn(('some_decimal', 'some decimal'), choices)
+        self.assertIn(('some_email', 'some email'), choices)
+        self.assertIn(('some_float', 'some float'), choices)
+        self.assertIn(('some_integer', 'some integer'), choices)
+        self.assertIn(('some_time', 'some time'), choices)
+        self.assertIn(('some_url', 'some url'), choices)
+        self.assertNotIn(('id', 'ID'), choices)
+
 
 class OmniFieldTestCase(TestCase):
     """
