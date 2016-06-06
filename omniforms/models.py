@@ -226,6 +226,7 @@ class OmniRelatedField(OmniField):
     Represents a field with relationships
     """
     related_type = models.ForeignKey(ContentType, related_name='+')
+    initial = None
 
     def as_form_field(self):
         """
@@ -250,7 +251,6 @@ class OmniManyToManyField(OmniRelatedField):
     """
     ManyToManyField representation
     """
-    initial = None
     FIELD_CLASS = 'django.forms.ModelMultipleChoiceField'
     FORM_WIDGETS = ('django.forms.SelectMultiple', 'django.forms.CheckboxSelectMultiple')
 
@@ -259,7 +259,6 @@ class OmniForeignKeyField(OmniRelatedField):
     """
     ForeignKey field representation
     """
-    initial = None
     FIELD_CLASS = 'django.forms.ModelChoiceField'
     FORM_WIDGETS = ('django.forms.Select', 'django.forms.RadioSelect')
 
