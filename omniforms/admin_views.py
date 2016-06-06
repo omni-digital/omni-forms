@@ -170,6 +170,7 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
         self.model_field = None
         self.model_field_name = None
 
+    @method_decorator(permission_required('omniforms.add_omnifield'))
     def dispatch(self, request, *args, **kwargs):
         """
         Custom dispatch method

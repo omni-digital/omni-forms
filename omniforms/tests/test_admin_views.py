@@ -266,3 +266,21 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
         url = reverse('admin:omniforms_omnimodelform_createfield', args=[self.omni_form.pk, 'some_date'])
         response = self.client.post(url, self.form_data, follow=True)
         self.assertIn('widget_class', response.context['form'].errors)
+
+    def test_staff_required(self):
+        """
+        The view should not be accessible to non staff users
+        """
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get(self.url, follow=True)
+        redirect_url = '{0}?next={1}'.format(reverse('admin:login'), self.url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_permission_required(self):
+        """
+        The view should require the omniforms.add_omnifield permission
+        """
+        self.user.user_permissions.remove(self.add_field_permission)
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, reverse('admin:index'))
