@@ -40,3 +40,5 @@ DATABASES = {
 }
 
 ROOT_URLCONF = 'app.urls'
+
+LOGIN_URL = 'admin:login'

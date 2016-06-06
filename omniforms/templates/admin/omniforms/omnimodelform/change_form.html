@@ -1,0 +1,23 @@
+{% extends "admin/change_form.html" %}{% load admin_urls %}
+
+
+{% block after_related_objects %}
+    {% if original %}
+    <div>
+        {% with fields=original.fields.all %}
+            {% if fields|length > 0 %}
+            <ul>
+                {% for field in fields %}
+                <li>
+                    {{ field.as_form_field.label_text }}
+                    {{ field.as_form_field }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <a href="{% url opts|admin_urlname:'addfield' original.pk|admin_urlquote %}" class="addlink">Add Field</a>
+    {% endif %}
+{% endblock %}

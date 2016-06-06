@@ -20,3 +20,19 @@ class OmniModelFormAddFieldForm(forms.Form):
         choices = kwargs.pop('model_fields')
         super(OmniModelFormAddFieldForm, self).__init__(*args, **kwargs)
         self.fields['model_field'].choices = choices
+
+
+class OmniModelFormCreateFieldForm(forms.ModelForm):
+    """
+    Model form for creating omni field instances
+    """
+    def clean_widget_class(self):
+        """
+        Cleans the widget_class data submitted to the form
+
+        :return: python dotted path for widget_class
+        """
+        widget_class = self.cleaned_data.get('widget_class')
+        if widget_class not in self._meta.model.FORM_WIDGETS:
+            raise forms.ValidationError('{0} is not a permitted widget'.format(widget_class))
+        return widget_class
