@@ -117,7 +117,7 @@ class OmniField(models.Model):
         field_class = import_string(self.specific.FIELD_CLASS)
         widget_class = import_string(self.specific.widget_class)
         return field_class(
-            widget=widget_class,
+            widget=widget_class(),
             label=self.specific.label,
             help_text=self.specific.help_text,
             required=self.specific.required,
@@ -219,27 +219,10 @@ class OmniUrlField(OmniField):
     FORM_WIDGETS = ('django.forms.widgets.URLInput',)
 
 
-@python_2_unicode_compatible
-class OmniFormBase(models.Model):
+class FormGeneratorMixin(object):
     """
-    Base class for the OmniForm model
+    Mixin containing methods for form generation
     """
-    title = models.CharField(max_length=255)
-
-    class Meta(object):
-        """
-        Django properties
-        """
-        abstract = True
-
-    def __str__(self):
-        """
-        Method for generating a string representation of the instance
-
-        :return: String representation of the instance
-        """
-        return self.title
-
     def _get_form_class_name(self):
         """
         Method for generating a name for the form class
@@ -260,13 +243,30 @@ class OmniFormBase(models.Model):
         """
         return forms.Form,
 
+    def _get_fields(self):
+        """
+        Method for getting all fields for the form class
+
+        :return: list of form field instances
+        """
+        return [field.as_form_field() for field in self.fields.all()]
+
+    def _get_field_names(self):
+        return self.fields.values_list('name', flat=True)
+
+    def _get_field_widgets(self):
+        return {field.name: import_string(field.widget_class) for field in self.fields.all()}
+
+    def _get_field_help_texts(self):
+        return {field.name: field.help_text for field in self.fields.all()}
+
     def _get_form_class_properties(self):
         """
         Method for getting a dict of form properties
 
         :return: Dict of properties to set on the form class
         """
-        return {'base_fields': [field.as_form_field() for field in self.fields.all()]}
+        return {'base_fields': self._get_fields()}
 
     def get_form_class(self):
         """
@@ -281,11 +281,33 @@ class OmniFormBase(models.Model):
         )
 
 
+@python_2_unicode_compatible
+class OmniFormBase(FormGeneratorMixin, models.Model):
+    """
+    Base class for the OmniForm model
+    """
+    title = models.CharField(max_length=255)
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        abstract = True
+
+    def __str__(self):
+        """
+        Method for generating a string representation of the instance
+
+        :return: String representation of the instance
+        """
+        return self.title
+
+
 class OmniModelFormBase(OmniFormBase):
     """
     Base class for the OmniModelForm model
     """
-    content_type = models.ForeignKey(ContentType, related_name='+')
+    content_type = models.ForeignKey(ContentType, related_name='+', help_text='THis is some help text')
 
     class Meta(object):
         """
@@ -308,8 +330,12 @@ class OmniModelFormBase(OmniFormBase):
 
         :return: Tuple of base classes for the form
         """
-        model_class = self.content_type.model_class()
-        return type(str('Meta'), (object,), {'model': model_class, 'fields': ()})
+        return type(str('Meta'), (object,), {
+            'model': self.content_type.model_class(),
+            'fields': self._get_field_names(),
+            'widgets': self._get_field_widgets(),
+            'help_texts': self._get_field_help_texts()
+        })
 
     def _get_form_class_properties(self):
         """
@@ -317,10 +343,9 @@ class OmniModelFormBase(OmniFormBase):
 
         :return: Dict of properties to set on the form class
         """
-        return {
-            'base_fields': [],
-            'Meta': self._get_form_meta_class()
-        }
+        properties = super(OmniModelFormBase, self)._get_form_class_properties()
+        properties['Meta'] = self._get_form_meta_class()
+        return properties
 
 
 class OmniForm(OmniFormBase):
