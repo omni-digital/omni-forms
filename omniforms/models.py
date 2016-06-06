@@ -295,7 +295,7 @@ class FormGeneratorMixin(object):
         """
         return [field.specific.as_form_field() for field in self.fields.all()]
 
-    def _get_field_names(self):
+    def get_used_field_names(self):
         """
         Method for getting the names of all fields on the form
 
@@ -391,7 +391,7 @@ class OmniModelFormBase(OmniFormBase):
         """
         return type(str('Meta'), (object,), {
             'model': self.content_type.model_class(),
-            'fields': self._get_field_names(),
+            'fields': self.get_used_field_names(),
             'widgets': self._get_field_widgets(),
             'help_texts': self._get_field_help_texts()
         })
@@ -412,10 +412,15 @@ class OmniModelFormBase(OmniFormBase):
 
         :return: List of (field.name, field.verbose_name) choices for use in the admin form
         """
-        fields = filter(
-            lambda field: not isinstance(field, (models.AutoField, models.ManyToOneRel)),
-            self.content_type.model_class()._meta.get_fields()
-        )
+        def is_valid_field(field):
+            if isinstance(field, (models.AutoField, models.ManyToOneRel)):
+                return False
+            elif field.name in self.get_used_field_names():
+                return False
+            else:
+                return True
+
+        fields = filter(is_valid_field, self.content_type.model_class()._meta.get_fields())
         return map(lambda f: (f.name, getattr(f, 'verbose_name', f.name)), fields)
 
 

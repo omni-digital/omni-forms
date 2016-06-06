@@ -171,6 +171,25 @@ class OmniModelFormTestCase(TestCase):
         self.assertIn(('some_url', 'some url'), choices)
         self.assertNotIn(('id', 'ID'), choices)
 
+    @patch('omniforms.models.OmniModelForm.get_used_field_names')
+    def test_get_model_field_choices_omits_used_fields(self, patched_method):
+        """
+        The get_model_field_choices method should not include fields which have already been used
+        """
+        patched_method.return_value = ['title', 'agree']
+        choices = self.omniform.get_model_field_choices()
+        self.assertIn(('some_date', 'some date'), choices)
+        self.assertIn(('some_datetime', 'some datetime'), choices)
+        self.assertIn(('some_decimal', 'some decimal'), choices)
+        self.assertIn(('some_email', 'some email'), choices)
+        self.assertIn(('some_float', 'some float'), choices)
+        self.assertIn(('some_integer', 'some integer'), choices)
+        self.assertIn(('some_time', 'some time'), choices)
+        self.assertIn(('some_url', 'some url'), choices)
+        self.assertNotIn(('id', 'ID'), choices)
+        self.assertNotIn(('title', 'title'), choices)
+        self.assertNotIn(('agree', 'agree'), choices)
+
 
 class OmniFieldTestCase(TestCase):
     """

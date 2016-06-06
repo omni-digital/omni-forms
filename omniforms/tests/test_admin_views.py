@@ -138,6 +138,23 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
+    def test_raises_404_if_field_already_specified(self):
+        """
+        The view should raise an HTTP 404 response if the specified field has already been used
+        """
+        instance = OmniCharField(
+            name='title',
+            label='title',
+            required=False,
+            widget_class=OmniCharField.FORM_WIDGETS[0],
+            order=0,
+            form=self.omni_form
+        )
+        instance.save()
+        url = reverse('admin:omniforms_omnimodelform_createfield', args=[self.omni_form.pk, 'title'])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
     def test_model_set_correctly(self):
         """
         The view should use the appropriate model for the field

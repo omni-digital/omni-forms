@@ -184,10 +184,15 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
         """
         self.omni_form = get_object_or_404(OmniModelForm, pk=args[0])
         self.model_field_name = args[1]
+
+        if self.model_field_name in self.omni_form.get_used_field_names():
+            raise Http404
+
         try:
             self.model_field = self.omni_form.content_type.model_class()._meta.get_field(self.model_field_name)
         except FieldDoesNotExist:
             raise Http404
+
         self.model = OmniField.get_concrete_class_for_model_field(self.model_field)
         return super(OmniModelFormCreateFieldView, self).dispatch(request, *args, **kwargs)
 
@@ -208,26 +213,18 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
         if self._field_is_required:
             widgets['required'] = forms.HiddenInput
 
-        if len(self.model.FORM_WIDGETS) > 1:
-            widgets['widget_class'] = forms.Select(
-                choices=map(
-                    lambda x: (x, x.rsplit('.')[-1]),
-                    self.model.FORM_WIDGETS
-                )
-            )
-
         if issubclass(self.model, OmniRelatedField):
             widgets['related_type'] = forms.HiddenInput
 
-        return type(
-            str('Meta'),
-            (object,),
-            {
-                'exclude': ('id', 'real_type'),
-                'model': self.model,
-                'widgets': widgets
-            }
-        )
+        if len(self.model.FORM_WIDGETS) > 1:
+            choices = map(lambda x: (x, x.rsplit('.')[-1]), self.model.FORM_WIDGETS)
+            widgets['widget_class'] = forms.Select(choices=choices)
+
+        return type(str('Meta'), (object,), {
+            'exclude': ('id', 'real_type'),
+            'model': self.model,
+            'widgets': widgets
+        })
 
     @property
     def _field_is_required(self):
