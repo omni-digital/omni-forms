@@ -8,6 +8,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.test import TestCase
+from django.utils.module_loading import import_string
 from mock import patch
 from omniforms.models import (
     OmniFormBase,
@@ -202,6 +203,16 @@ class OmniFieldTestCase(TestCase):
         self.assertFalse(field.blank)
         self.assertFalse(field.null)
 
+    def test_order_field(self):
+        """
+        The model should have an order field
+        """
+        field = OmniField._meta.get_field('order')
+        self.assertIsInstance(field, models.IntegerField)
+        self.assertEqual(field.default, 0)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
     def test_content_type_field(self):
         """
         The model should have a content_type field
@@ -270,6 +281,8 @@ class OmniFieldInstanceTestCase(TestCase):
         self.field = OmniFloatField(
             name='Test Field',
             label='Test Field Label',
+            help_text='Test help text',
+            required=True,
             widget_class='django.forms.widgets.TextInput',
             form=self.form
         )
@@ -308,6 +321,19 @@ class OmniFieldInstanceTestCase(TestCase):
             base_instance.specific
             self.assertEqual(patched_method.call_count, 1)
 
+    def test_as_form_field(self):
+        """
+        The as_form_field method should return an instance of the correct field
+        """
+        field_class = import_string(self.field.FIELD_CLASS)
+        widget_class = import_string(self.field.widget_class)
+        instance = self.field.as_form_field()
+        self.assertIsInstance(instance, field_class)
+        self.assertEqual(self.field.label, instance.label)
+        self.assertEqual(self.field.help_text, instance.help_text)
+        self.assertTrue(self.field.required)
+        self.assertIsInstance(instance.widget, widget_class)
+
 
 class OmniCharFieldTestCase(TestCase):
     """
@@ -327,6 +353,20 @@ class OmniCharFieldTestCase(TestCase):
         self.assertIsInstance(field, models.TextField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniCharField.FIELD_CLASS, 'django.forms.CharField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.TextInput', OmniCharField.FORM_WIDGETS)
+        self.assertIn('django.forms.widgets.Textarea', OmniCharField.FORM_WIDGETS)
+        self.assertIn('django.forms.widgets.PasswordInput', OmniCharField.FORM_WIDGETS)
 
 
 class OmniBooleanFieldTestCase(TestCase):
@@ -348,6 +388,18 @@ class OmniBooleanFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniBooleanField.FIELD_CLASS, 'django.forms.BooleanField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.CheckboxInput', OmniBooleanField.FORM_WIDGETS)
+
 
 class OmniEmailFieldTestCase(TestCase):
     """
@@ -367,6 +419,18 @@ class OmniEmailFieldTestCase(TestCase):
         self.assertIsInstance(field, models.EmailField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniEmailField.FIELD_CLASS, 'django.forms.EmailField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.EmailInput', OmniEmailField.FORM_WIDGETS)
 
 
 class OmniDateFieldTestCase(TestCase):
@@ -388,6 +452,18 @@ class OmniDateFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniDateField.FIELD_CLASS, 'django.forms.DateField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.DateInput', OmniDateField.FORM_WIDGETS)
+
 
 class OmniDateTimeFieldTestCase(TestCase):
     """
@@ -407,6 +483,18 @@ class OmniDateTimeFieldTestCase(TestCase):
         self.assertIsInstance(field, models.DateTimeField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniDateTimeField.FIELD_CLASS, 'django.forms.DateTimeField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.DateTimeInput', OmniDateTimeField.FORM_WIDGETS)
 
 
 class OmniDecimalFieldTestCase(TestCase):
@@ -430,6 +518,18 @@ class OmniDecimalFieldTestCase(TestCase):
         self.assertEqual(field.decimal_places, 2)
         self.assertEqual(field.max_digits, 10)
 
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniDecimalField.FIELD_CLASS, 'django.forms.DecimalField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.NumberInput', OmniDecimalField.FORM_WIDGETS)
+
 
 class OmniFloatFieldTestCase(TestCase):
     """
@@ -449,6 +549,18 @@ class OmniFloatFieldTestCase(TestCase):
         self.assertIsInstance(field, models.FloatField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniFloatField.FIELD_CLASS, 'django.forms.FloatField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.NumberInput', OmniFloatField.FORM_WIDGETS)
 
 
 class OmniIntegerFieldTestCase(TestCase):
@@ -470,6 +582,18 @@ class OmniIntegerFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniIntegerField.FIELD_CLASS, 'django.forms.IntegerField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.NumberInput', OmniIntegerField.FORM_WIDGETS)
+
 
 class OmniTimeFieldTestCase(TestCase):
     """
@@ -490,6 +614,18 @@ class OmniTimeFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniTimeField.FIELD_CLASS, 'django.forms.TimeField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.TimeInput', OmniTimeField.FORM_WIDGETS)
+
 
 class OmniUrlFieldTestCase(TestCase):
     """
@@ -509,3 +645,15 @@ class OmniUrlFieldTestCase(TestCase):
         self.assertIsInstance(field, models.URLField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniUrlField.FIELD_CLASS, 'django.forms.URLField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.URLInput', OmniUrlField.FORM_WIDGETS)

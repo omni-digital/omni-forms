@@ -9,6 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
+from django.utils.module_loading import import_string
 import re
 
 
@@ -22,10 +23,17 @@ class OmniField(models.Model):
     help_text = models.TextField(blank=True, null=True)
     required = models.BooleanField(default=False)
     widget_class = models.CharField(max_length=255)
+    order = models.IntegerField(default=0)
     real_type = models.ForeignKey(ContentType, related_name='+')
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        ordering = ('order',)
 
     def __str__(self):
         """
@@ -99,12 +107,35 @@ class OmniField(models.Model):
         else:
             return self.real_type.get_object_for_this_type(pk=self.pk)
 
+    def as_form_field(self):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :return: django.forms.fields.Field subclass
+        """
+        field_class = import_string(self.specific.FIELD_CLASS)
+        widget_class = import_string(self.specific.widget_class)
+        return field_class(
+            widget=widget_class,
+            label=self.specific.label,
+            help_text=self.specific.help_text,
+            required=self.specific.required,
+            initial=self.specific.initial
+        )
+
 
 class OmniCharField(OmniField):
     """
     CharField representation
     """
     initial = models.TextField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.CharField'
+    FORM_WIDGETS = (
+        'django.forms.widgets.TextInput',
+        'django.forms.widgets.Textarea',
+        'django.forms.widgets.PasswordInput'
+    )
 
 
 class OmniBooleanField(OmniField):
@@ -112,6 +143,8 @@ class OmniBooleanField(OmniField):
     BooleanField representation
     """
     initial = models.NullBooleanField()
+    FIELD_CLASS = 'django.forms.BooleanField'
+    FORM_WIDGETS = ('django.forms.widgets.CheckboxInput',)
 
 
 class OmniDateField(OmniField):
@@ -119,6 +152,8 @@ class OmniDateField(OmniField):
     DateField representation
     """
     initial = models.DateField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.DateField'
+    FORM_WIDGETS = ('django.forms.widgets.DateInput',)
 
 
 class OmniDateTimeField(OmniField):
@@ -126,6 +161,8 @@ class OmniDateTimeField(OmniField):
     DateTimeField representation
     """
     initial = models.DateTimeField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.DateTimeField'
+    FORM_WIDGETS = ('django.forms.widgets.DateTimeInput',)
 
 
 class OmniDecimalField(OmniField):
@@ -133,6 +170,8 @@ class OmniDecimalField(OmniField):
     DecimalField representation
     """
     initial = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
+    FIELD_CLASS = 'django.forms.DecimalField'
+    FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
 
 
 class OmniEmailField(OmniField):
@@ -140,6 +179,8 @@ class OmniEmailField(OmniField):
     EmailField representation
     """
     initial = models.EmailField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.EmailField'
+    FORM_WIDGETS = ('django.forms.widgets.EmailInput',)
 
 
 class OmniFloatField(OmniField):
@@ -147,6 +188,8 @@ class OmniFloatField(OmniField):
     FloatField representation
     """
     initial = models.FloatField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.FloatField'
+    FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
 
 
 class OmniIntegerField(OmniField):
@@ -154,6 +197,8 @@ class OmniIntegerField(OmniField):
     IntegerField representation
     """
     initial = models.IntegerField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.IntegerField'
+    FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
 
 
 class OmniTimeField(OmniField):
@@ -161,6 +206,8 @@ class OmniTimeField(OmniField):
     TimeField representation
     """
     initial = models.TimeField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.TimeField'
+    FORM_WIDGETS = ('django.forms.widgets.TimeInput',)
 
 
 class OmniUrlField(OmniField):
@@ -168,6 +215,8 @@ class OmniUrlField(OmniField):
     IntegerField representation
     """
     initial = models.URLField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.URLField'
+    FORM_WIDGETS = ('django.forms.widgets.URLInput',)
 
 
 @python_2_unicode_compatible
@@ -217,7 +266,7 @@ class OmniFormBase(models.Model):
 
         :return: Dict of properties to set on the form class
         """
-        return {'base_fields': []}
+        return {'base_fields': [field.as_form_field() for field in self.fields.all()]}
 
     def get_form_class(self):
         """
