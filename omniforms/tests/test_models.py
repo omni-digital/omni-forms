@@ -27,7 +27,7 @@ from omniforms.models import (
     OmniTimeField,
     OmniUrlField,
 )
-from omniforms.tests.factories import OmniModelFormFactory
+from omniforms.tests.utils import OmniFormTestCaseStub
 from omniforms.tests.models import DummyModel
 
 
@@ -80,7 +80,7 @@ class OmniModelFormBaseTestCase(TestCase):
         self.assertFalse(field.null)
 
 
-class OmniFormTestCase(TestCase):
+class OmniFormTestCase(OmniFormTestCaseStub):
     """
     Tests the OmniForm model
     """
@@ -271,20 +271,19 @@ class OmniFieldTestCase(TestCase):
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.URLField()), OmniUrlField)
 
 
-class OmniFieldInstanceTestCase(TestCase):
+class OmniFieldInstanceTestCase(OmniFormTestCaseStub):
     """
     Tests the OmniField model
     """
     def setUp(self):
         super(OmniFieldInstanceTestCase, self).setUp()
-        self.form = OmniModelFormFactory.create()
         self.field = OmniFloatField(
             name='Test Field',
             label='Test Field Label',
             help_text='Test help text',
             required=True,
             widget_class='django.forms.widgets.TextInput',
-            form=self.form
+            form=self.omni_form
         )
         self.field.save()
 
