@@ -297,12 +297,27 @@ class FormGeneratorMixin(object):
         return [field.specific.as_form_field() for field in self.fields.all()]
 
     def _get_field_names(self):
+        """
+        Method for getting the names of all fields on the form
+
+        :return: List of available field names
+        """
         return self.fields.values_list('name', flat=True)
 
     def _get_field_widgets(self):
+        """
+        Method for getting the widgets for all fields on the form
+
+        :return: Dict of field widgets where the dict key is the field name
+        """
         return {field.name: import_string(field.widget_class) for field in self.fields.all()}
 
     def _get_field_help_texts(self):
+        """
+        Method for getting help text for all fields on the form
+
+        :return: Dict of field widgets where the dict key is the field name
+        """
         return {field.name: field.help_text for field in self.fields.all()}
 
     def _get_form_class_properties(self):
