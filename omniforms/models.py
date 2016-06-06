@@ -4,9 +4,12 @@ Models for the omniforms app
 """
 from __future__ import unicode_literals
 from django import forms
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core.mail import send_mail
 from django.db import models
+from django.template import Template, Context
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
@@ -24,7 +27,7 @@ class OmniField(models.Model):
     required = models.BooleanField(default=False)
     widget_class = models.CharField(max_length=255)
     order = models.IntegerField(default=0)
-    real_type = models.ForeignKey(ContentType, related_name='+')
+    real_type = models.ForeignKey(ContentType, related_name='+')  # The Real OmniField type (set in the save method)
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
@@ -49,8 +52,6 @@ class OmniField(models.Model):
         Method for getting a concrete model class to represent the type of form field required
 
         :param model_field: Model Field instance
-        :type model_field: django.forms.Field
-
         :return: OmniField subclass
         """
         return {
@@ -261,6 +262,79 @@ class OmniForeignKeyField(OmniRelatedField):
     """
     FIELD_CLASS = 'django.forms.ModelChoiceField'
     FORM_WIDGETS = ('django.forms.Select', 'django.forms.RadioSelect')
+
+
+@python_2_unicode_compatible
+class OmniFormHandlerBase(models.Model):
+    """
+    Base class for the form handler
+    """
+    name = models.CharField(max_length=255)
+    order = models.IntegerField(default=0)
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    form = GenericForeignKey()
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        ordering = ('order',)
+
+    def __str__(self):
+        """
+        String representation of the model instance
+
+        :return: The instance name
+        """
+        return self.name
+
+    def handle(self, form):
+        """
+        Handle method stub
+
+        :param form: Valid form instance
+        :type form: django.forms.Form
+
+        :raises: NotImplementedError
+        """
+        raise NotImplementedError('"{0}" must define it\'s own handle method'.format(self.__class__.__name__))
+
+
+class OmniFormEmailHandler(OmniFormHandlerBase):
+    """
+    Email handler for the form builder
+    """
+    subject = models.CharField(max_length=255)
+    recipients = models.TextField()
+    template = models.TextField()
+
+    def _render_template(self, context_data):
+        """
+        Renders the template data specified against the instance
+
+        :param context_data: Context data for the email template
+        :type context_data: dict
+
+        :return: Rendered content
+        """
+        return Template(self.template).render(Context(context_data))
+
+    def handle(self, form):
+        """
+        Handle method
+        Sends an email to the specified recipients
+
+        :param form: Valid form instance
+        :type form: django.forms.Form
+        """
+        send_mail(
+            self.subject,
+            self._render_template(form.cleaned_data),
+            settings.DEFAULT_FROM_EMAIL,
+            self.recipients.split(','),
+            fail_silently=False
+        )
 
 
 class FormGeneratorMixin(object):

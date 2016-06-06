@@ -8,9 +8,9 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils.module_loading import import_string
-from mock import patch
+from mock import Mock, patch
 from omniforms.models import (
     OmniFormBase,
     OmniModelFormBase,
@@ -28,7 +28,9 @@ from omniforms.models import (
     OmniTimeField,
     OmniUrlField,
     OmniManyToManyField,
-    OmniForeignKeyField
+    OmniForeignKeyField,
+    OmniFormHandlerBase,
+    OmniFormEmailHandler
 )
 from omniforms.tests.utils import OmniFormTestCaseStub
 from omniforms.tests.models import DummyModel
@@ -52,7 +54,8 @@ class OmniFormBaseTestCase(TestCase):
         """
         The models title should be used as the string representation
         """
-        instance = OmniFormBase(title='test')
+        instance = OmniFormBase()
+        instance.title = 'test'
         self.assertEqual('{0}'.format(instance), instance.title)
 
     def test_is_abstract(self):
@@ -355,8 +358,8 @@ class OmniFieldInstanceTestCase(OmniFormTestCaseStub):
         base_instance = OmniField.objects.get(pk=self.field.pk)
         with patch.object(base_instance.real_type, 'get_object_for_this_type') as patched_method:
             patched_method.return_value = self.field
-            base_instance.specific
-            base_instance.specific
+            assert base_instance.specific
+            assert base_instance.specific
             self.assertEqual(patched_method.call_count, 1)
 
     def test_as_form_field(self):
@@ -829,3 +832,136 @@ class OmniForeignKeyFieldTestCase(OmniFormTestCaseStub):
         self.assertTrue(self.field.required)
         self.assertIsInstance(instance.widget, widget_class)
         self.assertEquals(list(instance.queryset), list(Permission.objects.all()))
+
+
+class OmniFormHandlerBaseTestCase(TestCase):
+    """
+    Tests the OmniFormHandlerBase class
+    """
+    def test_name_field(self):
+        """
+        The model should have a name field
+        """
+        field = OmniFormHandlerBase._meta.get_field('name')
+        self.assertIsInstance(field, models.CharField)
+        self.assertEqual(field.max_length, 255)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_order_field(self):
+        """
+        The model should have an order field
+        """
+        field = OmniFormHandlerBase._meta.get_field('order')
+        self.assertIsInstance(field, models.IntegerField)
+        self.assertEqual(field.default, 0)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_content_type_field(self):
+        """
+        The model should have a content_type field
+        """
+        field = OmniFormHandlerBase._meta.get_field('content_type')
+        self.assertIsInstance(field, models.ForeignKey)
+        self.assertEqual(field.rel.to, ContentType)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_object_id_field(self):
+        """
+        The model should have an object_id field
+        """
+        field = OmniFormHandlerBase._meta.get_field('object_id')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_form(self):
+        """
+        The model should have a 'form' field
+        """
+        field = OmniFormHandlerBase.form
+        self.assertIsInstance(field, GenericForeignKey)
+
+    def test_string_representation(self):
+        """
+        The models name should be used as the string representation of the instance
+        """
+        instance = OmniFormHandlerBase(name='Test handler')
+        self.assertEqual(instance.name, '{0}'.format(instance))
+
+    def test_handle_raises_not_implemented_error(self):
+        """
+        The handle method should raise a NotImplementedError
+        """
+        instance = OmniFormHandlerBase(name='Test handler')
+        self.assertRaises(NotImplementedError, instance.handle, Mock())
+
+
+class OmniFormEmailHandlerTestCase(TestCase):
+    """
+    Tests the OmniFormEmailHandler
+    """
+    def test_extends_base_class(self):
+        """
+        The model should extend OmniFormHandlerBase
+        """
+        self.assertTrue(issubclass(OmniFormEmailHandler, OmniFormHandlerBase))
+
+    def test_recipients_field(self):
+        """
+        The model should define a recipients field
+        """
+        field = OmniFormEmailHandler._meta.get_field('recipients')
+        self.assertIsInstance(field, models.TextField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_subject_field(self):
+        """
+        The model should define a subject field
+        """
+        field = OmniFormEmailHandler._meta.get_field('subject')
+        self.assertIsInstance(field, models.CharField)
+        self.assertEqual(field.max_length, 255)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_template_field(self):
+        """
+        The model should define a template field
+        """
+        field = OmniFormEmailHandler._meta.get_field('template')
+        self.assertIsInstance(field, models.TextField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_render_template(self):
+        """
+        The _render_template method should return the rendered template
+        """
+        instance = OmniFormEmailHandler(template='Hello {{ user }}')
+        self.assertEqual('Hello Bob', instance._render_template({'user': 'Bob'}))
+
+    @override_settings(DEFAULT_FROM_EMAIL='administrator@example.com')
+    @patch('omniforms.models.send_mail')
+    def test_handle(self, patched_method):
+        """
+        The handle method should send an email
+        """
+        form = Mock(attributes=['cleaned_data'])
+        form.cleaned_data = {'user': 'Bob'}
+        instance = OmniFormEmailHandler(
+            template='Hello {{ user }}',
+            recipients='a@example.com,b@example.com',
+            subject='This is a test'
+        )
+        instance.handle(form)
+        patched_method.assert_called_with(
+            'This is a test',
+            'Hello Bob',
+            'administrator@example.com',
+            ['a@example.com', 'b@example.com'],
+            fail_silently=False
+        )
