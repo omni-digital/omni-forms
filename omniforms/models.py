@@ -294,7 +294,7 @@ class FormGeneratorMixin(object):
 
         :return: list of form field instances
         """
-        return [field.as_form_field() for field in self.fields.all()]
+        return [field.specific.as_form_field() for field in self.fields.all()]
 
     def _get_field_names(self):
         return self.fields.values_list('name', flat=True)
@@ -399,7 +399,7 @@ class OmniModelFormBase(OmniFormBase):
         :return: List of (field.name, field.verbose_name) choices for use in the admin form
         """
         fields = filter(
-            lambda field: not isinstance(field, models.AutoField),
+            lambda field: not isinstance(field, (models.AutoField, models.ManyToOneRel)),
             self.content_type.model_class()._meta.get_fields()
         )
         return map(lambda f: (f.name, getattr(f, 'verbose_name', f.name)), fields)

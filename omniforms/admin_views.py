@@ -13,9 +13,9 @@ from django.forms.models import fields_for_model
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
-from django.views.generic import FormView, CreateView
+from django.views.generic import FormView, CreateView, DetailView
 from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm
-from omniforms.models import OmniModelForm, OmniField
+from omniforms.models import OmniModelForm, OmniField, OmniRelatedField
 
 
 class AdminViewMixin(object):
@@ -129,10 +129,7 @@ class OmniModelFormAddFieldView(AdminViewMixin, FormView):
         :return: Dict of kwargs for the form
         """
         form_kwargs = super(OmniModelFormAddFieldView, self).get_form_kwargs()
-        form_kwargs['model_fields'] = map(
-            lambda field: (field.name, getattr(field, 'verbose_name', field.name)),
-            self.omni_form.content_type.model_class()._meta.get_fields()
-        )
+        form_kwargs['model_fields'] = self.omni_form.get_model_field_choices()
         return form_kwargs
 
     def form_valid(self, form):
@@ -219,6 +216,9 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
                 )
             )
 
+        if issubclass(self.model, OmniRelatedField):
+            widgets['related_type'] = forms.HiddenInput
+
         return type(
             str('Meta'),
             (object,),
@@ -282,6 +282,10 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
         initial['content_type'] = ContentType.objects.get_for_model(self.omni_form).pk
         initial['object_id'] = self.omni_form.pk
         initial['widget_class'] = self.model.FORM_WIDGETS[0]
+
+        if issubclass(self.model, OmniRelatedField):
+            initial['related_type'] = ContentType.objects.get_for_model(field.queryset.model).pk
+
         return initial
 
     def get_success_url(self):
@@ -294,3 +298,56 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
             return reverse('admin:omniforms_omnimodelform_addfield', args=[self.omni_form.pk])
         else:
             return reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk])
+
+
+class OmniModelFormPreviewView(AdminViewMixin, DetailView):
+    """
+    Preview view for the omni model form
+    """
+    template_name = 'admin/omniforms/omnimodelform/preview.html'
+    model = OmniModelForm
+    context_object_name = 'omni_form'
+
+    @method_decorator(permission_required('omniforms.add_omnifield'))
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Custom dispatch method
+        Loads the form that the field is being added to before calling super
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param args: Default positional args
+        :type args: ()
+
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+
+        :return: Http Response
+        """
+        self.omni_form = self.get_object()
+        return super(OmniModelFormPreviewView, self).dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        """
+        Custom implementation of get_object
+
+        :return: OmniModelForm instance
+        """
+        return get_object_or_404(OmniModelForm, pk=self.args[0])
+
+    def get_context_data(self, **kwargs):
+        """
+        Custom implementation of get_context_data
+        Adds data to the context required by the admin view
+
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+
+        :return: Dict of context data for rendering the template
+        """
+        form_class = self.omni_form.get_form_class()
+        context_data = super(OmniModelFormPreviewView, self).get_context_data(**kwargs)
+        context_data['omni_form'] = self.omni_form
+        context_data['form'] = form_class()
+        return context_data
