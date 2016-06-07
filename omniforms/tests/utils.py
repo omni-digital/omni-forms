@@ -34,10 +34,14 @@ class OmniFormAdminTestCaseStub(OmniFormTestCaseStub):
         self.change_field_permission = Permission.objects.get(codename='change_omnifield')
         self.add_form_permission = Permission.objects.get(codename='add_omnimodelform')
         self.change_form_permission = Permission.objects.get(codename='change_omnimodelform')
+        self.add_handler_permission = Permission.objects.get(codename='add_omniformhandler')
+        self.change_handler_permission = Permission.objects.get(codename='change_omniformhandler')
         # Assign model permissions
         self.user.user_permissions.add(self.add_field_permission)
         self.user.user_permissions.add(self.change_field_permission)
         self.user.user_permissions.add(self.add_form_permission)
         self.user.user_permissions.add(self.change_form_permission)
+        self.user.user_permissions.add(self.add_handler_permission)
+        self.user.user_permissions.add(self.change_handler_permission)
         # Log the user in
         self.client.login(username='test', password='test1234')
