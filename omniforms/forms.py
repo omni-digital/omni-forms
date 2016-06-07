@@ -25,9 +25,7 @@ class OmniFormBaseForm(forms.Form):
                 'unbound forms'.format(self.__class__.__name__)
             )
 
-        if not self._handlers:
-            pass
-        else:
+        if self._handlers:
             for handler in self._handlers:
                 handler.handle(self.cleaned_data)
 
