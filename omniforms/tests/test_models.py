@@ -29,7 +29,7 @@ from omniforms.models import (
     OmniUrlField,
     OmniManyToManyField,
     OmniForeignKeyField,
-    OmniFormHandlerBase,
+    OmniFormHandler,
     OmniFormEmailHandler
 )
 from omniforms.tests.utils import OmniFormTestCaseStub
@@ -834,15 +834,15 @@ class OmniForeignKeyFieldTestCase(OmniFormTestCaseStub):
         self.assertEquals(list(instance.queryset), list(Permission.objects.all()))
 
 
-class OmniFormHandlerBaseTestCase(TestCase):
+class OmniFormHandlerTestCase(TestCase):
     """
-    Tests the OmniFormHandlerBase class
+    Tests the OmniFormHandler class
     """
     def test_name_field(self):
         """
         The model should have a name field
         """
-        field = OmniFormHandlerBase._meta.get_field('name')
+        field = OmniFormHandler._meta.get_field('name')
         self.assertIsInstance(field, models.CharField)
         self.assertEqual(field.max_length, 255)
         self.assertFalse(field.blank)
@@ -852,7 +852,7 @@ class OmniFormHandlerBaseTestCase(TestCase):
         """
         The model should have an order field
         """
-        field = OmniFormHandlerBase._meta.get_field('order')
+        field = OmniFormHandler._meta.get_field('order')
         self.assertIsInstance(field, models.IntegerField)
         self.assertEqual(field.default, 0)
         self.assertFalse(field.blank)
@@ -862,7 +862,7 @@ class OmniFormHandlerBaseTestCase(TestCase):
         """
         The model should have a content_type field
         """
-        field = OmniFormHandlerBase._meta.get_field('content_type')
+        field = OmniFormHandler._meta.get_field('content_type')
         self.assertIsInstance(field, models.ForeignKey)
         self.assertEqual(field.rel.to, ContentType)
         self.assertFalse(field.blank)
@@ -872,7 +872,7 @@ class OmniFormHandlerBaseTestCase(TestCase):
         """
         The model should have an object_id field
         """
-        field = OmniFormHandlerBase._meta.get_field('object_id')
+        field = OmniFormHandler._meta.get_field('object_id')
         self.assertIsInstance(field, models.PositiveIntegerField)
         self.assertFalse(field.blank)
         self.assertFalse(field.null)
@@ -881,21 +881,21 @@ class OmniFormHandlerBaseTestCase(TestCase):
         """
         The model should have a 'form' field
         """
-        field = OmniFormHandlerBase.form
+        field = OmniFormHandler.form
         self.assertIsInstance(field, GenericForeignKey)
 
     def test_string_representation(self):
         """
         The models name should be used as the string representation of the instance
         """
-        instance = OmniFormHandlerBase(name='Test handler')
+        instance = OmniFormHandler(name='Test handler')
         self.assertEqual(instance.name, '{0}'.format(instance))
 
     def test_handle_raises_not_implemented_error(self):
         """
         The handle method should raise a NotImplementedError
         """
-        instance = OmniFormHandlerBase(name='Test handler')
+        instance = OmniFormHandler(name='Test handler')
         self.assertRaises(NotImplementedError, instance.handle, Mock())
 
 
@@ -905,9 +905,9 @@ class OmniFormEmailHandlerTestCase(TestCase):
     """
     def test_extends_base_class(self):
         """
-        The model should extend OmniFormHandlerBase
+        The model should extend OmniFormHandler
         """
-        self.assertTrue(issubclass(OmniFormEmailHandler, OmniFormHandlerBase))
+        self.assertTrue(issubclass(OmniFormEmailHandler, OmniFormHandler))
 
     def test_recipients_field(self):
         """

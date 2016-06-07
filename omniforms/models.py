@@ -265,7 +265,7 @@ class OmniForeignKeyField(OmniRelatedField):
 
 
 @python_2_unicode_compatible
-class OmniFormHandlerBase(models.Model):
+class OmniFormHandler(models.Model):
     """
     Base class for the form handler
     """
@@ -301,7 +301,7 @@ class OmniFormHandlerBase(models.Model):
         raise NotImplementedError('"{0}" must define it\'s own handle method'.format(self.__class__.__name__))
 
 
-class OmniFormEmailHandler(OmniFormHandlerBase):
+class OmniFormEmailHandler(OmniFormHandler):
     """
     Email handler for the form builder
     """
