@@ -14,6 +14,7 @@ from django.template import Template, Context
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
+from omniforms.forms import OmniModelFormBaseForm
 import re
 
 
@@ -474,6 +475,18 @@ class OmniModelFormBase(OmniFormBase):
         """
         abstract = True
 
+    def _get_base_form_class(self):
+        """
+        Helper method for getting the base ModelForm class for use with the model form factory
+
+        :return: ModelForm instance
+        """
+        return type(
+            self._get_form_class_name(),
+            (OmniModelFormBaseForm,),
+            {'_handlers': [handler.specific for handler in self.handlers.all()]}
+        )
+
     def get_form_class(self):
         """
         Method for generating a form class from the data contained within the model
@@ -482,6 +495,7 @@ class OmniModelFormBase(OmniFormBase):
         """
         return modelform_factory(
             self.content_type.model_class(),
+            form=self._get_base_form_class(),
             fields=self.get_used_field_names(),
             widgets=self._get_field_widgets(),
             help_texts=self._get_field_help_texts()
@@ -510,6 +524,7 @@ class OmniForm(OmniFormBase):
     Concrete implementation of the omni form
     """
     fields = GenericRelation(OmniField)
+    handlers = GenericRelation(OmniFormHandler)
 
 
 class OmniModelForm(OmniModelFormBase):
@@ -517,3 +532,4 @@ class OmniModelForm(OmniModelFormBase):
     Concrete implementation of the omni model form
     """
     fields = GenericRelation(OmniField)
+    handlers = GenericRelation(OmniFormHandler)

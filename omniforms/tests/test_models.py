@@ -11,6 +11,7 @@ from django.db import models
 from django.test import TestCase, override_settings
 from django.utils.module_loading import import_string
 from mock import Mock, patch
+from omniforms.forms import OmniModelFormBaseForm
 from omniforms.models import (
     OmniFormBase,
     OmniModelFormBase,
@@ -118,13 +119,31 @@ class OmniModelFormTestCase(TestCase):
             title='test',
             content_type=ContentType.objects.get_for_model(DummyModel)
         )
+        self.handler_1 = OmniFormEmailHandler(
+            subject='test',
+            recipients='test@example.com',
+            template='Test content',
+            name='test 1',
+            order=0,
+            form=self.omniform
+        )
+        self.handler_1.save()
+        self.handler_2 = OmniFormEmailHandler(
+            subject='test2',
+            recipients='test2@example.com',
+            template='Test content 2',
+            name='test 2',
+            order=1,
+            form=self.omniform
+        )
+        self.handler_2.save()
 
     def test_get_form_class(self):
         """
         The get_form_class method should return a form class
         """
         form_class = self.omniform.get_form_class()
-        self.assertTrue(issubclass(form_class, forms.ModelForm))
+        self.assertTrue(issubclass(form_class, OmniModelFormBaseForm))
 
     def test_get_model_field_choices(self):
         """
@@ -161,6 +180,30 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn(('id', 'ID'), choices)
         self.assertNotIn(('title', 'title'), choices)
         self.assertNotIn(('agree', 'agree'), choices)
+
+    @patch('omniforms.models.OmniFormEmailHandler.handle')
+    def test_form_handle_method_calls_handlers(self, patched_method):
+        """
+        The forms 'handle' method should call each handler in turn
+        """
+        form_class = self.omniform.get_form_class()
+        form = form_class({})
+        form.full_clean()
+        form.handle()
+        self.assertEqual(patched_method.call_count, 2)
+        patched_method.assert_any_call({})
+
+    @patch('omniforms.models.OmniFormEmailHandler.handle')
+    def test_form_save_calls_handlers(self, patched_method):
+        """
+        The forms 'handle' method should call each handler in turn
+        """
+        form_class = self.omniform.get_form_class()
+        form = form_class({})
+        form.full_clean()
+        form.save()
+        self.assertEqual(patched_method.call_count, 2)
+        patched_method.assert_any_call({})
 
 
 class OmniFieldTestCase(TestCase):
