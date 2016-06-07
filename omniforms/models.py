@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
 from django.db import models
+from django.forms import modelform_factory
 from django.template import Template, Context
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
@@ -394,15 +395,6 @@ class FormGeneratorMixin(object):
             ''.join([fragment.capitalize() for fragment in re.split('\W+', self.title)])
         ))
 
-    @staticmethod
-    def _get_form_class_bases():
-        """
-        Method for getting a tuple of base classes for the form
-
-        :return: Tuple of base classes for the form
-        """
-        return forms.Form,
-
     def _get_fields(self):
         """
         Method for getting all fields for the form class
@@ -435,14 +427,6 @@ class FormGeneratorMixin(object):
         """
         return {field.name: field.help_text for field in self.fields.all()}
 
-    def _get_form_class_properties(self):
-        """
-        Method for getting a dict of form properties
-
-        :return: Dict of properties to set on the form class
-        """
-        return {'base_fields': self._get_fields()}
-
     def get_form_class(self):
         """
         Method for generating a form class from the data contained within the model
@@ -451,8 +435,8 @@ class FormGeneratorMixin(object):
         """
         return type(
             self._get_form_class_name(),
-            self._get_form_class_bases(),
-            self._get_form_class_properties()
+            (forms.Form,),
+            {'base_fields': self._get_fields()}
         )
 
 
@@ -490,37 +474,18 @@ class OmniModelFormBase(OmniFormBase):
         """
         abstract = True
 
-    @staticmethod
-    def _get_form_class_bases():
+    def get_form_class(self):
         """
-        Method for getting a tuple of base classes for the form
+        Method for generating a form class from the data contained within the model
 
-        :return: Tuple of base classes for the form
+        :return: ModelForm class
         """
-        return forms.ModelForm,
-
-    def _get_form_meta_class(self):
-        """
-        Method for getting a meta class for the form
-
-        :return: Tuple of base classes for the form
-        """
-        return type(str('Meta'), (object,), {
-            'model': self.content_type.model_class(),
-            'fields': self.get_used_field_names(),
-            'widgets': self._get_field_widgets(),
-            'help_texts': self._get_field_help_texts()
-        })
-
-    def _get_form_class_properties(self):
-        """
-        Method for getting a dict of form properties
-
-        :return: Dict of properties to set on the form class
-        """
-        properties = super(OmniModelFormBase, self)._get_form_class_properties()
-        properties['Meta'] = self._get_form_meta_class()
-        return properties
+        return modelform_factory(
+            self.content_type.model_class(),
+            fields=self.get_used_field_names(),
+            widgets=self._get_field_widgets(),
+            help_texts=self._get_field_help_texts()
+        )
 
     def get_model_field_choices(self):
         """

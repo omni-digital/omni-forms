@@ -100,21 +100,6 @@ class OmniFormTestCase(OmniFormTestCaseStub):
         """
         self.assertEqual('OmniFormTestModel', self.omniform._get_form_class_name())
 
-    def test_get_form_class_bases(self):
-        """
-        The _get_form_class_bases method should return a tuple containing the django.forms.Form class
-        """
-        bases = self.omniform._get_form_class_bases()
-        self.assertIn(forms.Form, bases)
-        self.assertEqual(len(bases), 1)
-
-    def test_get_form_class_properties(self):
-        """
-        The _get_form_class_properties method should return a dict of properties for the form class
-        """
-        properties = self.omniform._get_form_class_properties()
-        self.assertIn('base_fields', properties)
-
     def test_get_form_class(self):
         """
         The _get_form_class method should return a form class
@@ -140,22 +125,6 @@ class OmniModelFormTestCase(TestCase):
         """
         form_class = self.omniform.get_form_class()
         self.assertTrue(issubclass(form_class, forms.ModelForm))
-
-    def test_get_form_class_properties(self):
-        """
-        The _get_form_class_properties method should return appropriate properties for the form
-        """
-        properties = self.omniform._get_form_class_properties()
-        self.assertIn('base_fields', properties)
-        self.assertIn('Meta', properties)
-
-    def test_get_form_meta_class(self):
-        """
-        The _get_form_meta_class method should return a meta class for the form
-        """
-        meta_class = self.omniform._get_form_meta_class()
-        self.assertEqual(meta_class.__name__, 'Meta')
-        self.assertEqual(meta_class.model, DummyModel)
 
     def test_get_model_field_choices(self):
         """
