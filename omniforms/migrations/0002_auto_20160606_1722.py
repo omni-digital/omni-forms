@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='OmniFormHandlerBase',
+            name='OmniFormHandler',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=255)),
@@ -27,15 +27,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OmniFormEmailHandler',
             fields=[
-                ('omniformhandlerbase_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='omniforms.OmniFormHandlerBase')),
+                ('omniformhandler_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='omniforms.OmniFormHandler')),
                 ('recipients', models.TextField()),
                 ('subject', models.TextField()),
                 ('template', models.TextField()),
             ],
-            bases=('omniforms.omniformhandlerbase',),
+            bases=('omniforms.omniformhandler',),
         ),
         migrations.AddField(
-            model_name='omniformhandlerbase',
+            model_name='omniformhandler',
             name='content_type',
             field=models.ForeignKey(to='contenttypes.ContentType'),
         ),
