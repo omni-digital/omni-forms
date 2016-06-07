@@ -353,6 +353,12 @@ class OmniFormEmailHandler(OmniFormHandler):
     recipients = models.TextField()
     template = models.TextField()
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Send Email'
+
     def _render_template(self, context_data):
         """
         Renders the template data specified against the instance
@@ -385,6 +391,12 @@ class OmniFormSaveInstanceHandler(OmniFormHandler):
     """
     Handler for saving the form instance
     """
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Save Data'
+
     def handle(self, form):
         """
         Handle method
