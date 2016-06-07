@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
-from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormAddHandlerForm, OmniModelFormCreateFieldForm
+from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormAddHandlerForm
 
 
 class OmniModelFormAddFieldFormTestCase(TestCase):
