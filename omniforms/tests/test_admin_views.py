@@ -48,16 +48,16 @@ class OmniModelFormAddFieldViewTestCase(OmniFormAdminTestCaseStub):
         """
         response = self.client.get(self.url)
         form = response.context['form']
-        self.assertIn(('title', 'title'), form.fields['model_field'].choices)
-        self.assertIn(('agree', 'agree'), form.fields['model_field'].choices)
-        self.assertIn(('some_date', 'some date'), form.fields['model_field'].choices)
-        self.assertIn(('some_datetime', 'some datetime'), form.fields['model_field'].choices)
-        self.assertIn(('some_decimal', 'some decimal'), form.fields['model_field'].choices)
-        self.assertIn(('some_email', 'some email'), form.fields['model_field'].choices)
-        self.assertIn(('some_float', 'some float'), form.fields['model_field'].choices)
-        self.assertIn(('some_integer', 'some integer'), form.fields['model_field'].choices)
-        self.assertIn(('some_time', 'some time'), form.fields['model_field'].choices)
-        self.assertIn(('some_url', 'some url'), form.fields['model_field'].choices)
+        self.assertIn(('title', 'title'), form.fields['choices'].choices)
+        self.assertIn(('agree', 'agree'), form.fields['choices'].choices)
+        self.assertIn(('some_date', 'some date'), form.fields['choices'].choices)
+        self.assertIn(('some_datetime', 'some datetime'), form.fields['choices'].choices)
+        self.assertIn(('some_decimal', 'some decimal'), form.fields['choices'].choices)
+        self.assertIn(('some_email', 'some email'), form.fields['choices'].choices)
+        self.assertIn(('some_float', 'some float'), form.fields['choices'].choices)
+        self.assertIn(('some_integer', 'some integer'), form.fields['choices'].choices)
+        self.assertIn(('some_time', 'some time'), form.fields['choices'].choices)
+        self.assertIn(('some_url', 'some url'), form.fields['choices'].choices)
 
     def test_raises_404(self):
         """
@@ -70,7 +70,7 @@ class OmniModelFormAddFieldViewTestCase(OmniFormAdminTestCaseStub):
         """
         The view should redirect to the CreateField view on successful form submission
         """
-        response = self.client.post(self.url, data={'model_field': 'title'}, follow=True)
+        response = self.client.post(self.url, data={'choices': 'title'}, follow=True)
         expected_url = reverse('admin:omniforms_omnimodelform_createfield', args=[self.omni_form.pk, 'title'])
         self.assertRedirects(response, expected_url)
 
