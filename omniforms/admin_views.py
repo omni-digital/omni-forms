@@ -3,56 +3,54 @@
 Admin views for the omniforms app
 """
 from __future__ import unicode_literals
+from braces.views import PermissionRequiredMixin
 from django import forms
 from django.contrib.admin.options import get_content_type_for_model, IS_POPUP_VAR, TO_FIELD_VAR
-from django.contrib.auth.decorators import permission_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.core.urlresolvers import reverse
 from django.forms.models import fields_for_model
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
-from django.utils.decorators import method_decorator
 from django.views.generic import FormView, CreateView, DetailView
 from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm
 from omniforms.models import OmniModelForm, OmniField, OmniRelatedField
 
 
-class AdminViewMixin(object):
+class AdminView(PermissionRequiredMixin, FormView):
     """
     Admin view mixin
     """
     admin_site = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """
         Sets up attributes on the instance
-
-        :param args: Default positional args
-        :type args: ()
 
         :param kwargs: Default keyword args
         :type kwargs: {}
         """
-        super(AdminViewMixin, self).__init__(*args, **kwargs)
+        super(AdminView, self).__init__(**kwargs)
         self.request = None
-        self.omni_form = None
         self.model = None
 
     def get_context_data(self, **kwargs):
         """
         Gets context data required for the admin view
 
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+
         :return: Dict of data for the admin template
         """
-        context_data = super(AdminViewMixin, self).get_context_data(**kwargs)
+        context_data = super(AdminView, self).get_context_data(**kwargs)
         opts = self.admin_site.model._meta
         context_data.update({
             'add': False,
             'change': False,
             'has_add_permission': self.admin_site.has_add_permission(self.request),
-            'has_change_permission': self.admin_site.has_change_permission(self.request, self.omni_form),
-            'has_delete_permission': self.admin_site.has_delete_permission(self.request, self.omni_form),
+            'has_change_permission': self.admin_site.has_change_permission(self.request),
+            'has_delete_permission': self.admin_site.has_delete_permission(self.request),
             'has_absolute_url': False,
             'absolute_url': None,
             'opts': opts,
@@ -67,27 +65,32 @@ class AdminViewMixin(object):
         return context_data
 
 
-class OmniModelFormAddFieldView(AdminViewMixin, FormView):
+class OmniFormAdminView(AdminView):
     """
-    View for adding a field to the Omni Model Form instance in the django admin
+    Admin view for working with omni forms
     """
-    form_class = OmniModelFormAddFieldForm
-    template_name = "admin/omniforms/omnimodelform/addfield_form.html"
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """
         Sets up attributes required for the view
-
-        :param args: Default positional args
-        :type args: ()
 
         :param kwargs: Default keyword args
         :type kwargs: {}
         """
-        super(OmniModelFormAddFieldView, self).__init__(*args, **kwargs)
+        super(OmniFormAdminView, self).__init__(**kwargs)
         self.omni_form = None
 
-    @method_decorator(permission_required('omniforms.add_omnifield'))
+    @staticmethod
+    def _load_omni_form(pk):
+        """
+        Loads the omin form instance from the database or raises an HTTP 404
+
+        :param pk: The id of the omni form instance
+        :type pk: int
+
+        :return: OmniForm model instance
+        """
+        return get_object_or_404(OmniModelForm, pk=pk)
+
     def dispatch(self, request, *args, **kwargs):
         """
         Custom dispatch method
@@ -104,8 +107,8 @@ class OmniModelFormAddFieldView(AdminViewMixin, FormView):
 
         :return: Http Response
         """
-        self.omni_form = get_object_or_404(OmniModelForm, pk=args[0])
-        return super(OmniModelFormAddFieldView, self).dispatch(request, *args, **kwargs)
+        self.omni_form = self._load_omni_form(args[0])
+        return super(OmniFormAdminView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """
@@ -117,9 +120,22 @@ class OmniModelFormAddFieldView(AdminViewMixin, FormView):
 
         :return: Dict of context data for rendering the template
         """
-        context_data = super(OmniModelFormAddFieldView, self).get_context_data(**kwargs)
-        context_data['omni_form'] = self.omni_form
+        context_data = super(OmniFormAdminView, self).get_context_data(**kwargs)
+        context_data.update({
+            'omni_form': self.omni_form,
+            'has_change_permission': self.admin_site.has_change_permission(self.request, self.omni_form),
+            'has_delete_permission': self.admin_site.has_delete_permission(self.request, self.omni_form),
+        })
         return context_data
+
+
+class OmniModelFormAddFieldView(OmniFormAdminView):
+    """
+    View for adding a field to the Omni Model Form instance in the django admin
+    """
+    form_class = OmniModelFormAddFieldForm
+    template_name = "admin/omniforms/omnimodelform/addfield_form.html"
+    permission_required = "omniforms.add_omnifield"
 
     def get_form_kwargs(self):
         """
@@ -147,11 +163,12 @@ class OmniModelFormAddFieldView(AdminViewMixin, FormView):
         ))
 
 
-class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
+class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):
     """
     Creates a form field for the specified form
     """
     template_name = 'admin/omniforms/omnimodelform/createfield_form.html'
+    permission_required = "omniforms.add_omnifield"
 
     def __init__(self, *args, **kwargs):
         """
@@ -167,7 +184,6 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
         self.model_field = None
         self.model_field_name = None
 
-    @method_decorator(permission_required('omniforms.add_omnifield'))
     def dispatch(self, request, *args, **kwargs):
         """
         Custom dispatch method
@@ -182,7 +198,7 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
         :param request: Http Request instance
         :type request: django.http.HttpRequest
         """
-        self.omni_form = get_object_or_404(OmniModelForm, pk=args[0])
+        self.omni_form = self._load_omni_form(args[0])
         self.model_field_name = args[1]
 
         if self.model_field_name in self.omni_form.get_used_field_names():
@@ -258,7 +274,6 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
         :return: Dict of context data for rendering the template
         """
         context_data = super(OmniModelFormCreateFieldView, self).get_context_data(**kwargs)
-        context_data['omni_form'] = self.omni_form
         context_data['model_field_name'] = self.model_field_name
         return context_data
 
@@ -297,33 +312,13 @@ class OmniModelFormCreateFieldView(AdminViewMixin, CreateView):
             return reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk])
 
 
-class OmniModelFormPreviewView(AdminViewMixin, DetailView):
+class OmniModelFormPreviewView(OmniFormAdminView, DetailView):
     """
     Preview view for the omni model form
     """
-    template_name = 'admin/omniforms/omnimodelform/preview.html'
     model = OmniModelForm
-    context_object_name = 'omni_form'
-
-    @method_decorator(permission_required('omniforms.add_omnifield'))
-    def dispatch(self, request, *args, **kwargs):
-        """
-        Custom dispatch method
-        Loads the form that the field is being added to before calling super
-
-        :param request: Http Request instance
-        :type request: django.http.HttpRequest
-
-        :param args: Default positional args
-        :type args: ()
-
-        :param kwargs: Default keyword args
-        :type kwargs: {}
-
-        :return: Http Response
-        """
-        self.omni_form = self.get_object()
-        return super(OmniModelFormPreviewView, self).dispatch(request, *args, **kwargs)
+    template_name = 'admin/omniforms/omnimodelform/preview.html'
+    permission_required = "omniforms.add_omnifield"
 
     def get_object(self, queryset=None):
         """
@@ -331,20 +326,12 @@ class OmniModelFormPreviewView(AdminViewMixin, DetailView):
 
         :return: OmniModelForm instance
         """
-        return get_object_or_404(OmniModelForm, pk=self.args[0])
+        return self.omni_form
 
-    def get_context_data(self, **kwargs):
+    def get_form_class(self):
         """
-        Custom implementation of get_context_data
-        Adds data to the context required by the admin view
+        Method for getting a form class for the preview view
 
-        :param kwargs: Default keyword args
-        :type kwargs: {}
-
-        :return: Dict of context data for rendering the template
+        :return: Form class
         """
-        form_class = self.omni_form.get_form_class()
-        context_data = super(OmniModelFormPreviewView, self).get_context_data(**kwargs)
-        context_data['omni_form'] = self.omni_form
-        context_data['form'] = form_class()
-        return context_data
+        return self.omni_form.get_form_class()
