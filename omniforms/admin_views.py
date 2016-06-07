@@ -10,7 +10,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.core.urlresolvers import reverse
 from django.forms import modelform_factory
-from django.forms.models import fields_for_model
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, CreateView, DetailView
@@ -33,7 +32,6 @@ class AdminView(PermissionRequiredMixin, FormView):
         """
         super(AdminView, self).__init__(**kwargs)
         self.request = None
-        self.model = None
 
     def get_context_data(self, **kwargs):
         """
@@ -305,14 +303,15 @@ class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
         :param request: Http Request instance
         :type request: django.http.HttpRequest
         """
-        self.omni_form = self._load_omni_form(args[0])
-        self.model_field_name = args[1]
+        omni_form_id = args[0]
+        model_field_name = args[1]
 
-        if self.model_field_name in self.omni_form.get_used_field_names():
+        self.omni_form = self._load_omni_form(omni_form_id)
+        if model_field_name in self.omni_form.get_used_field_names():
             raise Http404
 
         try:
-            self.model_field = self.omni_form.content_type.model_class()._meta.get_field(self.model_field_name)
+            self.model_field = self.omni_form.content_type.model_class()._meta.get_field(model_field_name)
         except FieldDoesNotExist:
             raise Http404
 
@@ -350,7 +349,7 @@ class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
 
         :return: Bool
         """
-        return self.get_initial().get('required', False)
+        return not self.model_field.blank and not self.model_field.null
 
     def get_context_data(self, **kwargs):
         """
@@ -363,7 +362,7 @@ class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
         :return: Dict of context data for rendering the template
         """
         context_data = super(OmniModelFormCreateFieldView, self).get_context_data(**kwargs)
-        context_data['model_field_name'] = self.model_field_name
+        context_data['model_field_name'] = self.model_field.name
         return context_data
 
     def get_initial(self):
@@ -373,18 +372,12 @@ class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
         :return: Dict of initial data
         """
         initial = super(OmniModelFormCreateFieldView, self).get_initial()
-        field = fields_for_model(
-            self.omni_form.content_type.model_class(),
-            fields=[self.model_field_name]
-        )[self.model_field_name]
-        initial['required'] = field.required
-        initial['label'] = field.label
-        initial['name'] = self.model_field_name
+        initial['required'] = self._field_is_required
+        initial['label'] = self.model_field.verbose_name.capitalize()
+        initial['name'] = self.model_field.name
         initial['widget_class'] = self.model.FORM_WIDGETS[0]
-
         if issubclass(self.model, OmniRelatedField):
-            initial['related_type'] = ContentType.objects.get_for_model(field.queryset.model).pk
-
+            initial['related_type'] = ContentType.objects.get_for_model(self.model_field.queryset.model).pk
         return initial
 
 
