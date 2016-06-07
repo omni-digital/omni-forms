@@ -381,6 +381,37 @@ class OmniFormEmailHandler(OmniFormHandler):
         )
 
 
+class OmniFormSaveInstanceHandler(OmniFormHandler):
+    """
+    Handler for saving the form instance
+    """
+    def handle(self, form):
+        """
+        Handle method
+        Sends an email to the specified recipients
+
+        :param form: Valid form instance
+        :type form: django.forms.Form
+        """
+        try:
+            save_instance = import_string('django.forms.models.save_instance')
+            commit = True
+
+            if form.instance.pk is None:
+                fail_message = 'created'
+            else:
+                fail_message = 'changed'
+
+            save_instance(
+                form, form.instance, form._meta.fields,
+                fail_message, commit, form._meta.exclude,
+                construct=False
+            )
+        except (ImportError, AttributeError):  # Django > 1.8
+            form.instance.save()
+            form._save_m2m()
+
+
 class FormGeneratorMixin(object):
     """
     Mixin containing methods for form generation

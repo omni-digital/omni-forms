@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from django.utils.module_loading import import_string
 from mock import Mock, patch
 from omniforms.forms import OmniModelFormBaseForm
@@ -31,10 +32,15 @@ from omniforms.models import (
     OmniManyToManyField,
     OmniForeignKeyField,
     OmniFormHandler,
-    OmniFormEmailHandler
+    OmniFormEmailHandler,
+    OmniFormSaveInstanceHandler
 )
+from omniforms.tests.factories import DummyModelFactory
 from omniforms.tests.utils import OmniFormTestCaseStub
 from omniforms.tests.models import DummyModel
+from unittest import skipUnless
+
+import django
 
 
 class OmniFormBaseTestCase(TestCase):
@@ -1027,3 +1033,64 @@ class OmniFormEmailHandlerTestCase(TestCase):
             ['a@example.com', 'b@example.com'],
             fail_silently=False
         )
+
+
+class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
+    """
+    Tests the OmniFormSaveInstanceHandler
+    """
+    def setUp(self):
+        super(OmniFormSaveInstanceHandlerTestCase, self).setUp()
+        self.handler = OmniFormSaveInstanceHandler(
+            name='Save instance',
+            order=0,
+            form=self.omni_form
+        )
+        self.handler.save()
+
+    def test_extends_base_class(self):
+        """
+        The model should extend OmniFormHandler
+        """
+        self.assertTrue(issubclass(OmniFormSaveInstanceHandler, OmniFormHandler))
+
+    @skipUnless(django.get_version() < '1.9', 'Tests functionality specific to django versions < 1.9')
+    @patch('django.forms.models.save_instance')
+    def test_handle_django_lte_18(self, patched_method):
+        """
+        The handle method should call down to the save_instance function
+        """
+        dummy_model = DummyModelFactory.create()
+        form_class = self.omni_form.get_form_class()
+        form = form_class(instance=dummy_model, data={})
+        instance = OmniFormSaveInstanceHandler()
+        instance.handle(form)
+        patched_method.assert_called_with(
+            form, form.instance, form._meta.fields,
+            'changed', True, form._meta.exclude,
+            construct=False
+        )
+
+    @skipUnless(django.get_version() >= '1.9', 'Tests functionality specific to django versions >= 1.9')
+    def test_handle(self):
+        """
+        The handle method should call down to the save_instance function
+        """
+        dummy_model = DummyModelFactory.create()
+        with patch.object(dummy_model, 'save') as patched_method:
+            form_class = self.omni_form.get_form_class()
+            form = form_class(instance=dummy_model, data={
+                'title': 'title',
+                'agree': True,
+                'some_datetime': timezone.now(),
+                'some_decimal': 0.3,
+                'some_email': 'test@example.com',
+                'some_float': 1.0,
+                'some_integer': 2,
+                'some_time': timezone.now().time(),
+                'some_url': 'http://www.google.com'
+            })
+            form.full_clean()
+            instance = OmniFormSaveInstanceHandler()
+            instance.handle(form)
+            patched_method.assert_called_once()
