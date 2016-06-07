@@ -510,7 +510,7 @@ class OmniModelFormBase(OmniFormBase):
     """
     Base class for the OmniModelForm model
     """
-    content_type = models.ForeignKey(ContentType, related_name='+', help_text='THis is some help text')
+    content_type = models.ForeignKey(ContentType, related_name='+')
 
     class Meta(object):
         """

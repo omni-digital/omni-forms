@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 from django.conf.urls import url
 from django.contrib.contenttypes.admin import GenericTabularInline
+from omniforms.admin_forms import OmniModelFormAdminForm
 from omniforms.admin_views import OmniModelFormAddFieldView, OmniModelFormCreateFieldView, OmniModelFormPreviewView
 from omniforms.admin_views import OmniModelFormAddHandlerView, OmniModelFormCreateHandlerView
 from omniforms.models import OmniModelForm, OmniField, OmniFormHandler
@@ -38,6 +39,7 @@ class OmniModelFormAdmin(admin.ModelAdmin):
     Admin class for OmniModelForm model instances
     """
     inlines = [OmniFieldAdmin, OmniHandlerAdmin]
+    form = OmniModelFormAdminForm
 
     def get_urls(self):
         """
