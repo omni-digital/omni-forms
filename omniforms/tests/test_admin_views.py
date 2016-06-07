@@ -301,3 +301,39 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
         self.user.user_permissions.remove(self.add_field_permission)
         response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, reverse('admin:index'))
+
+
+class OmniModelFormPreviewViewTestCase(OmniFormAdminTestCaseStub):
+    """
+    Tests the OmniModelFormPreviewView
+    """
+    def setUp(self):
+        super(OmniModelFormPreviewViewTestCase, self).setUp()
+        self.url = reverse('admin:omniforms_omnimodelform_preview', args=[self.omni_form.pk])
+
+    def test_renders(self):
+        """
+        The view should render
+        """
+        response = self.client.get(self.url)
+        self.assertTemplateUsed(response, 'admin/omniforms/omnimodelform/preview.html')
+        self.assertEqual(response.context['omni_form'], self.omni_form)
+        self.assertEqual(response.context['form'].__class__.__name__, self.omni_form.get_form_class().__name__)
+
+    def test_staff_required(self):
+        """
+        The view should not be accessible to non staff users
+        """
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get(self.url, follow=True)
+        redirect_url = '{0}?next={1}'.format(reverse('admin:login'), self.url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_permission_required(self):
+        """
+        The view should require the omniforms.add_omnifield permission
+        """
+        self.user.user_permissions.remove(self.add_field_permission)
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, reverse('admin:index'))

@@ -335,3 +335,16 @@ class OmniModelFormPreviewView(OmniFormAdminView, DetailView):
         :return: Form class
         """
         return self.omni_form.get_form_class()
+
+    def get_context_data(self, **kwargs):
+        """
+        Adds the omni form form instance to the context for the preview
+
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+
+        :return: Dict of context data for the template
+        """
+        context_data = super(OmniModelFormPreviewView, self).get_context_data(**kwargs)
+        context_data['form'] = self.get_form(self.get_form_class())
+        return context_data
