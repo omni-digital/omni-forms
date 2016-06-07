@@ -13,7 +13,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 setup(
     name='omniforms',
     version='0.1',
-    packages=find_packages(),
+    packages=find_packages(exclude=['app']),
     include_package_data=True,
     license='MIT',
     description='A simple Django app to build model forms using the admin interface.',
