@@ -13,8 +13,8 @@ from django.forms.models import fields_for_model
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, CreateView, DetailView
-from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm
-from omniforms.models import OmniModelForm, OmniField, OmniRelatedField
+from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm, OmniModelFormAddHandlerForm
+from omniforms.models import OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
 
 
 class AdminView(PermissionRequiredMixin, FormView):
@@ -129,13 +129,23 @@ class OmniFormAdminView(AdminView):
         return context_data
 
 
-class OmniModelFormAddFieldView(OmniFormAdminView):
+class OmniModelFormAddRelatedView(OmniFormAdminView):
     """
-    View for adding a field to the Omni Model Form instance in the django admin
+    View for adding a related model to the Omni Model Form instance in the django admin
     """
-    form_class = OmniModelFormAddFieldForm
-    template_name = "admin/omniforms/omnimodelform/addfield_form.html"
-    permission_required = "omniforms.add_omnifield"
+    form_class = None
+    template_name = None
+    permission_required = None
+    url_name = None
+
+    def _get_form_choices(self):
+        """
+        Method for getting choices for the form instance
+
+        :raises: NotImplementedError
+        """
+        raise NotImplementedError('\'{0}\' must implement its own _get_form_choices '
+                                  'method'.format(self.__class__.__name__))
 
     def get_form_kwargs(self):
         """
@@ -144,8 +154,8 @@ class OmniModelFormAddFieldView(OmniFormAdminView):
 
         :return: Dict of kwargs for the form
         """
-        form_kwargs = super(OmniModelFormAddFieldView, self).get_form_kwargs()
-        form_kwargs['model_fields'] = self.omni_form.get_model_field_choices()
+        form_kwargs = super(OmniModelFormAddRelatedView, self).get_form_kwargs()
+        form_kwargs['choices'] = self._get_form_choices()
         return form_kwargs
 
     def form_valid(self, form):
@@ -157,10 +167,49 @@ class OmniModelFormAddFieldView(OmniFormAdminView):
 
         :return: Http Response
         """
-        return HttpResponseRedirect(reverse(
-            'admin:omniforms_omnimodelform_createfield',
-            args=(self.omni_form.pk, form.cleaned_data['model_field'])
-        ))
+        url = reverse(self.url_name, args=(self.omni_form.pk, form.cleaned_data['choices']))
+        return HttpResponseRedirect(url)
+
+
+class OmniModelFormAddFieldView(OmniModelFormAddRelatedView):
+    """
+    View for adding a field to the Omni Model Form instance in the django admin
+    """
+    form_class = OmniModelFormAddFieldForm
+    template_name = "admin/omniforms/omnimodelform/addfield_form.html"
+    permission_required = "omniforms.add_omnifield"
+    url_name = 'admin:omniforms_omnimodelform_createfield'
+
+    def _get_form_choices(self):
+        """
+        Custom implementation of get_form_kwargs
+        Adds a list of model fields to the kwargs for use in the form
+
+        :return: Dict of kwargs for the form
+        """
+        return self.omni_form.get_model_field_choices()
+
+
+class OmniModelFormAddHandlerView(OmniModelFormAddRelatedView):
+    """
+    View for adding a handler to the Omni Model Form instance in the django admin
+    """
+    form_class = OmniModelFormAddHandlerForm
+    template_name = "admin/omniforms/omnimodelform/addhandler_form.html"
+    permission_required = "omniforms.add_omniformhandler"
+    url_name = 'admin:omniforms_omnimodelform_createhandler'
+
+    def _get_form_choices(self):
+        """
+        Method for getting form handler model class content types
+
+        :return: Queryset of ContentType model instances
+        """
+        content_types = filter(
+            lambda x: issubclass(x.model_class(), OmniFormHandler) and x.model_class() != OmniFormHandler,
+            ContentType.objects.all()
+        )
+        return ContentType.objects.filter(pk__in=[ct.pk for ct in content_types])
 
 
 class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):

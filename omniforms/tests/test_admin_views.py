@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
-from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm
-from omniforms.admin_views import OmniModelFormAddFieldView, OmniModelFormCreateFieldView
+from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm, OmniModelFormAddHandlerForm
+from omniforms.admin_views import OmniModelFormAddFieldView, OmniModelFormCreateFieldView, OmniModelFormAddHandlerView
 from omniforms.models import (
     OmniModelForm,
     OmniCharField,
@@ -19,7 +19,8 @@ from omniforms.models import (
     OmniEmailField,
     OmniIntegerField,
     OmniTimeField,
-    OmniUrlField
+    OmniUrlField,
+    OmniFormHandler
 )
 from omniforms.tests.utils import OmniFormAdminTestCaseStub
 
@@ -335,5 +336,69 @@ class OmniModelFormPreviewViewTestCase(OmniFormAdminTestCaseStub):
         The view should require the omniforms.add_omnifield permission
         """
         self.user.user_permissions.remove(self.add_field_permission)
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, reverse('admin:index'))
+
+
+class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
+    """
+    Tests the OmniModelFormAddHandlerView
+    """
+    def setUp(self):
+        super(OmniModelFormAddHandlerViewTestCase, self).setUp()
+        self.url = reverse('admin:omniforms_omnimodelform_addhandler', args=[self.omni_form.pk])
+
+    def test_renders(self):
+        """
+        The view should render
+        """
+        response = self.client.get(self.url)
+        self.assertIsInstance(response.context['view'], OmniModelFormAddHandlerView)
+        self.assertIsInstance(response.context['form'], OmniModelFormAddHandlerForm)
+        self.assertEqual(response.context['omni_form'], self.omni_form)
+        self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/addhandler_form.html")
+
+    def test_forms_model_fields_choices(self):
+        """
+        The forms choices.queryset should be constructed properly
+        """
+        response = self.client.get(self.url)
+        form = response.context['form']
+        for content_type in form.fields['choices'].queryset:
+            self.assertTrue(
+                issubclass(content_type.model_class(), OmniFormHandler) and
+                content_type.model_class() != OmniFormHandler
+            )
+
+    def test_raises_404(self):
+        """
+        The view should raise an HTTP 404 if the omni_form does not exist
+        """
+        response = self.client.get(reverse('admin:omniforms_omnimodelform_addhandler', args=[999999999]))
+        self.assertEqual(response.status_code, 404)
+
+    # def test_redirects_to_create_field_view(self):
+    #     """
+    #     The view should redirect to the CreateField view on successful form submission
+    #     """
+    #     response = self.client.post(self.url, data={'choices': 'title'}, follow=True)
+    #     expected_url = reverse('admin:omniforms_omnimodelform_createfield', args=[self.omni_form.pk, 'title'])
+    #     self.assertRedirects(response, expected_url)
+
+    def test_staff_required(self):
+        """
+        The view should not be accessible to non staff users
+        """
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get(self.url, follow=True)
+        redirect_url = '{0}?next={1}'.format(reverse('admin:login'), self.url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_permission_required(self):
+        """
+        The view should require the omniforms.add_omnifield permission
+        """
+        self.user.user_permissions.remove(self.add_handler_permission)
         response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, reverse('admin:index'))
