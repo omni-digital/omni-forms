@@ -41,6 +41,25 @@ class OmniModelFormAdmin(admin.ModelAdmin):
     inlines = [OmniFieldAdmin, OmniHandlerAdmin]
     form = OmniModelFormAdminForm
 
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Method for getting readonly fields for the admin class form
+        Content Type can only be set at the point of creation so make it
+        readonly if we're editing a persisted model instance
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param obj: Model instance
+        :type obj: omniforms.models.OmniModelForm
+
+        :return: tuple of readonly field names
+        """
+        readonly_fields = super(OmniModelFormAdmin, self).get_readonly_fields(request, obj=obj)
+        if obj and obj.pk:
+            readonly_fields += ('content_type',)
+        return readonly_fields
+
     def get_urls(self):
         """
         Method for getting urls for the admin class

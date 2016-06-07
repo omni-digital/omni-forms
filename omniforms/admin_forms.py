@@ -66,7 +66,8 @@ class OmniModelFormAdminForm(forms.ModelForm):
         :type kwargs: {}
         """
         super(OmniModelFormAdminForm, self).__init__(*args, **kwargs)
-        self.fields['content_type'].queryset = self.get_permitted_content_types()
+        if 'content_type' in self.fields:  # content_type could be a readonly field
+            self.fields['content_type'].queryset = self.get_permitted_content_types()
 
     @staticmethod
     def get_permitted_content_types():

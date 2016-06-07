@@ -6,9 +6,11 @@ from __future__ import unicode_literals
 from django.contrib.admin import ModelAdmin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.core.urlresolvers import reverse, resolve
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
+from mock import Mock
 from omniforms.admin import OmniFieldAdmin, OmniModelFormAdmin, OmniHandlerAdmin
-from omniforms.models import OmniField, OmniFormHandler
+from omniforms.models import OmniField, OmniFormHandler, OmniModelForm
+from omniforms.tests.factories import OmniModelFormFactory
 from omniforms.tests.utils import OmniFormTestCaseStub
 
 
@@ -126,3 +128,25 @@ class OmniModelFormAdminTestCase(OmniFormTestCaseStub):
         """
         resolved = resolve(reverse('admin:omniforms_omnimodelform_createfield', args=[self.omni_form.pk, 'title']))
         self.assertEqual(resolved[0].__name__, 'OmniModelFormCreateFieldView')
+
+    def test_get_readonly_fields_with_new_instance(self):
+        """
+        The content_type field should not be readonly when adding a new instance
+        """
+        request = RequestFactory().get('/fake-path/')
+        instance = OmniModelForm()
+        admin_instance = OmniModelFormAdmin(OmniModelForm, Mock())
+        readonly_fields = admin_instance.get_readonly_fields(request)
+        self.assertNotIn('content_type', readonly_fields)
+        readonly_fields = admin_instance.get_readonly_fields(request, obj=instance)
+        self.assertNotIn('content_type', readonly_fields)
+
+    def test_get_readonly_fields_with_existing_instance(self):
+        """
+        The content_type field should be readonly when editing an existing instance
+        """
+        request = RequestFactory().get('/fake-path/')
+        instance = OmniModelFormFactory.create()
+        admin_instance = OmniModelFormAdmin(OmniModelForm, Mock())
+        readonly_fields = admin_instance.get_readonly_fields(request, obj=instance)
+        self.assertIn('content_type', readonly_fields)
