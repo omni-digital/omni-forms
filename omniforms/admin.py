@@ -8,7 +8,7 @@ from django.conf.urls import url
 from django.contrib.contenttypes.admin import GenericTabularInline
 from omniforms.admin_views import OmniModelFormAddFieldView, OmniModelFormCreateFieldView, OmniModelFormPreviewView
 from omniforms.admin_views import OmniModelFormAddHandlerView, OmniModelFormCreateHandlerView
-from omniforms.models import OmniModelForm, OmniField
+from omniforms.models import OmniModelForm, OmniField, OmniFormHandler
 
 
 class OmniFieldAdmin(GenericTabularInline):
@@ -18,14 +18,26 @@ class OmniFieldAdmin(GenericTabularInline):
     model = OmniField
     extra = 0
     max_num = 0
-    fields = ('order',)
+    fields = ('name', 'order',)
+    readonly_fields = ('name',)
+
+
+class OmniHandlerAdmin(GenericTabularInline):
+    """
+    Generic admin for OmniFormHandler models
+    """
+    model = OmniFormHandler
+    extra = 0
+    max_num = 0
+    fields = ('name', 'order',)
+    readonly_fields = ('name',)
 
 
 class OmniModelFormAdmin(admin.ModelAdmin):
     """
     Admin class for OmniModelForm model instances
     """
-    inlines = [OmniFieldAdmin]
+    inlines = [OmniFieldAdmin, OmniHandlerAdmin]
 
     def get_urls(self):
         """

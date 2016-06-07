@@ -376,7 +376,7 @@ class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
         initial['name'] = self.model_field.name
         initial['widget_class'] = self.model.FORM_WIDGETS[0]
         if issubclass(self.model, OmniRelatedField):
-            initial['related_type'] = ContentType.objects.get_for_model(self.model_field.queryset.model).pk
+            initial['related_type'] = ContentType.objects.get_for_model(self.model_field.rel.to).pk
         return initial
 
 
