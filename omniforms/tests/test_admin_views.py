@@ -6,8 +6,13 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
-from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm, OmniModelFormAddHandlerForm
-from omniforms.admin_views import OmniModelFormAddFieldView, OmniModelFormCreateFieldView, OmniModelFormAddHandlerView
+from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormCreateFieldForm
+from omniforms.admin_views import (
+    OmniModelFormAddFieldView,
+    OmniModelFormCreateFieldView,
+    OmniModelFormAddHandlerView,
+    OmniModelFormCreateHandlerView
+)
 from omniforms.models import (
     OmniModelForm,
     OmniCharField,
@@ -20,7 +25,8 @@ from omniforms.models import (
     OmniIntegerField,
     OmniTimeField,
     OmniUrlField,
-    OmniFormHandler
+    OmniFormHandler,
+    OmniFormEmailHandler
 )
 from omniforms.tests.utils import OmniFormAdminTestCaseStub
 
@@ -39,7 +45,7 @@ class OmniModelFormAddFieldViewTestCase(OmniFormAdminTestCaseStub):
         """
         response = self.client.get(self.url)
         self.assertIsInstance(response.context['view'], OmniModelFormAddFieldView)
-        self.assertIsInstance(response.context['form'], OmniModelFormAddFieldForm)
+        self.assertIsInstance(response.context['form'], OmniModelFormAddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/addfield_form.html")
 
@@ -354,7 +360,7 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         """
         response = self.client.get(self.url)
         self.assertIsInstance(response.context['view'], OmniModelFormAddHandlerView)
-        self.assertIsInstance(response.context['form'], OmniModelFormAddHandlerForm)
+        self.assertIsInstance(response.context['form'], OmniModelFormAddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/addhandler_form.html")
 
@@ -364,7 +370,8 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         """
         response = self.client.get(self.url)
         form = response.context['form']
-        for content_type in form.fields['choices'].queryset:
+        for content_type_id, content_type_name in form.fields['choices'].choices:
+            content_type = ContentType.objects.get(pk=content_type_id)
             self.assertTrue(
                 issubclass(content_type.model_class(), OmniFormHandler) and
                 content_type.model_class() != OmniFormHandler
@@ -377,13 +384,14 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         response = self.client.get(reverse('admin:omniforms_omnimodelform_addhandler', args=[999999999]))
         self.assertEqual(response.status_code, 404)
 
-    # def test_redirects_to_create_field_view(self):
-    #     """
-    #     The view should redirect to the CreateField view on successful form submission
-    #     """
-    #     response = self.client.post(self.url, data={'choices': 'title'}, follow=True)
-    #     expected_url = reverse('admin:omniforms_omnimodelform_createfield', args=[self.omni_form.pk, 'title'])
-    #     self.assertRedirects(response, expected_url)
+    def test_redirects_to_create_handler_view(self):
+        """
+        The view should redirect to the CreateHandler view on successful form submission
+        """
+        content_type = ContentType.objects.get_for_model(OmniFormEmailHandler)
+        response = self.client.post(self.url, data={'choices': content_type.pk}, follow=True)
+        expected_url = reverse('admin:omniforms_omnimodelform_createhandler', args=[self.omni_form.pk, content_type.pk])
+        self.assertRedirects(response, expected_url)
 
     def test_staff_required(self):
         """
@@ -402,3 +410,114 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         self.user.user_permissions.remove(self.add_handler_permission)
         response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, reverse('admin:index'))
+
+
+class OmniModelFormCreateHandlerViewTestCase(OmniFormAdminTestCaseStub):
+    """
+    Tests the OmniModelFormCreateHandlerView
+    """
+    def setUp(self):
+        super(OmniModelFormCreateHandlerViewTestCase, self).setUp()
+        self.content_type = ContentType.objects.get_for_model(OmniFormEmailHandler)
+        self.url = reverse(
+            'admin:omniforms_omnimodelform_createhandler',
+            args=[self.omni_form.pk, self.content_type.pk]
+        )
+        self.form_data = {
+            'name': 'some_date',
+            'order': 0,
+            'content_type': ContentType.objects.get_for_model(self.omni_form).pk,
+            'object_id': self.omni_form.pk,
+            'subject': 'This is a test',
+            'recipients': 'a@b.com',
+            'template': 'Hi there {{ user }}'
+        }
+
+    def test_renders(self):
+        """
+        The view should render
+        """
+        response = self.client.get(self.url)
+        self.assertTemplateUsed(response, 'admin/omniforms/omnimodelform/createhandler_form.html')
+        self.assertEqual(int(response.context['handler_content_type_id']), self.content_type.pk)
+        self.assertEqual(response.context['omni_form'], self.omni_form)
+        self.assertIsInstance(response.context['view'], OmniModelFormCreateHandlerView)
+        self.assertIsInstance(response.context['form'], forms.ModelForm)
+
+    def test_raises_404_if_content_type_not_exists(self):
+        """
+        The view should raise an HTTP 404 response if the specified content type does not exist
+        """
+        url = reverse('admin:omniforms_omnimodelform_createhandler', args=[self.omni_form.pk, 9999])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_raises_404_if_content_type_invalid(self):
+        """
+        The view should raise an HTTP 404 response if the specified content type is not a subclass of OmniFormHandler
+        """
+        invalid_content_type = ContentType.objects.get_for_model(OmniCharField)
+        url = reverse('admin:omniforms_omnimodelform_createhandler', args=[self.omni_form.pk, invalid_content_type.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_raises_404_if_content_type_is_base_form_handler(self):
+        """
+        The view should raise an HTTP 404 response if the specified content type is the base OmniFormHandler
+        """
+        invalid_content_type = ContentType.objects.get_for_model(OmniFormHandler)
+        url = reverse('admin:omniforms_omnimodelform_createhandler', args=[self.omni_form.pk, invalid_content_type.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_form_hidden_widgets(self):
+        """
+        The form should use hidden input widgets for the content_type and object_id fields
+        """
+        response = self.client.get(self.url)
+        self.assertIsInstance(response.context['form'].fields['content_type'].widget, forms.HiddenInput)
+        self.assertIsInstance(response.context['form'].fields['object_id'].widget, forms.HiddenInput)
+
+    def test_form_initial_data(self):
+        """
+        The forms initial data should be appropriate
+        """
+        response = self.client.get(self.url)
+        self.assertEqual(response.context['form'].initial['object_id'], self.omni_form.pk)
+        self.assertEqual(
+            response.context['form'].initial['content_type'],
+            ContentType.objects.get_for_model(OmniModelForm).pk
+        )
+
+    def test_staff_required(self):
+        """
+        The view should not be accessible to non staff users
+        """
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get(self.url, follow=True)
+        redirect_url = '{0}?next={1}'.format(reverse('admin:login'), self.url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_permission_required(self):
+        """
+        The view should require the omniforms.add_omnihandler permission
+        """
+        self.user.user_permissions.remove(self.add_handler_permission)
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, reverse('admin:index'))
+
+    def test_redirects_to_change_form(self):
+        """
+        The view should redirect to the change form
+        """
+        response = self.client.post(self.url, self.form_data, follow=True)
+        self.assertRedirects(response, reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk]))
+
+    def test_redirects_to_add_form(self):
+        """
+        The view should redirect to the add form
+        """
+        self.form_data.update({'_addanother': 'Save and add another'})
+        response = self.client.post(self.url, self.form_data, follow=True)
+        self.assertRedirects(response, reverse('admin:omniforms_omnimodelform_addhandler', args=[self.omni_form.pk]))

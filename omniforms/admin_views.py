@@ -9,11 +9,12 @@ from django.contrib.admin.options import get_content_type_for_model, IS_POPUP_VA
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.core.urlresolvers import reverse
+from django.forms import modelform_factory
 from django.forms.models import fields_for_model
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, CreateView, DetailView
-from omniforms.admin_forms import OmniModelFormAddFieldForm, OmniModelFormCreateFieldForm, OmniModelFormAddHandlerForm
+from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormCreateFieldForm
 from omniforms.models import OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
 
 
@@ -163,7 +164,7 @@ class OmniModelFormAddRelatedView(OmniFormAdminView):
         Called when the submitted form is valid
 
         :param form: Valid form instance
-        :type form: omniforms.admin_forms.OmniModelFormAddFieldForm
+        :type form: omniforms.admin_forms.OmniModelFormAddRelatedForm
 
         :return: Http Response
         """
@@ -175,7 +176,7 @@ class OmniModelFormAddFieldView(OmniModelFormAddRelatedView):
     """
     View for adding a field to the Omni Model Form instance in the django admin
     """
-    form_class = OmniModelFormAddFieldForm
+    form_class = OmniModelFormAddRelatedForm
     template_name = "admin/omniforms/omnimodelform/addfield_form.html"
     permission_required = "omniforms.add_omnifield"
     url_name = 'admin:omniforms_omnimodelform_createfield'
@@ -194,7 +195,7 @@ class OmniModelFormAddHandlerView(OmniModelFormAddRelatedView):
     """
     View for adding a handler to the Omni Model Form instance in the django admin
     """
-    form_class = OmniModelFormAddHandlerForm
+    form_class = OmniModelFormAddRelatedForm
     template_name = "admin/omniforms/omnimodelform/addhandler_form.html"
     permission_required = "omniforms.add_omniformhandler"
     url_name = 'admin:omniforms_omnimodelform_createhandler'
@@ -209,15 +210,72 @@ class OmniModelFormAddHandlerView(OmniModelFormAddRelatedView):
             lambda x: issubclass(x.model_class(), OmniFormHandler) and x.model_class() != OmniFormHandler,
             ContentType.objects.all()
         )
-        return ContentType.objects.filter(pk__in=[ct.pk for ct in content_types])
+        return [(content_type.pk, '{0}'.format(content_type)) for content_type in content_types]
 
 
-class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):
+class OmniModelFormCreateRelatedView(OmniFormAdminView, CreateView):
+    """
+    Base view class for creating OmniForm related objects
+    """
+    form_class = forms.ModelForm
+    add_another_url_name = 'admin:omniforms_omnimodelform_addfield'
+    exclude = ()
+
+    def get_initial(self):
+        """
+        Gets initial data for the form
+
+        :return: Dict of initial data
+        """
+        initial = super(OmniModelFormCreateRelatedView, self).get_initial()
+        initial['content_type'] = ContentType.objects.get_for_model(self.omni_form).pk
+        initial['object_id'] = self.omni_form.pk
+        return initial
+
+    def _get_form_widgets(self):
+        """
+        Returns a dict of form widgets keyed by field name
+
+        :return: Dict of field widgets
+        """
+        return {
+            'object_id': forms.HiddenInput,
+            'content_type': forms.HiddenInput,
+        }
+
+    def get_form_class(self):
+        """
+        Method for generating a form class for the view
+
+        :return: ModelForm class
+        """
+        return modelform_factory(
+            self.model,
+            exclude=self.exclude,
+            form=self.form_class,
+            widgets=self._get_form_widgets()
+        )
+
+    def get_success_url(self):
+        """
+        Method for getting the success URL to redirect the user to on successful form submission
+
+        :return: Url to redirect the user to
+        """
+        if '_addanother' in self.request.POST:
+            return reverse(self.add_another_url_name, args=[self.omni_form.pk])
+        else:
+            return reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk])
+
+
+class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
     """
     Creates a form field for the specified form
     """
     template_name = 'admin/omniforms/omnimodelform/createfield_form.html'
     permission_required = "omniforms.add_omnifield"
+    form_class = OmniModelFormCreateFieldForm
+    exclude = ('id', 'real_type')
 
     def __init__(self, *args, **kwargs):
         """
@@ -261,19 +319,17 @@ class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):
         self.model = OmniField.get_concrete_class_for_model_field(self.model_field)
         return super(OmniModelFormCreateFieldView, self).dispatch(request, *args, **kwargs)
 
-    def _get_form_meta_class(self):
+    def _get_form_widgets(self):
         """
-        Generates a meta class for the model form
-        Specifies which fields to exclude from the form and specifies some default widgets
+        Returns a dict of form widgets keyed by field name
 
-        :return: Class
+        :return: Dict of field widgets
         """
-        widgets = {
+        widgets = super(OmniModelFormCreateFieldView, self)._get_form_widgets()
+        widgets.update({
             'name': forms.HiddenInput,
             'widget_class': forms.HiddenInput,
-            'object_id': forms.HiddenInput,
-            'content_type': forms.HiddenInput,
-        }
+        })
 
         if self._field_is_required:
             widgets['required'] = forms.HiddenInput
@@ -285,11 +341,7 @@ class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):
             choices = map(lambda x: (x, x.rsplit('.')[-1]), self.model.FORM_WIDGETS)
             widgets['widget_class'] = forms.Select(choices=choices)
 
-        return type(str('Meta'), (object,), {
-            'exclude': ('id', 'real_type'),
-            'model': self.model,
-            'widgets': widgets
-        })
+        return widgets
 
     @property
     def _field_is_required(self):
@@ -299,18 +351,6 @@ class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):
         :return: Bool
         """
         return self.get_initial().get('required', False)
-
-    def get_form_class(self):
-        """
-        Method for generating a form class for the view
-
-        :return: ModelForm class
-        """
-        return type(
-            str('OmniFieldModelForm'),
-            (OmniModelFormCreateFieldForm,),
-            {'Meta': self._get_form_meta_class()}
-        )
 
     def get_context_data(self, **kwargs):
         """
@@ -340,8 +380,6 @@ class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):
         initial['required'] = field.required
         initial['label'] = field.label
         initial['name'] = self.model_field_name
-        initial['content_type'] = ContentType.objects.get_for_model(self.omni_form).pk
-        initial['object_id'] = self.omni_form.pk
         initial['widget_class'] = self.model.FORM_WIDGETS[0]
 
         if issubclass(self.model, OmniRelatedField):
@@ -349,16 +387,57 @@ class OmniModelFormCreateFieldView(OmniFormAdminView, CreateView):
 
         return initial
 
-    def get_success_url(self):
-        """
-        Method for getting the success URL to redirect the user to on successful form submission
 
-        :return: Url to redirect the user to
+class OmniModelFormCreateHandlerView(OmniModelFormCreateRelatedView):
+    """
+    Creates a form handler for the specified form
+    """
+    template_name = 'admin/omniforms/omnimodelform/createhandler_form.html'
+    permission_required = "omniforms.add_omniformhandler"
+    add_another_url_name = 'admin:omniforms_omnimodelform_addhandler'
+
+    def __init__(self, **kwargs):
+        super(OmniModelFormCreateHandlerView, self).__init__(**kwargs)
+        self.content_type_id = None
+
+    def dispatch(self, request, *args, **kwargs):
         """
-        if '_addanother' in self.request.POST:
-            return reverse('admin:omniforms_omnimodelform_addfield', args=[self.omni_form.pk])
+        Custom dispatch method
+        Gets the omni form instance and sets the model for the view
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+        """
+        self.content_type_id = args[1]
+        try:
+            content_type = ContentType.objects.get(pk=self.content_type_id)
+        except ContentType.DoesNotExist:
+            raise Http404
         else:
-            return reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk])
+            model_class = content_type.model_class()
+            if not issubclass(model_class, OmniFormHandler) or model_class == OmniFormHandler:
+                raise Http404
+            self.model = model_class
+        return super(OmniModelFormCreateHandlerView, self).dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """
+        Adds the handler content type id to the context
+
+        :param kwargs: Default positional args
+        :type kwargs: {}
+
+        :return: Dict of context data for rendering the template
+        """
+        context_data = super(OmniModelFormCreateHandlerView, self).get_context_data(**kwargs)
+        context_data['handler_content_type_id'] = self.content_type_id
+        return context_data
 
 
 class OmniModelFormPreviewView(OmniFormAdminView, DetailView):

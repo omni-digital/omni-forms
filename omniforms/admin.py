@@ -7,7 +7,7 @@ from django.contrib import admin
 from django.conf.urls import url
 from django.contrib.contenttypes.admin import GenericTabularInline
 from omniforms.admin_views import OmniModelFormAddFieldView, OmniModelFormCreateFieldView, OmniModelFormPreviewView
-from omniforms.admin_views import OmniModelFormAddHandlerView
+from omniforms.admin_views import OmniModelFormAddHandlerView, OmniModelFormCreateHandlerView
 from omniforms.models import OmniModelForm, OmniField
 
 
@@ -54,6 +54,11 @@ class OmniModelFormAdmin(admin.ModelAdmin):
                 r'^(.+)/add-handler/$',
                 self.admin_site.admin_view(OmniModelFormAddHandlerView.as_view(admin_site=self)),
                 name='omniforms_omnimodelform_addhandler'
+            ),
+            url(
+                r'^(.+)/add-handler/(.+)/$',
+                self.admin_site.admin_view(OmniModelFormCreateHandlerView.as_view(admin_site=self)),
+                name='omniforms_omnimodelform_createhandler'
             ),
         ] + super(OmniModelFormAdmin, self).get_urls()
 

@@ -4,10 +4,9 @@ Admin forms for the omniforms app
 """
 from __future__ import unicode_literals
 from django import forms
-from django.contrib.contenttypes.models import ContentType
 
 
-class OmniModelFormAddFieldForm(forms.Form):
+class OmniModelFormAddRelatedForm(forms.Form):
     """
     Form for chosing a field to add to the omni form
     """
@@ -19,24 +18,8 @@ class OmniModelFormAddFieldForm(forms.Form):
         Sets choices on the 'field' field
         """
         choices = kwargs.pop('choices')
-        super(OmniModelFormAddFieldForm, self).__init__(*args, **kwargs)
+        super(OmniModelFormAddRelatedForm, self).__init__(*args, **kwargs)
         self.fields['choices'].choices = choices
-
-
-class OmniModelFormAddHandlerForm(forms.Form):
-    """
-    Form for chosing a handler to add to the omni form
-    """
-    choices = forms.ModelChoiceField(queryset=ContentType.objects.none())
-
-    def __init__(self, *args, **kwargs):
-        """
-        Custom init method
-        Sets choices on the 'field' field
-        """
-        choices = kwargs.pop('choices')
-        super(OmniModelFormAddHandlerForm, self).__init__(*args, **kwargs)
-        self.fields['choices'].queryset = choices
 
 
 class OmniModelFormCreateFieldForm(forms.ModelForm):
