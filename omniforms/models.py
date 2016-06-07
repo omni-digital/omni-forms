@@ -271,6 +271,7 @@ class OmniFormHandler(models.Model):
     """
     name = models.CharField(max_length=255)
     order = models.IntegerField(default=0)
+    real_type = models.ForeignKey(ContentType, related_name='+')  # The Real OmniField type (set in the save method)
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
@@ -288,6 +289,47 @@ class OmniFormHandler(models.Model):
         :return: The instance name
         """
         return self.name
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        """
+        Custom save method
+        Sets the actual content type on the instance if it doesn't exist already
+
+        :param force_insert: Whether or not to force the insert
+        :type force_insert: bool
+
+        :param force_update: Whether or not to force the update
+        :type force_update: bool
+
+        :param using: Database connection to use
+        :type using: connection
+
+        :param update_fields: Fields to update
+        :type update_fields: list
+
+        :return: Saved instance
+        """
+        if not self.real_type_id:
+            self.real_type = ContentType.objects.get_for_model(self)
+        super(OmniFormHandler, self).save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields
+        )
+
+    @cached_property
+    def specific(self):
+        """
+        Method for getting the most specific subclassed version of this instance
+
+        :return: OmniField model subclass instance
+        """
+        real_type = self.real_type
+        if isinstance(self, real_type.model_class()):
+            return self
+        else:
+            return self.real_type.get_object_for_this_type(pk=self.pk)
 
     def handle(self, form):
         """

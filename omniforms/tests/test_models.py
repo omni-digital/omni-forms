@@ -899,6 +899,56 @@ class OmniFormHandlerTestCase(TestCase):
         self.assertRaises(NotImplementedError, instance.handle, Mock())
 
 
+class OmniFormHandlerInstanceTestCase(OmniFormTestCaseStub):
+    """
+    Tests the OmniFormHandler class
+    """
+    def setUp(self):
+        super(OmniFormHandlerInstanceTestCase, self).setUp()
+        self.handler = OmniFormEmailHandler(
+            name='Send Email',
+            order=0,
+            template='Hello {{ user }}',
+            recipients='a@example.com,b@example.com',
+            subject='This is a test',
+            form=self.omni_form
+        )
+        self.handler.save()
+
+    def test_save_sets_real_type(self):
+        """
+        The OmniField save method should set the real_type field
+        """
+        self.assertEqual(self.handler.real_type, ContentType.objects.get_for_model(OmniFormEmailHandler))
+
+    def test_specific(self):
+        """
+        The specific property should return the specific instance
+        """
+        base_instance = OmniFormHandler.objects.get(pk=self.handler.pk)
+        instance = base_instance.specific
+        self.assertIsInstance(base_instance, OmniFormHandler)
+        self.assertNotIsInstance(base_instance, OmniFormEmailHandler)
+        self.assertIsInstance(instance, OmniFormEmailHandler)
+
+    def test_specific_returns_self(self):
+        """
+        The specific property should return the instance if it is already the most specific version
+        """
+        self.assertEqual(self.handler, self.handler.specific)
+
+    def test_specific_cached(self):
+        """
+        The specific property should cache the result
+        """
+        base_instance = OmniFormHandler.objects.get(pk=self.handler.pk)
+        with patch.object(base_instance.real_type, 'get_object_for_this_type') as patched_method:
+            patched_method.return_value = self.handler
+            assert base_instance.specific
+            assert base_instance.specific
+            self.assertEqual(patched_method.call_count, 1)
+
+
 class OmniFormEmailHandlerTestCase(TestCase):
     """
     Tests the OmniFormEmailHandler

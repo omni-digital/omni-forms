@@ -217,7 +217,7 @@ class OmniModelFormCreateRelatedView(OmniFormAdminView, CreateView):
     """
     form_class = forms.ModelForm
     add_another_url_name = 'admin:omniforms_omnimodelform_addfield'
-    exclude = ()
+    exclude = ('id', 'real_type')
 
     def get_initial(self):
         """
@@ -273,7 +273,6 @@ class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
     template_name = 'admin/omniforms/omnimodelform/createfield_form.html'
     permission_required = "omniforms.add_omnifield"
     form_class = OmniModelFormCreateFieldForm
-    exclude = ('id', 'real_type')
 
     def __init__(self, *args, **kwargs):
         """
