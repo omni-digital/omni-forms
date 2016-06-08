@@ -38,6 +38,8 @@ OMNI_FORMS_CONTENT_TYPES = [
 ]
 ```
 
+If the `OMNI_FORMS_CONTENT_TYPES` setting is not defined it will default to `None` and the `OMNI_FORMS_EXCLUDED_CONTENT_TYPES` setting will be used instead (default values or otherwise).
+
 ## OMNI_FORMS_EXCLUDED_CONTENT_TYPES
 
 It is possible to prevent model forms from being created for specific apps or specific models using the `OMNI_FORMS_EXCLUDED_CONTENT_TYPES` setting.
