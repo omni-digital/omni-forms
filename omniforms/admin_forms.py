@@ -7,6 +7,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models.query import Q
 from omniforms.models import OmniModelForm
 import json
 
@@ -70,25 +71,54 @@ class OmniModelFormAdminForm(forms.ModelForm):
             self.fields['content_type'].queryset = self.get_permitted_content_types()
 
     @staticmethod
-    def get_permitted_content_types():
+    def _query_filters(the_dict):
+        """
+        Method for generating Query filters to use when querying the ContentType model
+        Used to either remove certain types of content from the omni model forms or to
+        explicitly define which apps/models may be associated with an omni model form
+
+        :param the_dict: Dictionary to construct the filters from
+        :type the_dict: {}
+
+        :return: Dict of model filters
+        """
+        kwargs = {}
+        try:
+            kwargs['app_label'] = the_dict['app_label']
+        except KeyError:
+            raise ImproperlyConfigured(
+                'Dictionary \'{0}\' must contain an '
+                'app_label'.format(json.dumps(the_dict))
+            )
+
+        if 'model' in the_dict:
+            kwargs['model'] = the_dict['model']
+
+        return kwargs
+
+    def get_permitted_content_types(self):
         """
         Method for getting a queryset of permitted content types for the model form
 
         :return: QuerySet of ContentTYpe model instances
         """
+        content_types = getattr(settings, 'OMNI_FORMS_CONTENT_TYPES', None)
         exclusions = getattr(settings, 'OMNI_FORMS_EXCLUDED_CONTENT_TYPES', [{'app_label': 'omniforms'}])
         qs = ContentType.objects.all()
-        for exclusion in exclusions:
-            kwargs = {}
-            try:
-                kwargs['app_label'] = exclusion['app_label']
-            except KeyError:
-                raise ImproperlyConfigured(
-                    'Dictionary \'{0}\' must contain an '
-                    'app_label'.format(json.dumps(exclusion))
-                )
 
-            if 'model' in exclusion:
-                kwargs['model'] = exclusion['model']
-            qs = qs.exclude(**kwargs)
+        if content_types:
+            query = None
+            for content_type in content_types:
+                kwargs = self._query_filters(content_type)
+                if query is None:
+                    query = Q(**kwargs)
+                else:
+                    query = query | Q(**kwargs)
+            qs = qs.filter(query)
+
+        elif exclusions:
+            for exclusion in exclusions:
+                kwargs = self._query_filters(exclusion)
+                qs = qs.exclude(**kwargs)
+
         return qs

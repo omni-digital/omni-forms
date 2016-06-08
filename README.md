@@ -20,7 +20,26 @@ The OmniForms application can be configured in a number of different ways:
 
 ### Permitted content types
 
-You may not want administrators to be able to create forms for _all_ different types of content in your database.
+You may not want administrators to be able to create forms for _all_ different types of content in your database.  There are 2 different ways of restricting the types of content that can be associated with model forms created through the admin interface:
+
+## OMNI_FORMS_CONTENT_TYPES
+
+It is possible to define specific apps and/or models which can be used by the omniforms app using the `OMNI_FORMS_CONTENT_TYPES` setting.
+
+For example:
+
+The following configuration would allow _any_ of the models in the app `foo` and the `modelone` and `modeltwo` models within the `bar` app to be used.
+
+```
+OMNI_FORMS_CONTENT_TYPES = [
+    {'app_label': 'foo'},
+    {'app_label': 'bar', 'model': 'modelone'},
+    {'app_label': 'bar', 'model': 'modeltwo'},
+]
+```
+
+## OMNI_FORMS_EXCLUDED_CONTENT_TYPES
+
 It is possible to prevent model forms from being created for specific apps or specific models using the `OMNI_FORMS_EXCLUDED_CONTENT_TYPES` setting.
 
 For example:

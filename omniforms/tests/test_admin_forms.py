@@ -77,3 +77,13 @@ class OmniModelFormAdminFormTestCase(TestCase):
         """
         form = OmniModelFormAdminForm()
         self.assertEqual(form.fields['content_type'].queryset.filter(app_label='omniforms').count(), 0)
+
+    @override_settings(OMNI_FORMS_CONTENT_TYPES=[{'app_label': 'tests', 'model': 'dummymodel'}])
+    def test_get_permitted_content_types_explicit_include(self):
+        """
+        The get_permitted_content_types method should only include specifically included models
+        """
+        dummy_model_content_type = ContentType.objects.get_for_model(DummyModel)
+        form = OmniModelFormAdminForm()
+        self.assertEqual(1, form.fields['content_type'].queryset.count())
+        self.assertIn(dummy_model_content_type, form.fields['content_type'].queryset)
