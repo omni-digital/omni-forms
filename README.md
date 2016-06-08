@@ -1,3 +1,5 @@
+![Build status](https://travis-ci.org/omni-digital/omni-forms.svg?branch=master)
+
 # Omni Forms
 
 Omni forms is a simple form builder with admin integration for django versions >= 1.8.
