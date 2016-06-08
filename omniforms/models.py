@@ -7,6 +7,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import models
 from django.forms import modelform_factory
@@ -397,6 +398,38 @@ class OmniFormSaveInstanceHandler(OmniFormHandler):
         """
         verbose_name = 'Save Data'
 
+    def assert_has_all_required_fields(self):
+        """
+        Property that determines whether or not the associated form defines all of the required fields
+
+        :raises: ValidationError
+        """
+        defined_fields = self.form.get_used_field_names()
+        required_fields = self.form.get_required_field_names()
+        missing_fields = []
+        for field in required_fields:
+            if field not in defined_fields:
+                missing_fields.append(field)
+
+        if len(missing_fields) > 0:
+            raise ValidationError(
+                'The save instance handler can only be attached to forms that contain fields for '
+                'all required model fields.  The form you are attempting to attach this handler to '
+                'is missing the following fields: ({0})'.format(', '.join(missing_fields))
+            )
+
+    def clean(self):
+        """
+        Cleans the handler for saving a model instance
+        Ensures that the handler is attached to a model form instance
+
+        :raises: ValidationError
+        """
+        super(OmniFormSaveInstanceHandler, self).clean()
+        if not isinstance(self.form, OmniModelFormBase):
+            raise ValidationError('This handler can only be attached to model forms')
+        self.assert_has_all_required_fields()
+
     def handle(self, form):
         """
         Handle method
@@ -446,14 +479,6 @@ class FormGeneratorMixin(object):
         :return: list of form field instances
         """
         return [field.specific.as_form_field() for field in self.fields.all()]
-
-    def get_used_field_names(self):
-        """
-        Method for getting the names of all fields on the form
-
-        :return: List of available field names
-        """
-        return self.fields.values_list('name', flat=True)
 
     def _get_field_widgets(self):
         """
@@ -517,6 +542,33 @@ class OmniModelFormBase(OmniFormBase):
         Django properties
         """
         abstract = True
+
+    def get_required_fields(self):
+        """
+        Method to get all required fields for the linked content type model
+
+        :return: List of required field names
+        """
+        return filter(
+            lambda field: not field.null,
+            self.content_type.model_class()._meta.get_fields()
+        )
+
+    def get_required_field_names(self):
+        """
+        Method to get the names of all required fields for the linked content type model
+
+        :return: List of required field names
+        """
+        return map(lambda field: field.name, self.get_required_fields())
+
+    def get_used_field_names(self):
+        """
+        Method for getting the names of all fields on the form
+
+        :return: List of available field names
+        """
+        return self.fields.values_list('name', flat=True)
 
     def _get_base_form_class(self):
         """

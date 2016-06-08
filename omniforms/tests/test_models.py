@@ -7,6 +7,7 @@ from django import forms
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -210,6 +211,39 @@ class OmniModelFormTestCase(TestCase):
         form.save()
         self.assertEqual(patched_method.call_count, 2)
         patched_method.assert_any_call({})
+
+    def test_get_required_fields(self):
+        """
+        The get_required_fields method should return a list of required fields for the linked content model
+        """
+        get_field = self.omniform.content_type.model_class()._meta.get_field
+        required_fields = self.omniform.get_required_fields()
+        self.assertIn(get_field('title'), required_fields)
+        self.assertIn(get_field('agree'), required_fields)
+        self.assertIn(get_field('some_datetime'), required_fields)
+        self.assertIn(get_field('some_decimal'), required_fields)
+        self.assertIn(get_field('some_email'), required_fields)
+        self.assertIn(get_field('some_float'), required_fields)
+        self.assertIn(get_field('some_integer'), required_fields)
+        self.assertIn(get_field('some_time'), required_fields)
+        self.assertIn(get_field('some_url'), required_fields)
+        self.assertNotIn(get_field('some_date'), required_fields)
+
+    def test_get_required_field_names(self):
+        """
+        The get_required_field_names method should return a list of required field names for the linked content model
+        """
+        required_fields = self.omniform.get_required_field_names()
+        self.assertIn('title', required_fields)
+        self.assertIn('agree', required_fields)
+        self.assertIn('some_datetime', required_fields)
+        self.assertIn('some_decimal', required_fields)
+        self.assertIn('some_email', required_fields)
+        self.assertIn('some_float', required_fields)
+        self.assertIn('some_integer', required_fields)
+        self.assertIn('some_time', required_fields)
+        self.assertIn('some_url', required_fields)
+        self.assertNotIn('some_date', required_fields)
 
 
 class OmniFieldTestCase(TestCase):
@@ -1094,3 +1128,53 @@ class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
             instance = OmniFormSaveInstanceHandler()
             instance.handle(form)
             patched_method.assert_called_once()
+
+    def test_cannot_be_attached_to_non_model_form(self):
+        """
+        It must not be possible to attach the Save Instance handler to non model forms
+        """
+        form = OmniForm(title='Test form')
+        form.save()
+        handler = OmniFormSaveInstanceHandler(name='Save instance', order=0, form=form)
+        with self.assertRaises(ValidationError) as cm:
+            handler.clean()
+        self.assertEqual(cm.exception.message, 'This handler can only be attached to model forms')
+
+    @patch('omniforms.models.OmniFormSaveInstanceHandler.assert_has_all_required_fields')
+    def test_clean_calls_assert_has_all_required_fields(self, patched_method):
+        """
+        The clean method should call down to assert_has_all_required_fields
+        """
+        handler = OmniFormSaveInstanceHandler(name='Save instance', order=0, form=self.omni_form)
+        handler.clean()
+        patched_method.assert_called_with()
+
+    @patch('omniforms.models.OmniModelForm.get_required_field_names')
+    @patch('omniforms.models.OmniModelForm.get_used_field_names')
+    def test_assert_has_all_required_fields_invalid(self, get_used_field_names, get_required_field_names):
+        """
+        The assert_has_all_required_fields method should raise a ValidationError with an appropriate message
+        """
+        get_required_field_names.return_value = ['foo', 'bar', 'baz']
+        get_used_field_names.return_value = ['foo', 'something', 'else']
+        handler = OmniFormSaveInstanceHandler(name='Save instance', order=0, form=self.omni_form)
+        with self.assertRaises(ValidationError) as cm:
+            handler.assert_has_all_required_fields()
+
+        self.assertEqual(
+            cm.exception.message,
+            'The save instance handler can only be attached to forms that contain fields for '
+            'all required model fields.  The form you are attempting to attach this handler to '
+            'is missing the following fields: ({0})'.format(', '.join(['bar', 'baz']))
+        )
+
+    @patch('omniforms.models.OmniModelForm.get_required_field_names')
+    @patch('omniforms.models.OmniModelForm.get_used_field_names')
+    def test_assert_has_all_required_fields_valid(self, get_used_field_names, get_required_field_names):
+        """
+        The assert_has_all_required_fields method should not raise a ValidationError
+        """
+        get_required_field_names.return_value = ['foo', 'bar', 'baz']
+        get_used_field_names.return_value = ['foo', 'bar', 'baz', 'something', 'else']
+        handler = OmniFormSaveInstanceHandler(name='Save instance', order=0, form=self.omni_form)
+        handler.assert_has_all_required_fields()
