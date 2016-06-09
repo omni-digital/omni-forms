@@ -481,6 +481,14 @@ class FormGeneratorMixin(object):
         """
         return [field.specific.as_form_field() for field in self.fields.all()]
 
+    def get_initial_data(self):
+        """
+        Method for getting the initial data for all fields on the form
+
+        :return: Dict of initial data where the dict key is the field name
+        """
+        return {field.name: field.specific.initial for field in self.fields.all()}
+
     def _get_field_widgets(self):
         """
         Method for getting the widgets for all fields on the form
