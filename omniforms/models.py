@@ -59,6 +59,7 @@ class OmniField(models.Model):
         """
         return {
             models.CharField: OmniCharField,
+            models.TextField: OmniCharField,
             models.BooleanField: OmniBooleanField,
             models.DateField: OmniDateField,
             models.DateTimeField: OmniDateTimeField,
