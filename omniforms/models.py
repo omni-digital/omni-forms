@@ -629,7 +629,10 @@ class OmniModelFormBase(OmniFormBase):
                 return True
 
         fields = filter(is_valid_field, self.content_type.model_class()._meta.get_fields())
-        return map(lambda f: (f.name, getattr(f, 'verbose_name', f.name)), fields)
+        return [
+            (field.name, getattr(field, 'verbose_name', field.name))
+            for field in fields
+        ]
 
 
 class OmniForm(OmniFormBase):

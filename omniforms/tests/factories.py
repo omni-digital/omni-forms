@@ -5,7 +5,7 @@ Factories for omniforms models
 from __future__ import unicode_literals
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from omniforms.models import OmniForm, OmniModelForm
+from omniforms.models import OmniForm, OmniModelForm, OmniFormEmailHandler
 from omniforms.tests.models import DummyModel
 import factory
 
@@ -35,6 +35,24 @@ class OmniModelFormFactory(factory.DjangoModelFactory):
         Factory meta
         """
         model = OmniModelForm
+
+
+class OmniFormEmailHandlerFactory(factory.DjangoModelFactory):
+    """
+    Model factory for creating OmniFormEmailHandler instances
+    """
+    subject = factory.Sequence(lambda n: 'Email Handler {0}'.format(n))
+    recipients = factory.Sequence(lambda n: 'foo{0}@example.com,bar{0}@example.com'.format(n))
+    template = factory.Sequence(lambda n: 'This is some test content {0}'.format(n))
+    name = factory.Sequence(lambda n: 'Email Handler {0}'.format(n))
+    order = factory.Sequence(lambda n: n)
+    form = factory.SubFactory(OmniModelFormFactory)
+
+    class Meta(object):
+        """
+        Factory meta
+        """
+        model = OmniFormEmailHandler
 
 
 class DummyModelFactory(factory.DjangoModelFactory):

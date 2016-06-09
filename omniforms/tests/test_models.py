@@ -18,7 +18,6 @@ from omniforms.models import (
     OmniFormBase,
     OmniModelFormBase,
     OmniForm,
-    OmniModelForm,
     OmniField,
     OmniCharField,
     OmniBooleanField,
@@ -36,9 +35,8 @@ from omniforms.models import (
     OmniFormEmailHandler,
     OmniFormSaveInstanceHandler
 )
-from omniforms.tests.factories import DummyModelFactory
+from omniforms.tests.factories import DummyModelFactory, OmniModelFormFactory, OmniFormEmailHandlerFactory
 from omniforms.tests.utils import OmniFormTestCaseStub
-from omniforms.tests.models import DummyModel
 from unittest import skipUnless
 
 import django
@@ -122,28 +120,29 @@ class OmniModelFormTestCase(TestCase):
     """
     def setUp(self):
         super(OmniModelFormTestCase, self).setUp()
-        self.omniform = OmniModelForm.objects.create(
-            title='test',
-            content_type=ContentType.objects.get_for_model(DummyModel)
-        )
-        self.handler_1 = OmniFormEmailHandler(
-            subject='test',
-            recipients='test@example.com',
-            template='Test content',
-            name='test 1',
+        self.omniform = OmniModelFormFactory.create()
+        self.field_1 = OmniCharField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
             order=0,
+            initial='Some title...',
             form=self.omniform
         )
-        self.handler_1.save()
-        self.handler_2 = OmniFormEmailHandler(
-            subject='test2',
-            recipients='test2@example.com',
-            template='Test content 2',
-            name='test 2',
+        self.field_1.save()
+        self.field_2 = OmniBooleanField(
+            name='agree',
+            label='Please agree',
+            required=True,
+            widget_class='django.forms.widgets.CheckboxInput',
             order=1,
+            initial=True,
             form=self.omniform
         )
-        self.handler_2.save()
+        self.field_2.save()
+        self.handler_1 = OmniFormEmailHandlerFactory.create(form=self.omniform)
+        self.handler_2 = OmniFormEmailHandlerFactory.create(form=self.omniform)
 
     def test_get_form_class(self):
         """
@@ -152,13 +151,57 @@ class OmniModelFormTestCase(TestCase):
         form_class = self.omniform.get_form_class()
         self.assertTrue(issubclass(form_class, OmniModelFormBaseForm))
 
+    @patch('omniforms.models.OmniModelForm._get_field_help_texts')
+    @patch('omniforms.models.OmniModelForm._get_field_widgets')
+    @patch('omniforms.models.OmniModelForm._get_field_labels')
+    @patch('omniforms.models.OmniModelForm.get_used_field_names')
+    @patch('omniforms.models.OmniModelForm._get_base_form_class')
+    @patch('omniforms.models.modelform_factory')
+    def test_get_form_class_calls_modelform_factory(
+            self, modelform_factory, _get_base_form_class, get_used_field_names,
+            _get_field_labels, _get_field_widgets, _get_field_help_texts
+    ):
+        """
+        The get_form_class method should call down to modelform_factory
+        """
+        _get_base_form_class.return_value = Mock()
+        get_used_field_names.return_value = Mock()
+        _get_field_labels.return_value = Mock()
+        _get_field_widgets.return_value = Mock()
+        _get_field_help_texts.return_value = Mock()
+        self.omniform.get_form_class()
+        modelform_factory.assert_called_with(
+            self.omniform.content_type.model_class(),
+            form=_get_base_form_class.return_value,
+            fields=get_used_field_names.return_value,
+            labels=_get_field_labels.return_value,
+            widgets=_get_field_widgets.return_value,
+            help_texts=_get_field_help_texts.return_value
+        )
+
+    def test_get_field_labels(self):
+        """
+        The _get_field_labels method should return a labels dict for the form
+        """
+        labels = self.omniform._get_field_labels()
+        self.assertEqual(labels['title'], 'Please give us a title')
+        self.assertEqual(labels['agree'], 'Please agree')
+
+    def test_get_initial_data(self):
+        """
+        The get_initial_data method of the form should return a dict of initial data
+        """
+        initial = self.omniform.get_initial_data()
+        self.assertEqual(initial['title'], 'Some title...')
+        self.assertEqual(initial['agree'], True)
+
     def test_get_model_field_choices(self):
         """
         The get_model_field_choices method should return the appropriate choice values
         """
         choices = self.omniform.get_model_field_choices()
-        self.assertIn(('title', 'title'), choices)
-        self.assertIn(('agree', 'agree'), choices)
+        self.assertNotIn(('title', 'title'), choices)
+        self.assertNotIn(('agree', 'agree'), choices)
         self.assertIn(('some_date', 'some date'), choices)
         self.assertIn(('some_datetime', 'some datetime'), choices)
         self.assertIn(('some_decimal', 'some decimal'), choices)
@@ -198,7 +241,7 @@ class OmniModelFormTestCase(TestCase):
         form.full_clean()
         form.handle()
         self.assertEqual(patched_method.call_count, 2)
-        patched_method.assert_any_call({})
+        patched_method.assert_any_call(form)
 
     @patch('omniforms.models.OmniFormEmailHandler.handle')
     def test_form_save_calls_handlers(self, patched_method):
@@ -210,7 +253,7 @@ class OmniModelFormTestCase(TestCase):
         form.full_clean()
         form.save()
         self.assertEqual(patched_method.call_count, 2)
-        patched_method.assert_any_call({})
+        patched_method.assert_any_call(form)
 
     def test_get_required_fields(self):
         """
