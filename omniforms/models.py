@@ -489,6 +489,14 @@ class FormGeneratorMixin(object):
         """
         return {field.name: import_string(field.widget_class) for field in self.fields.all()}
 
+    def _get_field_labels(self):
+        """
+        Method for getting the labels for all fields on the form
+
+        :return: Dict of field labels where the dict key is the field name
+        """
+        return {field.name: field.label for field in self.fields.all()}
+
     def _get_field_help_texts(self):
         """
         Method for getting help text for all fields on the form
@@ -593,6 +601,7 @@ class OmniModelFormBase(OmniFormBase):
             self.content_type.model_class(),
             form=self._get_base_form_class(),
             fields=self.get_used_field_names(),
+            labels=self._get_field_labels(),
             widgets=self._get_field_widgets(),
             help_texts=self._get_field_help_texts()
         )
