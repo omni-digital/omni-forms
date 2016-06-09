@@ -595,24 +595,38 @@ class OmniModelFormBase(OmniFormBase):
         """
         abstract = True
 
-    def get_required_fields(self):
+    def get_required_fields(self, exclude_with_default=True, exclude_auto_fields=True):
         """
         Method to get all required fields for the linked content type model
 
         :return: List of required field names
         """
-        return filter(
-            lambda field: not field.null,
-            self.content_type.model_class()._meta.get_fields()
-        )
+        def filter_field(field):
+            if field.null:
+                return False
+            elif exclude_with_default and field.has_default():
+                return False
+            elif isinstance(field, (models.DateField, models.DateTimeField, models.TimeField)) and exclude_with_default:
+                return not (field.auto_now or field.auto_now_add)
+            elif isinstance(field, models.AutoField) and exclude_auto_fields:
+                return False
+            else:
+                return True
+        return list(filter(filter_field, self.content_type.model_class()._meta.get_fields()))
 
-    def get_required_field_names(self):
+    def get_required_field_names(self, exclude_with_default=True, exclude_auto_fields=True):
         """
         Method to get the names of all required fields for the linked content type model
 
         :return: List of required field names
         """
-        return map(lambda field: field.name, self.get_required_fields())
+        return map(
+            lambda field: field.name,
+            self.get_required_fields(
+                exclude_with_default=exclude_with_default,
+                exclude_auto_fields=exclude_auto_fields
+            )
+        )
 
     def get_used_field_names(self):
         """
