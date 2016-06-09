@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from mock import patch
 from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormCreateFieldForm
 from omniforms.admin_views import (
     OmniModelFormAddFieldView,
@@ -26,7 +27,8 @@ from omniforms.models import (
     OmniTimeField,
     OmniUrlField,
     OmniFormHandler,
-    OmniFormEmailHandler
+    OmniFormEmailHandler,
+    OmniFormSaveInstanceHandler
 )
 from omniforms.tests.utils import OmniFormAdminTestCaseStub
 
@@ -410,6 +412,24 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         self.user.user_permissions.remove(self.add_handler_permission)
         response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, reverse('admin:index'))
+
+    def test_get_form_choices(self):
+        """
+        The _get_form_choices method of the view should return content types that are OmniFormHandler subclasses
+        """
+        choices = OmniModelFormAddHandlerView()._get_form_choices()
+        email_handler_ctype = ContentType.objects.get_for_model(OmniFormEmailHandler)
+        save_instance_handler_ctype = ContentType.objects.get_for_model(OmniFormSaveInstanceHandler)
+        self.assertIn((email_handler_ctype.pk, '{0}'.format(email_handler_ctype)), choices)
+        self.assertIn((save_instance_handler_ctype.pk, '{0}'.format(save_instance_handler_ctype)), choices)
+
+    @patch('omniforms.models.ContentType.model_class')
+    def test_get_form_choices_does_not_fail_if_model_class_is_none(self, patched_method):
+        """
+        The _get_form_choices method of the view should not raise an exception if the model class could not be resolved
+        """
+        patched_method.return_value = None
+        OmniModelFormAddHandlerView()._get_form_choices()
 
 
 class OmniModelFormCreateHandlerViewTestCase(OmniFormAdminTestCaseStub):

@@ -205,7 +205,11 @@ class OmniModelFormAddHandlerView(OmniModelFormAddRelatedView):
         :return: Queryset of ContentType model instances
         """
         content_types = filter(
-            lambda x: issubclass(x.model_class(), OmniFormHandler) and x.model_class() != OmniFormHandler,
+            lambda x: (
+                x.model_class() is not None and
+                issubclass(x.model_class(), OmniFormHandler) and
+                x.model_class() != OmniFormHandler
+            ),
             ContentType.objects.all()
         )
         return [(content_type.pk, '{0}'.format(content_type)) for content_type in content_types]
