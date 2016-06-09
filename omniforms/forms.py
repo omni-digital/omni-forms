@@ -27,7 +27,7 @@ class OmniFormBaseForm(forms.Form):
 
         if self._handlers:
             for handler in self._handlers:
-                handler.handle(self.cleaned_data)
+                handler.handle(self)
 
 
 class OmniModelFormBaseForm(forms.ModelForm, OmniFormBaseForm):
