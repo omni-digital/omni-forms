@@ -263,33 +263,9 @@ class OmniModelFormTestCase(TestCase):
         """
         get_field = self.omniform.content_type.model_class()._meta.get_field
         required_fields = self.omniform.get_required_fields(exclude_with_default=False, exclude_auto_fields=False)
-        self.assertIn(get_field('id'), required_fields)
+        self.assertNotIn(get_field('id'), required_fields)
         self.assertIn(get_field('title'), required_fields)
-        self.assertIn(get_field('agree'), required_fields)
-        self.assertIn(get_field('some_datetime'), required_fields)
-        self.assertIn(get_field('some_datetime_1'), required_fields)
-        self.assertIn(get_field('some_datetime_1'), required_fields)
-        self.assertIn(get_field('some_decimal'), required_fields)
-        self.assertIn(get_field('some_email'), required_fields)
-        self.assertIn(get_field('some_float'), required_fields)
-        self.assertIn(get_field('some_integer'), required_fields)
-        self.assertIn(get_field('some_time'), required_fields)
-        self.assertIn(get_field('some_time_1'), required_fields)
-        self.assertIn(get_field('some_time_2'), required_fields)
-        self.assertIn(get_field('some_url'), required_fields)
-        self.assertNotIn(get_field('some_date'), required_fields)
-        self.assertIn(get_field('some_date_1'), required_fields)
-        self.assertIn(get_field('some_date_2'), required_fields)
-
-    def test_get_required_fields_exclude_with_default(self):
-        """
-        The get_required_fields method should return a list of required fields for the linked content model
-        """
-        get_field = self.omniform.content_type.model_class()._meta.get_field
-        required_fields = self.omniform.get_required_fields(exclude_with_default=True, exclude_auto_fields=False)
-        self.assertIn(get_field('id'), required_fields)
-        self.assertIn(get_field('title'), required_fields)
-        self.assertIn(get_field('agree'), required_fields)
+        self.assertNotIn(get_field('agree'), required_fields)
         self.assertIn(get_field('some_datetime'), required_fields)
         self.assertNotIn(get_field('some_datetime_1'), required_fields)
         self.assertNotIn(get_field('some_datetime_2'), required_fields)
@@ -304,6 +280,32 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn(get_field('some_date'), required_fields)
         self.assertNotIn(get_field('some_date_1'), required_fields)
         self.assertNotIn(get_field('some_date_2'), required_fields)
+        self.assertNotIn(get_field('other_models'), required_fields)
+
+    def test_get_required_fields_exclude_with_default(self):
+        """
+        The get_required_fields method should return a list of required fields for the linked content model
+        """
+        get_field = self.omniform.content_type.model_class()._meta.get_field
+        required_fields = self.omniform.get_required_fields(exclude_with_default=True, exclude_auto_fields=False)
+        self.assertNotIn(get_field('id'), required_fields)
+        self.assertIn(get_field('title'), required_fields)
+        self.assertNotIn(get_field('agree'), required_fields)
+        self.assertIn(get_field('some_datetime'), required_fields)
+        self.assertNotIn(get_field('some_datetime_1'), required_fields)
+        self.assertNotIn(get_field('some_datetime_2'), required_fields)
+        self.assertIn(get_field('some_decimal'), required_fields)
+        self.assertIn(get_field('some_email'), required_fields)
+        self.assertIn(get_field('some_float'), required_fields)
+        self.assertIn(get_field('some_integer'), required_fields)
+        self.assertIn(get_field('some_time'), required_fields)
+        self.assertNotIn(get_field('some_time_1'), required_fields)
+        self.assertNotIn(get_field('some_time_2'), required_fields)
+        self.assertIn(get_field('some_url'), required_fields)
+        self.assertNotIn(get_field('some_date'), required_fields)
+        self.assertNotIn(get_field('some_date_1'), required_fields)
+        self.assertNotIn(get_field('some_date_2'), required_fields)
+        self.assertNotIn(get_field('other_models'), required_fields)
 
     def test_get_required_fields_exclude_auto_fields(self):
         """
@@ -313,31 +315,7 @@ class OmniModelFormTestCase(TestCase):
         required_fields = self.omniform.get_required_fields(exclude_with_default=False, exclude_auto_fields=True)
         self.assertNotIn(get_field('id'), required_fields)
         self.assertIn(get_field('title'), required_fields)
-        self.assertIn(get_field('agree'), required_fields)
-        self.assertIn(get_field('some_datetime'), required_fields)
-        self.assertIn(get_field('some_datetime_1'), required_fields)
-        self.assertIn(get_field('some_datetime_2'), required_fields)
-        self.assertIn(get_field('some_decimal'), required_fields)
-        self.assertIn(get_field('some_email'), required_fields)
-        self.assertIn(get_field('some_float'), required_fields)
-        self.assertIn(get_field('some_integer'), required_fields)
-        self.assertIn(get_field('some_time'), required_fields)
-        self.assertIn(get_field('some_time_1'), required_fields)
-        self.assertIn(get_field('some_time_2'), required_fields)
-        self.assertIn(get_field('some_url'), required_fields)
-        self.assertNotIn(get_field('some_date'), required_fields)
-        self.assertIn(get_field('some_date_1'), required_fields)
-        self.assertIn(get_field('some_date_2'), required_fields)
-
-    def test_get_required_fields_defaults(self):
-        """
-        The get_required_fields method should return a list of required fields for the linked content model
-        """
-        get_field = self.omniform.content_type.model_class()._meta.get_field
-        required_fields = self.omniform.get_required_fields()
-        self.assertNotIn(get_field('id'), required_fields)
-        self.assertIn(get_field('title'), required_fields)
-        self.assertIn(get_field('agree'), required_fields)
+        self.assertNotIn(get_field('agree'), required_fields)
         self.assertIn(get_field('some_datetime'), required_fields)
         self.assertNotIn(get_field('some_datetime_1'), required_fields)
         self.assertNotIn(get_field('some_datetime_2'), required_fields)
@@ -352,6 +330,32 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn(get_field('some_date'), required_fields)
         self.assertNotIn(get_field('some_date_1'), required_fields)
         self.assertNotIn(get_field('some_date_2'), required_fields)
+        self.assertNotIn(get_field('other_models'), required_fields)
+
+    def test_get_required_fields_defaults(self):
+        """
+        The get_required_fields method should return a list of required fields for the linked content model
+        """
+        get_field = self.omniform.content_type.model_class()._meta.get_field
+        required_fields = self.omniform.get_required_fields()
+        self.assertNotIn(get_field('id'), required_fields)
+        self.assertIn(get_field('title'), required_fields)
+        self.assertNotIn(get_field('agree'), required_fields)
+        self.assertIn(get_field('some_datetime'), required_fields)
+        self.assertNotIn(get_field('some_datetime_1'), required_fields)
+        self.assertNotIn(get_field('some_datetime_2'), required_fields)
+        self.assertIn(get_field('some_decimal'), required_fields)
+        self.assertIn(get_field('some_email'), required_fields)
+        self.assertIn(get_field('some_float'), required_fields)
+        self.assertIn(get_field('some_integer'), required_fields)
+        self.assertIn(get_field('some_time'), required_fields)
+        self.assertNotIn(get_field('some_time_1'), required_fields)
+        self.assertNotIn(get_field('some_time_2'), required_fields)
+        self.assertIn(get_field('some_url'), required_fields)
+        self.assertNotIn(get_field('some_date'), required_fields)
+        self.assertNotIn(get_field('some_date_1'), required_fields)
+        self.assertNotIn(get_field('some_date_2'), required_fields)
+        self.assertNotIn(get_field('other_models'), required_fields)
 
     def test_get_required_field_names(self):
         """
@@ -359,7 +363,7 @@ class OmniModelFormTestCase(TestCase):
         """
         required_fields = self.omniform.get_required_field_names(exclude_with_default=False, exclude_auto_fields=False)
         self.assertIn('title', required_fields)
-        self.assertIn('agree', required_fields)
+        self.assertNotIn('agree', required_fields)
         self.assertIn('some_datetime', required_fields)
         self.assertIn('some_decimal', required_fields)
         self.assertIn('some_email', required_fields)

@@ -602,13 +602,11 @@ class OmniModelFormBase(OmniFormBase):
         :return: List of required field names
         """
         def filter_field(field):
-            if field.null:
+            if field.blank:
+                return False
+            elif isinstance(field, models.ManyToManyField):
                 return False
             elif exclude_with_default and field.has_default():
-                return False
-            elif isinstance(field, (models.DateField, models.DateTimeField, models.TimeField)) and exclude_with_default:
-                return not (field.auto_now or field.auto_now_add)
-            elif isinstance(field, models.AutoField) and exclude_auto_fields:
                 return False
             else:
                 return True
@@ -620,13 +618,13 @@ class OmniModelFormBase(OmniFormBase):
 
         :return: List of required field names
         """
-        return map(
+        return list(map(
             lambda field: field.name,
             self.get_required_fields(
                 exclude_with_default=exclude_with_default,
                 exclude_auto_fields=exclude_auto_fields
             )
-        )
+        ))
 
     def get_used_field_names(self):
         """

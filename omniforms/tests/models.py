@@ -2,6 +2,13 @@ from django.db import models
 from omniforms.models import OmniField
 
 
+class DummyModel2(models.Model):
+    """
+    Dummy Model 2 for use with tests
+    """
+    title = models.CharField(max_length=255)
+
+
 class DummyModel(models.Model):
     """
     Dummy Model for use with tests
@@ -22,6 +29,7 @@ class DummyModel(models.Model):
     some_time_1 = models.TimeField(auto_now=True)
     some_time_2 = models.TimeField(auto_now_add=True)
     some_url = models.URLField()
+    other_models = models.ManyToManyField(DummyModel2)
 
 
 class TaggableManagerField(OmniField):
