@@ -29,6 +29,7 @@ from omniforms.models import (
     OmniIntegerField,
     OmniTimeField,
     OmniUrlField,
+    OmniSlugField,
     OmniManyToManyField,
     OmniForeignKeyField,
     OmniFormHandler,
@@ -36,7 +37,7 @@ from omniforms.models import (
     OmniFormSaveInstanceHandler
 )
 from omniforms.tests.factories import DummyModelFactory, OmniModelFormFactory, OmniFormEmailHandlerFactory
-from omniforms.tests.models import TaggableManagerField
+from omniforms.tests.models import TaggableManagerField, DummyModel2
 from omniforms.tests.utils import OmniFormTestCaseStub
 from taggit_autosuggest.managers import TaggableManager
 from unittest import skipUnless
@@ -281,6 +282,7 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn(get_field('some_date_1'), required_fields)
         self.assertNotIn(get_field('some_date_2'), required_fields)
         self.assertNotIn(get_field('other_models'), required_fields)
+        self.assertIn(get_field('slug'), required_fields)
 
     def test_get_required_fields_exclude_with_default(self):
         """
@@ -306,6 +308,7 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn(get_field('some_date_1'), required_fields)
         self.assertNotIn(get_field('some_date_2'), required_fields)
         self.assertNotIn(get_field('other_models'), required_fields)
+        self.assertIn(get_field('slug'), required_fields)
 
     def test_get_required_fields_exclude_auto_fields(self):
         """
@@ -331,6 +334,7 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn(get_field('some_date_1'), required_fields)
         self.assertNotIn(get_field('some_date_2'), required_fields)
         self.assertNotIn(get_field('other_models'), required_fields)
+        self.assertIn(get_field('slug'), required_fields)
 
     def test_get_required_fields_defaults(self):
         """
@@ -356,22 +360,32 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn(get_field('some_date_1'), required_fields)
         self.assertNotIn(get_field('some_date_2'), required_fields)
         self.assertNotIn(get_field('other_models'), required_fields)
+        self.assertIn(get_field('slug'), required_fields)
 
     def test_get_required_field_names(self):
         """
         The get_required_field_names method should return a list of required field names for the linked content model
         """
         required_fields = self.omniform.get_required_field_names(exclude_with_default=False, exclude_auto_fields=False)
+        self.assertNotIn('id', required_fields)
         self.assertIn('title', required_fields)
         self.assertNotIn('agree', required_fields)
         self.assertIn('some_datetime', required_fields)
+        self.assertNotIn('some_datetime_1', required_fields)
+        self.assertNotIn('some_datetime_2', required_fields)
         self.assertIn('some_decimal', required_fields)
         self.assertIn('some_email', required_fields)
         self.assertIn('some_float', required_fields)
         self.assertIn('some_integer', required_fields)
         self.assertIn('some_time', required_fields)
+        self.assertNotIn('some_time_1', required_fields)
+        self.assertNotIn('some_time_2', required_fields)
         self.assertIn('some_url', required_fields)
         self.assertNotIn('some_date', required_fields)
+        self.assertNotIn('some_date_1', required_fields)
+        self.assertNotIn('some_date_2', required_fields)
+        self.assertNotIn('other_models', required_fields)
+        self.assertIn('slug', required_fields)
 
 
 class OmniFieldTestCase(TestCase):
@@ -491,6 +505,15 @@ class OmniFieldTestCase(TestCase):
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.IntegerField()), OmniIntegerField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.TimeField()), OmniTimeField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.URLField()), OmniUrlField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.SlugField()), OmniSlugField)
+        self.assertEqual(
+            OmniField.get_concrete_class_for_model_field(models.ForeignKey(DummyModel2)),
+            OmniForeignKeyField
+        )
+        self.assertEqual(
+            OmniField.get_concrete_class_for_model_field(models.ManyToManyField(DummyModel2)),
+            OmniManyToManyField
+        )
 
     @override_settings(OMNI_FORMS_CUSTOM_FIELD_MAPPING={
         'taggit_autosuggest.managers.TaggableManager': 'omniforms.tests.models.TaggableManagerField'
@@ -919,6 +942,39 @@ class OmniUrlFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.URLInput', OmniUrlField.FORM_WIDGETS)
+
+
+class OmniSlugFieldTestCase(TestCase):
+    """
+    Tests the OmniSlugField
+    """
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniField
+        """
+        self.assertTrue(issubclass(OmniSlugField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should have an initial field
+        """
+        field = OmniSlugField._meta.get_field('initial')
+        self.assertIsInstance(field, models.SlugField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniSlugField.FIELD_CLASS, 'django.forms.SlugField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.TextInput', OmniSlugField.FORM_WIDGETS)
+        self.assertIn('django.forms.widgets.HiddenInput', OmniSlugField.FORM_WIDGETS)
 
 
 class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):

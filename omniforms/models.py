@@ -103,7 +103,8 @@ class OmniField(models.Model):
             models.TimeField: OmniTimeField,
             models.URLField: OmniUrlField,
             models.ForeignKey: OmniForeignKeyField,
-            models.ManyToManyField: OmniManyToManyField
+            models.ManyToManyField: OmniManyToManyField,
+            models.SlugField: OmniSlugField
         }
         field_mapping.update(cls.get_custom_field_mapping())
         return field_mapping.get(model_field.__class__)
@@ -177,6 +178,18 @@ class OmniCharField(OmniField):
         'django.forms.widgets.TextInput',
         'django.forms.widgets.Textarea',
         'django.forms.widgets.PasswordInput'
+    )
+
+
+class OmniSlugField(OmniField):
+    """
+    SlugField representation
+    """
+    initial = models.SlugField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.SlugField'
+    FORM_WIDGETS = (
+        'django.forms.widgets.TextInput',
+        'django.forms.widgets.HiddenInput'
     )
 
 

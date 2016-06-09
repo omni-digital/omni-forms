@@ -29,6 +29,7 @@ class DummyModel(models.Model):
     some_time_1 = models.TimeField(auto_now=True)
     some_time_2 = models.TimeField(auto_now_add=True)
     some_url = models.URLField()
+    slug = models.SlugField()
     other_models = models.ManyToManyField(DummyModel2)
 
 
