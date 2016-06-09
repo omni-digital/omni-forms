@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -36,7 +36,9 @@ from omniforms.models import (
     OmniFormSaveInstanceHandler
 )
 from omniforms.tests.factories import DummyModelFactory, OmniModelFormFactory, OmniFormEmailHandlerFactory
+from omniforms.tests.models import TaggableManagerField
 from omniforms.tests.utils import OmniFormTestCaseStub
+from taggit_autosuggest.managers import TaggableManager
 from unittest import skipUnless
 
 import django
@@ -406,6 +408,47 @@ class OmniFieldTestCase(TestCase):
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.IntegerField()), OmniIntegerField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.TimeField()), OmniTimeField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.URLField()), OmniUrlField)
+
+    @override_settings(OMNI_FORMS_CUSTOM_FIELD_MAPPING={
+        'taggit_autosuggest.managers.TaggableManager': 'omniforms.tests.models.TaggableManagerField'
+    })
+    def test_get_custom_field_mapping(self):
+        """
+        The get_custom_field_mapping method of the class should return a mapping of custom fields
+        """
+        custom_field_mapping = OmniField.get_custom_field_mapping()
+        self.assertIn(TaggableManager, custom_field_mapping)
+        self.assertEqual(custom_field_mapping[TaggableManager], TaggableManagerField)
+
+    @override_settings(OMNI_FORMS_CUSTOM_FIELD_MAPPING={
+        'omniforms.tests.fields.ThisIsAFictionalField': 'omniforms.tests.models.TaggableManagerField'
+    })
+    def test_get_custom_field_mapping_raises_improperly_configured_exception_for_field(self):
+        """
+        The get_custom_field_mapping method of the class should raise an improperlyconfigured exception if the
+        OMNI_FORMS_CUSTOM_FIELD_MAPPING setting contains a key that could not be imported
+        """
+        self.assertRaises(ImproperlyConfigured, OmniField.get_custom_field_mapping)
+
+    @override_settings(OMNI_FORMS_CUSTOM_FIELD_MAPPING={
+        'taggit_autosuggest.managers.TaggableManager': 'omniforms.tests.models.FictionalModel'
+    })
+    def test_get_custom_field_mapping_raises_improperly_configured_exception_for_model(self):
+        """
+        The get_custom_field_mapping method of the class should raise an improperlyconfigured exception if the
+        OMNI_FORMS_CUSTOM_FIELD_MAPPING setting contains a value that could not be imported
+        """
+        self.assertRaises(ImproperlyConfigured, OmniField.get_custom_field_mapping)
+
+    @override_settings(OMNI_FORMS_CUSTOM_FIELD_MAPPING={
+        'taggit_autosuggest.managers.TaggableManager': 'omniforms.tests.models.TaggableManagerInvalidField'
+    })
+    def test_get_custom_field_mapping_raises_improperly_configured_exception_for_invalid_model(self):
+        """
+        The get_custom_field_mapping method of the class should raise an improperlyconfigured exception if the
+        OMNI_FORMS_CUSTOM_FIELD_MAPPING imported model field does not subclass OmniField
+        """
+        self.assertRaises(ImproperlyConfigured, OmniField.get_custom_field_mapping)
 
 
 class OmniFieldInstanceTestCase(OmniFormTestCaseStub):

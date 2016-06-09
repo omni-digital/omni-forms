@@ -7,7 +7,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.core.mail import send_mail
 from django.db import models
 from django.forms import modelform_factory
@@ -50,6 +50,39 @@ class OmniField(models.Model):
         return self.label
 
     @classmethod
+    def get_custom_field_mapping(cls):
+        """
+        Class method for getting custom, user defined, field mappings
+
+        :return: Field mapping dict where the key is a model field class and the value is an OmniField subclass
+        """
+        field_mapping = {}
+        custom_fields = getattr(settings, 'OMNI_FORMS_CUSTOM_FIELD_MAPPING', {})
+        for key, value in custom_fields.items():
+            try:
+                field_mapping_key = import_string(key)
+            except ImportError:
+                raise ImproperlyConfigured(
+                    'Could not import \'{0}\' from settings.OMNI_FORMS_CUSTOM_FIELD_MAPPING '
+                    'Please update your settings file'.format(key)
+                )
+
+            try:
+                field_mapping_value = import_string(value)
+            except ImportError:
+                raise ImproperlyConfigured(
+                    'Could not import \'{0}\' from \'settings.OMNI_FORMS_CUSTOM_FIELD_MAPPING[{1}].\''
+                    'Please update your settings file'.format(value, key)
+                )
+            else:
+                if not issubclass(field_mapping_value, OmniField):
+                    raise ImproperlyConfigured('\'{0}\' defined in OMNI_FORMS_CUSTOM_FIELD_MAPPING must be a '
+                                               'subclass of omniforms.models.OmniField'.format(value))
+
+            field_mapping[field_mapping_key] = field_mapping_value
+        return field_mapping
+
+    @classmethod
     def get_concrete_class_for_model_field(cls, model_field):
         """
         Method for getting a concrete model class to represent the type of form field required
@@ -57,7 +90,7 @@ class OmniField(models.Model):
         :param model_field: Model Field instance
         :return: OmniField subclass
         """
-        return {
+        field_mapping = {
             models.CharField: OmniCharField,
             models.TextField: OmniCharField,
             models.BooleanField: OmniBooleanField,
@@ -71,7 +104,9 @@ class OmniField(models.Model):
             models.URLField: OmniUrlField,
             models.ForeignKey: OmniForeignKeyField,
             models.ManyToManyField: OmniManyToManyField
-        }.get(model_field.__class__)
+        }
+        field_mapping.update(cls.get_custom_field_mapping())
+        return field_mapping.get(model_field.__class__)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """

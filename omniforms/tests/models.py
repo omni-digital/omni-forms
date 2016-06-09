@@ -1,4 +1,5 @@
 from django.db import models
+from omniforms.models import OmniField
 
 
 class DummyModel(models.Model):
@@ -15,3 +16,17 @@ class DummyModel(models.Model):
     some_integer = models.IntegerField()
     some_time = models.TimeField()
     some_url = models.URLField()
+
+
+class TaggableManagerField(OmniField):
+    """
+    Model to test custom field mappings
+    """
+    initial = None
+
+
+class TaggableManagerInvalidField(models.Model):
+    """
+    Model to test custom field mappings
+    """
+    initial = None
