@@ -672,8 +672,9 @@ class OmniModelFormBase(OmniFormBase):
 
         :return: List of model field instances
         """
+
         def is_valid_field(field):
-            if isinstance(field, (models.AutoField, ForeignObjectRel)):
+            if isinstance(field, (models.AutoField, ForeignObjectRel, GenericRelation, GenericForeignKey)):
                 return False
             else:
                 return True
