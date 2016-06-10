@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models.fields.related import ForeignObjectRel
 from django.forms import modelform_factory
 from django.template import Template, Context
 from django.utils.encoding import python_2_unicode_compatible
@@ -473,7 +474,7 @@ class OmniFormSaveInstanceHandler(OmniFormHandler):
 
         :raises: ValidationError
         """
-        defined_fields = self.form.get_used_field_names()
+        defined_fields = self.form.used_field_names
         required_fields = self.form.get_required_field_names()
         missing_fields = []
         for field in required_fields:
@@ -628,45 +629,6 @@ class OmniModelFormBase(OmniFormBase):
         """
         abstract = True
 
-    def get_required_fields(self, exclude_with_default=True, exclude_auto_fields=True):
-        """
-        Method to get all required fields for the linked content type model
-
-        :return: List of required field names
-        """
-        def filter_field(field):
-            if field.blank:
-                return False
-            elif isinstance(field, models.ManyToManyField):
-                return False
-            elif exclude_with_default and field.has_default():
-                return False
-            else:
-                return True
-        return list(filter(filter_field, self.content_type.model_class()._meta.get_fields()))
-
-    def get_required_field_names(self, exclude_with_default=True, exclude_auto_fields=True):
-        """
-        Method to get the names of all required fields for the linked content type model
-
-        :return: List of required field names
-        """
-        return list(map(
-            lambda field: field.name,
-            self.get_required_fields(
-                exclude_with_default=exclude_with_default,
-                exclude_auto_fields=exclude_auto_fields
-            )
-        ))
-
-    def get_used_field_names(self):
-        """
-        Method for getting the names of all fields on the form
-
-        :return: List of available field names
-        """
-        return self.fields.values_list('name', flat=True)
-
     def _get_base_form_class(self):
         """
         Helper method for getting the base ModelForm class for use with the model form factory
@@ -688,31 +650,86 @@ class OmniModelFormBase(OmniFormBase):
         return modelform_factory(
             self.content_type.model_class(),
             form=self._get_base_form_class(),
-            fields=self.get_used_field_names(),
+            fields=self.used_field_names,
             labels=self._get_field_labels(),
             widgets=self._get_field_widgets(),
             help_texts=self._get_field_help_texts()
         )
 
-    def get_model_field_choices(self):
+    @cached_property
+    def used_field_names(self):
         """
-        Helper method to get field choices for the admin addfield form
+        Property for getting the names of all fields associated with the form
 
-        :return: List of (field.name, field.verbose_name) choices for use in the admin form
+        :return: List of available field names
+        """
+        return self.fields.values_list('name', flat=True)
+
+    def get_model_fields(self):
+        """
+        Method to get all model fields for the content type
+        associated with the forms specified content type
+
+        :return: List of model field instances
         """
         def is_valid_field(field):
-            if isinstance(field, (models.AutoField, models.ManyToOneRel)):
-                return False
-            elif field.name in self.get_used_field_names():
+            if isinstance(field, (models.AutoField, ForeignObjectRel)):
                 return False
             else:
                 return True
+        return list(filter(is_valid_field, self.content_type.model_class()._meta.get_fields()))
 
-        fields = filter(is_valid_field, self.content_type.model_class()._meta.get_fields())
+    def get_model_field_names(self):
+        """
+        Method to get all model field names for the content type
+        associated with the forms specified content type
+
+        :return: List of field name strings
+        """
+        return [field.name for field in self.get_model_fields()]
+
+    def get_model_field_choices(self):
+        """
+        Method to get field choices for the admin addfield form
+
+        :return: List of (field.name, field.verbose_name) choices for use in the admin form
+        """
         return [
             (field.name, getattr(field, 'verbose_name', field.name))
-            for field in fields
+            for field in self.get_model_fields()
+            if field.name not in self.used_field_names
         ]
+
+    def get_required_fields(self, exclude_with_default=True):
+        """
+        Method to get all required fields for the linked content type model
+
+        :param exclude_with_default: Whether or not to exclude fields with default values
+        :type exclude_with_default: bool
+
+        :return: List of required field names
+        """
+        def filter_field(field):
+            if field.blank:
+                return False
+            elif isinstance(field, models.ManyToManyField):
+                return False
+            elif exclude_with_default and field.has_default():
+                return False
+            else:
+                return True
+        return list(filter(filter_field, self.get_model_fields()))
+
+    def get_required_field_names(self, exclude_with_default=True):
+        """
+        Method to get the names of all required fields for the linked content type model
+
+        :return: List of required field names
+        """
+        return list(map(
+            lambda field: field.name,
+            self.get_required_fields(exclude_with_default=exclude_with_default)
+        ))
 
 
 class OmniForm(OmniFormBase):

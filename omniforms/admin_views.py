@@ -310,12 +310,11 @@ class OmniModelFormCreateFieldView(OmniModelFormCreateRelatedView):
         model_field_name = args[1]
 
         self.omni_form = self._load_omni_form(omni_form_id)
-        if model_field_name in self.omni_form.get_used_field_names():
+
+        if model_field_name not in self.omni_form.get_model_field_names():
             raise Http404
 
-        try:
-            self.model_field = self.omni_form.content_type.model_class()._meta.get_field(model_field_name)
-        except FieldDoesNotExist:
+        if model_field_name in self.omni_form.used_field_names:
             raise Http404
 
         self.model = OmniField.get_concrete_class_for_model_field(self.model_field)

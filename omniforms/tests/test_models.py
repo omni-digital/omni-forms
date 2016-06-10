@@ -12,7 +12,7 @@ from django.db import models
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.module_loading import import_string
-from mock import Mock, patch
+from mock import Mock, patch, PropertyMock
 from omniforms.forms import OmniModelFormBaseForm
 from omniforms.models import (
     OmniFormBase,
@@ -156,21 +156,21 @@ class OmniModelFormTestCase(TestCase):
         form_class = self.omniform.get_form_class()
         self.assertTrue(issubclass(form_class, OmniModelFormBaseForm))
 
+    @patch('omniforms.models.OmniModelForm.used_field_names',
+           PropertyMock(return_value=['foo', 'bar', 'baz']))
     @patch('omniforms.models.OmniModelForm._get_field_help_texts')
     @patch('omniforms.models.OmniModelForm._get_field_widgets')
     @patch('omniforms.models.OmniModelForm._get_field_labels')
-    @patch('omniforms.models.OmniModelForm.get_used_field_names')
     @patch('omniforms.models.OmniModelForm._get_base_form_class')
     @patch('omniforms.models.modelform_factory')
     def test_get_form_class_calls_modelform_factory(
-            self, modelform_factory, _get_base_form_class, get_used_field_names,
+            self, modelform_factory, _get_base_form_class,
             _get_field_labels, _get_field_widgets, _get_field_help_texts
     ):
         """
         The get_form_class method should call down to modelform_factory
         """
         _get_base_form_class.return_value = Mock()
-        get_used_field_names.return_value = Mock()
         _get_field_labels.return_value = Mock()
         _get_field_widgets.return_value = Mock()
         _get_field_help_texts.return_value = Mock()
@@ -178,7 +178,7 @@ class OmniModelFormTestCase(TestCase):
         modelform_factory.assert_called_with(
             self.omniform.content_type.model_class(),
             form=_get_base_form_class.return_value,
-            fields=get_used_field_names.return_value,
+            fields=['foo', 'bar', 'baz'],
             labels=_get_field_labels.return_value,
             widgets=_get_field_widgets.return_value,
             help_texts=_get_field_help_texts.return_value
@@ -217,12 +217,12 @@ class OmniModelFormTestCase(TestCase):
         self.assertIn(('some_url', 'some url'), choices)
         self.assertNotIn(('id', 'ID'), choices)
 
-    @patch('omniforms.models.OmniModelForm.get_used_field_names')
-    def test_get_model_field_choices_omits_used_fields(self, patched_method):
+    @patch('omniforms.models.OmniModelForm.used_field_names',
+           PropertyMock(return_value=['title', 'agree']))
+    def test_get_model_field_choices_omits_used_fields(self):
         """
         The get_model_field_choices method should not include fields which have already been used
         """
-        patched_method.return_value = ['title', 'agree']
         choices = self.omniform.get_model_field_choices()
         self.assertIn(('some_date', 'some date'), choices)
         self.assertIn(('some_datetime', 'some datetime'), choices)
@@ -265,7 +265,7 @@ class OmniModelFormTestCase(TestCase):
         The get_required_fields method should return a list of required fields for the linked content model
         """
         get_field = self.omniform.content_type.model_class()._meta.get_field
-        required_fields = self.omniform.get_required_fields(exclude_with_default=False, exclude_auto_fields=False)
+        required_fields = self.omniform.get_required_fields(exclude_with_default=False)
         self.assertNotIn(get_field('id'), required_fields)
         self.assertIn(get_field('title'), required_fields)
         self.assertNotIn(get_field('agree'), required_fields)
@@ -291,33 +291,7 @@ class OmniModelFormTestCase(TestCase):
         The get_required_fields method should return a list of required fields for the linked content model
         """
         get_field = self.omniform.content_type.model_class()._meta.get_field
-        required_fields = self.omniform.get_required_fields(exclude_with_default=True, exclude_auto_fields=False)
-        self.assertNotIn(get_field('id'), required_fields)
-        self.assertIn(get_field('title'), required_fields)
-        self.assertNotIn(get_field('agree'), required_fields)
-        self.assertIn(get_field('some_datetime'), required_fields)
-        self.assertNotIn(get_field('some_datetime_1'), required_fields)
-        self.assertNotIn(get_field('some_datetime_2'), required_fields)
-        self.assertIn(get_field('some_decimal'), required_fields)
-        self.assertIn(get_field('some_email'), required_fields)
-        self.assertIn(get_field('some_float'), required_fields)
-        self.assertIn(get_field('some_integer'), required_fields)
-        self.assertIn(get_field('some_time'), required_fields)
-        self.assertNotIn(get_field('some_time_1'), required_fields)
-        self.assertNotIn(get_field('some_time_2'), required_fields)
-        self.assertIn(get_field('some_url'), required_fields)
-        self.assertNotIn(get_field('some_date'), required_fields)
-        self.assertNotIn(get_field('some_date_1'), required_fields)
-        self.assertNotIn(get_field('some_date_2'), required_fields)
-        self.assertNotIn(get_field('other_models'), required_fields)
-        self.assertIn(get_field('slug'), required_fields)
-
-    def test_get_required_fields_exclude_auto_fields(self):
-        """
-        The get_required_fields method should return a list of required fields for the linked content model
-        """
-        get_field = self.omniform.content_type.model_class()._meta.get_field
-        required_fields = self.omniform.get_required_fields(exclude_with_default=False, exclude_auto_fields=True)
+        required_fields = self.omniform.get_required_fields(exclude_with_default=True)
         self.assertNotIn(get_field('id'), required_fields)
         self.assertIn(get_field('title'), required_fields)
         self.assertNotIn(get_field('agree'), required_fields)
@@ -368,7 +342,7 @@ class OmniModelFormTestCase(TestCase):
         """
         The get_required_field_names method should return a list of required field names for the linked content model
         """
-        required_fields = self.omniform.get_required_field_names(exclude_with_default=False, exclude_auto_fields=False)
+        required_fields = self.omniform.get_required_field_names(exclude_with_default=False)
         self.assertNotIn('id', required_fields)
         self.assertIn('title', required_fields)
         self.assertNotIn('agree', required_fields)
@@ -388,6 +362,68 @@ class OmniModelFormTestCase(TestCase):
         self.assertNotIn('some_date_2', required_fields)
         self.assertNotIn('other_models', required_fields)
         self.assertIn('slug', required_fields)
+
+    def test_used_field_names(self):
+        """
+        The used_field_names property of the model should return names of fields used on the form
+        """
+        used_field_names = self.omniform.used_field_names
+        self.assertEqual(len(used_field_names), 2)
+        self.assertIn('title', used_field_names)
+        self.assertIn('agree', used_field_names)
+
+    def test_get_model_fields(self):
+        """
+        The get_model_fields method of the form should return appropriate model fields
+        """
+        model_fields = self.omniform.get_model_fields()
+        model_field_names = [field.name for field in model_fields]
+        self.assertNotIn('id', model_field_names)
+        self.assertNotIn('dummymodel3_set', model_field_names)
+        self.assertIn('title', model_field_names)
+        self.assertIn('agree', model_field_names)
+        self.assertIn('some_date', model_field_names)
+        self.assertIn('some_date_1', model_field_names)
+        self.assertIn('some_date_2', model_field_names)
+        self.assertIn('some_datetime', model_field_names)
+        self.assertIn('some_datetime_1', model_field_names)
+        self.assertIn('some_datetime_2', model_field_names)
+        self.assertIn('some_decimal', model_field_names)
+        self.assertIn('some_email', model_field_names)
+        self.assertIn('some_float', model_field_names)
+        self.assertIn('some_integer', model_field_names)
+        self.assertIn('some_time', model_field_names)
+        self.assertIn('some_time_1', model_field_names)
+        self.assertIn('some_time_2', model_field_names)
+        self.assertIn('some_url', model_field_names)
+        self.assertIn('slug', model_field_names)
+        self.assertIn('other_models', model_field_names)
+
+    def test_get_model_field_names(self):
+        """
+        The get_model_field_names method should return the appropriate model field names
+        """
+        model_field_names = self.omniform.get_model_field_names()
+        self.assertNotIn('id', model_field_names)
+        self.assertNotIn('dummymodel3_set', model_field_names)
+        self.assertIn('title', model_field_names)
+        self.assertIn('agree', model_field_names)
+        self.assertIn('some_date', model_field_names)
+        self.assertIn('some_date_1', model_field_names)
+        self.assertIn('some_date_2', model_field_names)
+        self.assertIn('some_datetime', model_field_names)
+        self.assertIn('some_datetime_1', model_field_names)
+        self.assertIn('some_datetime_2', model_field_names)
+        self.assertIn('some_decimal', model_field_names)
+        self.assertIn('some_email', model_field_names)
+        self.assertIn('some_float', model_field_names)
+        self.assertIn('some_integer', model_field_names)
+        self.assertIn('some_time', model_field_names)
+        self.assertIn('some_time_1', model_field_names)
+        self.assertIn('some_time_2', model_field_names)
+        self.assertIn('some_url', model_field_names)
+        self.assertIn('slug', model_field_names)
+        self.assertIn('other_models', model_field_names)
 
 
 class OmniFieldTestCase(TestCase):
@@ -1436,14 +1472,14 @@ class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
         handler.clean()
         patched_method.assert_called_with()
 
+    @patch('omniforms.models.OmniModelForm.used_field_names',
+           PropertyMock(return_value=['foo', 'something', 'else']))
     @patch('omniforms.models.OmniModelForm.get_required_field_names')
-    @patch('omniforms.models.OmniModelForm.get_used_field_names')
-    def test_assert_has_all_required_fields_invalid(self, get_used_field_names, get_required_field_names):
+    def test_assert_has_all_required_fields_invalid(self, get_required_field_names):
         """
         The assert_has_all_required_fields method should raise a ValidationError with an appropriate message
         """
         get_required_field_names.return_value = ['foo', 'bar', 'baz']
-        get_used_field_names.return_value = ['foo', 'something', 'else']
         handler = OmniFormSaveInstanceHandler(name='Save instance', order=0, form=self.omni_form)
         with self.assertRaises(ValidationError) as cm:
             handler.assert_has_all_required_fields()
@@ -1455,13 +1491,13 @@ class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
             'is missing the following fields: ({0})'.format(', '.join(['bar', 'baz']))
         )
 
+    @patch('omniforms.models.OmniModelForm.used_field_names',
+           PropertyMock(return_value=['foo', 'bar', 'baz', 'something', 'else']))
     @patch('omniforms.models.OmniModelForm.get_required_field_names')
-    @patch('omniforms.models.OmniModelForm.get_used_field_names')
-    def test_assert_has_all_required_fields_valid(self, get_used_field_names, get_required_field_names):
+    def test_assert_has_all_required_fields_valid(self, get_required_field_names):
         """
         The assert_has_all_required_fields method should not raise a ValidationError
         """
         get_required_field_names.return_value = ['foo', 'bar', 'baz']
-        get_used_field_names.return_value = ['foo', 'bar', 'baz', 'something', 'else']
         handler = OmniFormSaveInstanceHandler(name='Save instance', order=0, form=self.omni_form)
         handler.assert_has_all_required_fields()

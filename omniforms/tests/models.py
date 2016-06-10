@@ -2,6 +2,13 @@ from django.db import models
 from omniforms.models import OmniField
 
 
+class DummyModel3(models.Model):
+    """
+    Dummy Model 2 for use with tests
+    """
+    title = models.ManyToManyField('tests.DummyModel')
+
+
 class DummyModel2(models.Model):
     """
     Dummy Model 2 for use with tests

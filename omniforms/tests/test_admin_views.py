@@ -139,6 +139,14 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
+    def test_raises_404_for_many_to_many_rel_field(self):
+        """
+        The view should raise an HTTP 404 response if the omni form does not exist
+        """
+        url = reverse('admin:omniforms_omnimodelform_createfield', args=[self.omni_form.pk, 'dummymodel3_set'])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
     def test_raises_404_for_invalid_field_name(self):
         """
         The view should raise an HTTP 404 response if the specified field does not exist
