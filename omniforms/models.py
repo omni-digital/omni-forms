@@ -105,7 +105,8 @@ class OmniField(models.Model):
             models.ForeignKey: OmniForeignKeyField,
             models.ManyToManyField: OmniManyToManyField,
             models.SlugField: OmniSlugField,
-            models.FileField: OmniFileField
+            models.FileField: OmniFileField,
+            models.ImageField: OmniImageField
         }
         field_mapping.update(cls.get_custom_field_mapping())
         return field_mapping.get(model_field.__class__)
@@ -245,6 +246,15 @@ class OmniFileField(OmniField):
     """
     initial = None
     FIELD_CLASS = 'django.forms.FileField'
+    FORM_WIDGETS = ('django.forms.widgets.FileInput',)
+
+
+class OmniImageField(OmniField):
+    """
+    ImageField representation
+    """
+    initial = None
+    FIELD_CLASS = 'django.forms.ImageField'
     FORM_WIDGETS = ('django.forms.widgets.FileInput',)
 
 

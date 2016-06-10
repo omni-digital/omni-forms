@@ -27,6 +27,7 @@ from omniforms.models import (
     OmniEmailField,
     OmniFileField,
     OmniFloatField,
+    OmniImageField,
     OmniIntegerField,
     OmniTimeField,
     OmniUrlField,
@@ -508,6 +509,7 @@ class OmniFieldTestCase(TestCase):
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.URLField()), OmniUrlField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.SlugField()), OmniSlugField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.FileField()), OmniFileField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.ImageField()), OmniImageField)
         self.assertEqual(
             OmniField.get_concrete_class_for_model_field(models.ForeignKey(DummyModel2)),
             OmniForeignKeyField
@@ -991,7 +993,7 @@ class OmniFileFieldTestCase(TestCase):
 
     def test_initial(self):
         """
-        The model should have an initial field
+        The model should not allow initial data
         """
         self.assertIsNone(OmniFileField.initial)
 
@@ -1006,6 +1008,35 @@ class OmniFileFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.FileInput', OmniFileField.FORM_WIDGETS)
+
+
+class OmniImageFieldTestCase(TestCase):
+    """
+    Tests the OmniImageField
+    """
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniImageField
+        """
+        self.assertTrue(issubclass(OmniImageField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should not allow initial data
+        """
+        self.assertIsNone(OmniImageField.initial)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniImageField.FIELD_CLASS, 'django.forms.ImageField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.FileInput', OmniImageField.FORM_WIDGETS)
 
 
 class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):
