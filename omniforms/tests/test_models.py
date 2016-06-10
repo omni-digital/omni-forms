@@ -25,6 +25,7 @@ from omniforms.models import (
     OmniDateTimeField,
     OmniDecimalField,
     OmniEmailField,
+    OmniFileField,
     OmniFloatField,
     OmniIntegerField,
     OmniTimeField,
@@ -506,6 +507,7 @@ class OmniFieldTestCase(TestCase):
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.TimeField()), OmniTimeField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.URLField()), OmniUrlField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.SlugField()), OmniSlugField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.FileField()), OmniFileField)
         self.assertEqual(
             OmniField.get_concrete_class_for_model_field(models.ForeignKey(DummyModel2)),
             OmniForeignKeyField
@@ -975,6 +977,35 @@ class OmniSlugFieldTestCase(TestCase):
         """
         self.assertIn('django.forms.widgets.TextInput', OmniSlugField.FORM_WIDGETS)
         self.assertIn('django.forms.widgets.HiddenInput', OmniSlugField.FORM_WIDGETS)
+
+
+class OmniFileFieldTestCase(TestCase):
+    """
+    Tests the OmniFileField
+    """
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniField
+        """
+        self.assertTrue(issubclass(OmniFileField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should have an initial field
+        """
+        self.assertIsNone(OmniFileField.initial)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniFileField.FIELD_CLASS, 'django.forms.FileField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.FileInput', OmniFileField.FORM_WIDGETS)
 
 
 class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):

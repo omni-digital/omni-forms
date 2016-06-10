@@ -104,7 +104,8 @@ class OmniField(models.Model):
             models.URLField: OmniUrlField,
             models.ForeignKey: OmniForeignKeyField,
             models.ManyToManyField: OmniManyToManyField,
-            models.SlugField: OmniSlugField
+            models.SlugField: OmniSlugField,
+            models.FileField: OmniFileField
         }
         field_mapping.update(cls.get_custom_field_mapping())
         return field_mapping.get(model_field.__class__)
@@ -236,6 +237,15 @@ class OmniEmailField(OmniField):
     initial = models.EmailField(blank=True, null=True)
     FIELD_CLASS = 'django.forms.EmailField'
     FORM_WIDGETS = ('django.forms.widgets.EmailInput',)
+
+
+class OmniFileField(OmniField):
+    """
+    FileField representation
+    """
+    initial = None
+    FIELD_CLASS = 'django.forms.FileField'
+    FORM_WIDGETS = ('django.forms.widgets.FileInput',)
 
 
 class OmniFloatField(OmniField):
