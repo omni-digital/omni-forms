@@ -13,7 +13,7 @@ from django.forms import modelform_factory
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, CreateView, DetailView, UpdateView
-from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormCreateFieldForm
+from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormFieldForm
 from omniforms.models import OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
 
 
@@ -274,7 +274,7 @@ class OmniModelFormFieldView(OmniModelFormRelatedView):
     View for creating/editing OmniModelForm fields
     """
     add_another_url_name = 'admin:omniforms_omnimodelform_addfield'
-    form_class = OmniModelFormCreateFieldForm
+    form_class = OmniModelFormFieldForm
     model = None
 
     def __init__(self, *args, **kwargs):

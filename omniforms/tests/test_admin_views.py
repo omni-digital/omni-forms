@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from mock import patch
-from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormCreateFieldForm
+from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormFieldForm
 from omniforms.admin_views import (
     OmniModelFormAddFieldView,
     OmniModelFormCreateFieldView,
@@ -130,7 +130,7 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniModelFormCreateFieldView)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertEqual(response.context['model_field_name'], 'title')
-        self.assertIsInstance(response.context['form'], OmniModelFormCreateFieldForm)
+        self.assertIsInstance(response.context['form'], OmniModelFormFieldForm)
 
     def test_raises_404_for_invalid_omni_form(self):
         """
@@ -357,7 +357,7 @@ class OmniModelFormUpdateFieldViewTestCase(OmniFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniModelFormUpdateFieldView)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertEqual(response.context['model_field_name'], 'title')
-        self.assertIsInstance(response.context['form'], OmniModelFormCreateFieldForm)
+        self.assertIsInstance(response.context['form'], OmniModelFormFieldForm)
 
     def test_raises_404_for_invalid_omni_form(self):
         """
