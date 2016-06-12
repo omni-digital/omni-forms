@@ -11,6 +11,7 @@ from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormCrea
 from omniforms.admin_views import (
     OmniModelFormAddFieldView,
     OmniModelFormCreateFieldView,
+    OmniModelFormUpdateFieldView,
     OmniModelFormAddHandlerView,
     OmniModelFormCreateHandlerView
 )
@@ -316,6 +317,131 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
         The view should require the omniforms.add_omnifield permission
         """
         self.user.user_permissions.remove(self.add_field_permission)
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, reverse('admin:index'))
+
+
+class OmniModelFormUpdateFieldViewTestCase(OmniFormAdminTestCaseStub):
+    """
+    Tests the OmniModelFormAddFieldView
+    """
+    def setUp(self):
+        super(OmniModelFormUpdateFieldViewTestCase, self).setUp()
+        self.url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'title'])
+        self.field = OmniCharField(
+            name='title',
+            label='Title',
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            form=self.omni_form
+        )
+        self.field.save()
+        self.form_data = {
+            'id': self.field.pk,
+            'required': False,
+            'name': 'some_date',
+            'label': 'Enter a date',
+            'help_text': 'This will be used for something',
+            'widget_class': OmniCharField.FORM_WIDGETS[0],
+            'content_type': ContentType.objects.get_for_model(self.omni_form).pk,
+            'object_id': self.omni_form.pk,
+            'order': 0
+        }
+
+    def test_renders(self):
+        """
+        The view should render
+        """
+        response = self.client.get(self.url)
+        self.assertTemplateUsed(response, 'admin/omniforms/omnimodelform/createfield_form.html')
+        self.assertIsInstance(response.context['view'], OmniModelFormUpdateFieldView)
+        self.assertEqual(response.context['omni_form'], self.omni_form)
+        self.assertEqual(response.context['model_field_name'], 'title')
+        self.assertIsInstance(response.context['form'], OmniModelFormCreateFieldForm)
+
+    def test_raises_404_for_invalid_omni_form(self):
+        """
+        The view should raise an HTTP 404 response if the omni form does not exist
+        """
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[9999, 'title'])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_raises_404_for_invalid_field_name(self):
+        """
+        The view should raise an HTTP 404 response if the specified field does not exist
+        """
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'thisisnotafield'])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_model_set_correctly(self):
+        """
+        The view should use the appropriate model for the field
+        """
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'title'])
+        response = self.client.get(url)
+        self.assertEqual(response.context['view'].model, OmniCharField)
+
+    def test_required_field_widget_required(self):
+        """
+        The form should use a hidden widget for the required field if the corresponding model field is required
+        """
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'title'])
+        response = self.client.get(url)
+        self.assertIsInstance(response.context['form'].fields['required'].widget, forms.HiddenInput)
+
+    def test_form_hidden_widgets(self):
+        """
+        The form should use hidden input widgets for the name, widget_class, content_type and object_id fields
+        """
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'title'])
+        response = self.client.get(url)
+        self.assertIsInstance(response.context['form'].fields['name'].widget, forms.HiddenInput)
+        self.assertIsInstance(response.context['form'].fields['content_type'].widget, forms.HiddenInput)
+        self.assertIsInstance(response.context['form'].fields['object_id'].widget, forms.HiddenInput)
+
+    def test_redirects_to_change_form(self):
+        """
+        The view should redirect to the change form
+        """
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'title'])
+        response = self.client.post(url, self.form_data, follow=True)
+        self.assertRedirects(response, reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk]))
+
+    def test_redirects_to_add_form(self):
+        """
+        The view should redirect to the add form
+        """
+        self.form_data.update({'_addanother': 'Save and add another'})
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'title'])
+        response = self.client.post(url, self.form_data, follow=True)
+        self.assertRedirects(response, reverse('admin:omniforms_omnimodelform_addfield', args=[self.omni_form.pk]))
+
+    def test_invalid_widget_class(self):
+        """
+        It should not be possible to submit an invalid widget class in the form
+        """
+        self.form_data.update({'widget_class': 'django.forms.fields.DateField'})
+        url = reverse('admin:omniforms_omnimodelform_updatefield', args=[self.omni_form.pk, 'title'])
+        response = self.client.post(url, self.form_data, follow=True)
+        self.assertIn('widget_class', response.context['form'].errors)
+
+    def test_staff_required(self):
+        """
+        The view should not be accessible to non staff users
+        """
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get(self.url, follow=True)
+        redirect_url = '{0}?next={1}'.format(reverse('admin:login'), self.url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_permission_required(self):
+        """
+        The view should require the omniforms.change_omnifield permission
+        """
+        self.user.user_permissions.remove(self.change_field_permission)
         response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, reverse('admin:index'))
 
