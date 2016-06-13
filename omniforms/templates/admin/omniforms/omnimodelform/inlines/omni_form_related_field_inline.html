@@ -1,0 +1,7 @@
+{% extends 'admin/omniforms/omnimodelform/inlines/omni_form_related_inline.html' %}
+{% load i18n admin_urls admin_static admin_modify %}
+
+
+{% block change_link %}
+<a href="{% url 'admin:omniforms_omnimodelform_updatefield' inline_admin_form.original.form.pk|admin_urlquote inline_admin_form.original.name|admin_urlquote %}" class="inlinechangelink">{% trans "Change" %}</a>
+{% endblock change_link %}

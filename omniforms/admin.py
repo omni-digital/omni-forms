@@ -13,26 +13,30 @@ from omniforms.admin_views import OmniModelFormUpdateFieldView
 from omniforms.models import OmniModelForm, OmniField, OmniFormHandler
 
 
-class OmniFieldAdmin(GenericTabularInline):
+class OmniRelatedInlineAdmin(GenericTabularInline):
+    """
+    Admin class for handling related inline items for omniforms
+    """
+    extra = 0
+    max_num = 0
+    fields = ('name', 'order',)
+    readonly_fields = ('name',)
+
+
+class OmniFieldAdmin(OmniRelatedInlineAdmin):
     """
     Generic admin for OmniField models
     """
     model = OmniField
-    extra = 0
-    max_num = 0
-    fields = ('name', 'order',)
-    readonly_fields = ('name',)
+    show_change_link = True
+    template = 'admin/omniforms/omnimodelform/inlines/omni_form_related_field_inline.html'
 
 
-class OmniHandlerAdmin(GenericTabularInline):
+class OmniHandlerAdmin(OmniRelatedInlineAdmin):
     """
     Generic admin for OmniFormHandler models
     """
     model = OmniFormHandler
-    extra = 0
-    max_num = 0
-    fields = ('name', 'order',)
-    readonly_fields = ('name',)
 
 
 class OmniModelFormAdmin(admin.ModelAdmin):

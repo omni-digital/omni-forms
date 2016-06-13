@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.query import Q
+from django.forms.widgets import Widget
 from omniforms.models import OmniModelForm
 import json
 
