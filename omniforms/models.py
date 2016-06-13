@@ -41,6 +41,7 @@ class OmniField(models.Model):
         Django properties
         """
         ordering = ('order',)
+        unique_together = ('name', 'content_type', 'object_id')
 
     def __str__(self):
         """

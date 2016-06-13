@@ -8,7 +8,7 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.db import models
+from django.db import models, IntegrityError
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.module_loading import import_string
@@ -595,6 +595,16 @@ class OmniFieldTestCase(TestCase):
         OMNI_FORMS_CUSTOM_FIELD_MAPPING imported model field does not subclass OmniField
         """
         self.assertRaises(ImproperlyConfigured, OmniField.get_custom_field_mapping)
+
+    def test_field_name_unique_for_form(self):
+        """
+        The field name must be unique for the given form
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniField(name='A', label='A', widget_class='A', form=form)
+        field.save()
+        field.pk = None  # Remove the PK to make the instance think it's new
+        self.assertRaises(IntegrityError, field.save)
 
 
 class OmniFieldInstanceTestCase(OmniFormTestCaseStub):
