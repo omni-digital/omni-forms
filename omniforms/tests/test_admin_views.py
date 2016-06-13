@@ -9,10 +9,10 @@ from django.core.urlresolvers import reverse
 from mock import patch
 from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormFieldForm
 from omniforms.admin_views import (
-    OmniModelFormAddFieldView,
+    OmniModelFormSelectFieldView,
     OmniModelFormCreateFieldView,
     OmniModelFormUpdateFieldView,
-    OmniModelFormAddHandlerView,
+    OmniModelFormSelectHandlerView,
     OmniModelFormCreateHandlerView
 )
 from omniforms.models import (
@@ -34,12 +34,12 @@ from omniforms.models import (
 from omniforms.tests.utils import OmniFormAdminTestCaseStub
 
 
-class OmniModelFormAddFieldViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormSelectFieldViewTestCase(OmniFormAdminTestCaseStub):
     """
-    Tests the OmniModelFormAddFieldView
+    Tests the OmniModelFormSelectFieldView
     """
     def setUp(self):
-        super(OmniModelFormAddFieldViewTestCase, self).setUp()
+        super(OmniModelFormSelectFieldViewTestCase, self).setUp()
         self.url = reverse('admin:omniforms_omnimodelform_addfield', args=[self.omni_form.pk])
 
     def test_renders(self):
@@ -47,7 +47,7 @@ class OmniModelFormAddFieldViewTestCase(OmniFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertIsInstance(response.context['view'], OmniModelFormAddFieldView)
+        self.assertIsInstance(response.context['view'], OmniModelFormSelectFieldView)
         self.assertIsInstance(response.context['form'], OmniModelFormAddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/addfield_form.html")
@@ -105,7 +105,7 @@ class OmniModelFormAddFieldViewTestCase(OmniFormAdminTestCaseStub):
 
 class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
     """
-    Tests the OmniModelFormAddFieldView
+    Tests the OmniModelFormSelectFieldView
     """
     def setUp(self):
         super(OmniModelFormCreateFieldViewTestCase, self).setUp()
@@ -323,7 +323,7 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
 
 class OmniModelFormUpdateFieldViewTestCase(OmniFormAdminTestCaseStub):
     """
-    Tests the OmniModelFormAddFieldView
+    Tests the OmniModelFormUpdateFieldView
     """
     def setUp(self):
         super(OmniModelFormUpdateFieldViewTestCase, self).setUp()
@@ -482,12 +482,12 @@ class OmniModelFormPreviewViewTestCase(OmniFormAdminTestCaseStub):
         self.assertRedirects(response, reverse('admin:index'))
 
 
-class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormSelectHandlerViewTestCase(OmniFormAdminTestCaseStub):
     """
-    Tests the OmniModelFormAddHandlerView
+    Tests the OmniModelFormSelectHandlerView
     """
     def setUp(self):
-        super(OmniModelFormAddHandlerViewTestCase, self).setUp()
+        super(OmniModelFormSelectHandlerViewTestCase, self).setUp()
         self.url = reverse('admin:omniforms_omnimodelform_addhandler', args=[self.omni_form.pk])
 
     def test_renders(self):
@@ -495,7 +495,7 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertIsInstance(response.context['view'], OmniModelFormAddHandlerView)
+        self.assertIsInstance(response.context['view'], OmniModelFormSelectHandlerView)
         self.assertIsInstance(response.context['form'], OmniModelFormAddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/addhandler_form.html")
@@ -551,7 +551,7 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         """
         The _get_form_choices method of the view should return content types that are OmniFormHandler subclasses
         """
-        choices = OmniModelFormAddHandlerView()._get_form_choices()
+        choices = OmniModelFormSelectHandlerView()._get_form_choices()
         email_handler_ctype = ContentType.objects.get_for_model(OmniFormEmailHandler)
         save_instance_handler_ctype = ContentType.objects.get_for_model(OmniFormSaveInstanceHandler)
         self.assertIn((email_handler_ctype.pk, '{0}'.format(email_handler_ctype)), choices)
@@ -563,7 +563,7 @@ class OmniModelFormAddHandlerViewTestCase(OmniFormAdminTestCaseStub):
         The _get_form_choices method of the view should not raise an exception if the model class could not be resolved
         """
         patched_method.return_value = None
-        OmniModelFormAddHandlerView()._get_form_choices()
+        OmniModelFormSelectHandlerView()._get_form_choices()
 
 
 class OmniModelFormCreateHandlerViewTestCase(OmniFormAdminTestCaseStub):

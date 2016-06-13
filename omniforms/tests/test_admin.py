@@ -120,7 +120,7 @@ class OmniModelFormAdminTestCase(OmniFormTestCaseStub):
         The class should add custom urls for adding a field
         """
         resolved = resolve(reverse('admin:omniforms_omnimodelform_addfield', args=[self.omni_form.pk]))
-        self.assertEqual(resolved[0].__name__, 'OmniModelFormAddFieldView')
+        self.assertEqual(resolved[0].__name__, 'OmniModelFormSelectFieldView')
 
     def test_create_field_view(self):
         """

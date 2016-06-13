@@ -182,7 +182,7 @@ class OmniModelFormRelatedView(OmniFormAdminView):
             return reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk])
 
 
-class OmniModelFormAddRelatedView(OmniFormAdminView):
+class OmniModelFormSelectRelatedView(OmniFormAdminView):
     """
     View for selecting a related model type to add to the Omni Model Form instance in the django admin
     This view does not actually create the related instance but allows the administrator to select the
@@ -209,7 +209,7 @@ class OmniModelFormAddRelatedView(OmniFormAdminView):
 
         :return: Dict of kwargs for the form
         """
-        form_kwargs = super(OmniModelFormAddRelatedView, self).get_form_kwargs()
+        form_kwargs = super(OmniModelFormSelectRelatedView, self).get_form_kwargs()
         form_kwargs['choices'] = self._get_form_choices()
         return form_kwargs
 
@@ -226,7 +226,7 @@ class OmniModelFormAddRelatedView(OmniFormAdminView):
         return HttpResponseRedirect(url)
 
 
-class OmniModelFormAddFieldView(OmniModelFormAddRelatedView):
+class OmniModelFormSelectFieldView(OmniModelFormSelectRelatedView):
     """
     View for choosing which field a field to the Omni Model Form instance in the django admin
     """
@@ -244,7 +244,7 @@ class OmniModelFormAddFieldView(OmniModelFormAddRelatedView):
         return self.omni_form.get_model_field_choices()
 
 
-class OmniModelFormAddHandlerView(OmniModelFormAddRelatedView):
+class OmniModelFormSelectHandlerView(OmniModelFormSelectRelatedView):
     """
     View for choosing a handler to add to the Omni Model Form instance in the django admin
     """
