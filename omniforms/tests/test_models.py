@@ -1113,6 +1113,24 @@ class OmniFloatFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_min_value(self):
+        """
+        The model should have a min_value field
+        """
+        field = OmniFloatField._meta.get_field('min_value')
+        self.assertIsInstance(field, models.FloatField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_max_value(self):
+        """
+        The model should have a max_value field
+        """
+        field = OmniFloatField._meta.get_field('max_value')
+        self.assertIsInstance(field, models.FloatField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
     def test_field_class(self):
         """
         The model should define the correct field class
@@ -1124,6 +1142,27 @@ class OmniFloatFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.NumberInput', OmniFloatField.FORM_WIDGETS)
+
+    def test_as_form_field(self):
+        """
+        The as_form_field method should pass protocol and unpack_ipv4 to the field constructor
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniFloatField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial=10.8,
+            min_value=10,
+            max_value=999,
+            form=form
+        )
+        field.save()
+        field_instance = field.as_form_field()
+        self.assertEqual(field_instance.min_value, 10)
+        self.assertEqual(field_instance.max_value, 999)
 
 
 class OmniIntegerFieldTestCase(TestCase):
