@@ -329,8 +329,30 @@ class OmniDecimalField(OmniField):
     DecimalField representation
     """
     initial = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
+    min_value = models.DecimalField(blank=True, null=True, decimal_places=99999, max_digits=9999999)
+    max_value = models.DecimalField(blank=True, null=True, decimal_places=99999, max_digits=9999999)
+    max_digits = models.PositiveIntegerField()
+    decimal_places = models.PositiveIntegerField()
+
     FIELD_CLASS = 'django.forms.DecimalField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
+
+    def as_form_field(self, **kwargs):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :param kwargs: Extra keyword args to pass to the form field constructor
+        :type kwargs: dict
+
+        :return: django.forms.fields.Field subclass
+        """
+        return super(OmniDecimalField, self).as_form_field(
+            min_value=self.min_value,
+            max_value=self.max_value,
+            max_digits=self.max_digits,
+            decimal_places=self.decimal_places
+        )
 
 
 class OmniEmailField(OmniField):

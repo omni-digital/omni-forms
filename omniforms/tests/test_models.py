@@ -979,6 +979,42 @@ class OmniDecimalFieldTestCase(TestCase):
         self.assertEqual(field.decimal_places, 2)
         self.assertEqual(field.max_digits, 10)
 
+    def test_min_value(self):
+        """
+        The model should have a min_value field
+        """
+        field = OmniDecimalField._meta.get_field('min_value')
+        self.assertIsInstance(field, models.DecimalField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_max_value(self):
+        """
+        The model should have a max_value field
+        """
+        field = OmniDecimalField._meta.get_field('max_value')
+        self.assertIsInstance(field, models.DecimalField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_max_digits(self):
+        """
+        The model should have a max_digits field
+        """
+        field = OmniDecimalField._meta.get_field('max_digits')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_decimal_places(self):
+        """
+        The model should have a decimal_places field
+        """
+        field = OmniDecimalField._meta.get_field('decimal_places')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
     def test_field_class(self):
         """
         The model should define the correct field class
@@ -990,6 +1026,31 @@ class OmniDecimalFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.NumberInput', OmniDecimalField.FORM_WIDGETS)
+
+    def test_as_form_field(self):
+        """
+        The as_form_field method should pass protocol and unpack_ipv4 to the field constructor
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniDecimalField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial=10.8,
+            min_value=0.0,
+            max_value=999.987,
+            max_digits=999,
+            decimal_places=3,
+            form=form
+        )
+        field.save()
+        field_instance = field.as_form_field()
+        self.assertEqual(field_instance.min_value, 0.0)
+        self.assertEqual(field_instance.max_value, 999.987)
+        self.assertEqual(field_instance.max_digits, 999)
+        self.assertEqual(field_instance.decimal_places, 3)
 
 
 class OmniFloatFieldTestCase(TestCase):
