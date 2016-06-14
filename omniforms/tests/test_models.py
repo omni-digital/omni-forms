@@ -709,6 +709,26 @@ class OmniCharFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_max_length(self):
+        """
+        The model should have a max_length field
+        """
+        field = OmniCharField._meta.get_field('max_length')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertTrue(field.blank)
+        self.assertFalse(field.null)
+        self.assertEqual(field.default, 255)
+
+    def test_min_length(self):
+        """
+        The model should have a min_length field
+        """
+        field = OmniCharField._meta.get_field('min_length')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertTrue(field.blank)
+        self.assertFalse(field.null)
+        self.assertEqual(field.default, 0)
+
     def test_field_class(self):
         """
         The model should define the correct field class

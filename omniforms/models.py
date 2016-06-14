@@ -185,6 +185,9 @@ class OmniCharField(OmniField):
     CharField representation
     """
     initial = models.TextField(blank=True, null=True)
+    max_length = models.PositiveIntegerField(default=255, blank=True)
+    min_length = models.PositiveIntegerField(default=0, blank=True)
+
     FIELD_CLASS = 'django.forms.CharField'
     FORM_WIDGETS = (
         'django.forms.widgets.TextInput',
