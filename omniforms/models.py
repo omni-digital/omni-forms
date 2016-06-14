@@ -360,8 +360,26 @@ class OmniEmailField(OmniField):
     EmailField representation
     """
     initial = models.EmailField(blank=True, null=True)
+    max_length = models.PositiveIntegerField(default=255, blank=True)
+    min_length = models.PositiveIntegerField(default=0, blank=True)
+
     FIELD_CLASS = 'django.forms.EmailField'
     FORM_WIDGETS = ('django.forms.widgets.EmailInput',)
+
+    def as_form_field(self, **kwargs):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :param kwargs: Extra keyword args to pass to the form field constructor
+        :type kwargs: dict
+
+        :return: django.forms.fields.Field subclass
+        """
+        return super(OmniEmailField, self).as_form_field(
+            min_length=self.min_length,
+            max_length=self.max_length
+        )
 
 
 class OmniFileField(OmniField):
