@@ -1237,6 +1237,26 @@ class OmniUrlFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_max_length(self):
+        """
+        The model should have a max_length field
+        """
+        field = OmniUrlField._meta.get_field('max_length')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertTrue(field.blank)
+        self.assertFalse(field.null)
+        self.assertEqual(field.default, 255)
+
+    def test_min_length(self):
+        """
+        The model should have a min_length field
+        """
+        field = OmniUrlField._meta.get_field('min_length')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertTrue(field.blank)
+        self.assertFalse(field.null)
+        self.assertEqual(field.default, 0)
+
     def test_field_class(self):
         """
         The model should define the correct field class
@@ -1248,6 +1268,27 @@ class OmniUrlFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.URLInput', OmniUrlField.FORM_WIDGETS)
+
+    def test_as_form_field(self):
+        """
+        The as_form_field method should pass the min_length and max_length to the field constructor
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniUrlField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial='http://www.google.com',
+            min_length=10,
+            max_length=150,
+            form=form
+        )
+        field.save()
+        field_instance = field.as_form_field()
+        self.assertEqual(field_instance.min_length, 10)
+        self.assertEqual(field_instance.max_length, 150)
 
 
 class OmniSlugFieldTestCase(TestCase):
