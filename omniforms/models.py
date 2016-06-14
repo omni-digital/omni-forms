@@ -432,8 +432,26 @@ class OmniIntegerField(OmniField):
     IntegerField representation
     """
     initial = models.IntegerField(blank=True, null=True)
+    min_value = models.IntegerField(blank=True, null=True)
+    max_value = models.IntegerField(blank=True, null=True)
+
     FIELD_CLASS = 'django.forms.IntegerField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
+
+    def as_form_field(self, **kwargs):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :param kwargs: Extra keyword args to pass to the form field constructor
+        :type kwargs: dict
+
+        :return: django.forms.fields.Field subclass
+        """
+        return super(OmniIntegerField, self).as_form_field(
+            min_value=self.min_value,
+            max_value=self.max_value
+        )
 
 
 class OmniTimeField(OmniField):
