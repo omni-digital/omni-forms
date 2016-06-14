@@ -743,6 +743,27 @@ class OmniCharFieldTestCase(TestCase):
         self.assertIn('django.forms.widgets.Textarea', OmniCharField.FORM_WIDGETS)
         self.assertIn('django.forms.widgets.PasswordInput', OmniCharField.FORM_WIDGETS)
 
+    def test_as_form_field(self):
+        """
+        The as_form_field method should pass the min_length and max_length to the field constructor
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniCharField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial='Some title...',
+            min_length=10,
+            max_length=150,
+            form=form
+        )
+        field.save()
+        field_instance = field.as_form_field()
+        self.assertEqual(field_instance.min_length, 10)
+        self.assertEqual(field_instance.max_length, 150)
+
 
 class OmniUUIDFieldTestCase(TestCase):
     """

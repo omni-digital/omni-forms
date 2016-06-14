@@ -162,10 +162,13 @@ class OmniField(models.Model):
         else:
             return self.real_type.get_object_for_this_type(pk=self.pk)
 
-    def as_form_field(self):
+    def as_form_field(self, **kwargs):
         """
         Method for generating a form field instance from the
         specified data stored against this model instance
+
+        :param kwargs: Extra keyword args to pass to the form field constructor
+        :type kwargs: dict
 
         :return: django.forms.fields.Field subclass
         """
@@ -176,7 +179,8 @@ class OmniField(models.Model):
             label=self.specific.label,
             help_text=self.specific.help_text,
             required=self.specific.required,
-            initial=self.specific.initial
+            initial=self.specific.initial,
+            **kwargs
         )
 
 
@@ -194,6 +198,18 @@ class OmniCharField(OmniField):
         'django.forms.widgets.Textarea',
         'django.forms.widgets.PasswordInput'
     )
+
+    def as_form_field(self, **kwargs):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :param kwargs: Extra keyword args to pass to the form field constructor
+        :type kwargs: dict
+
+        :return: django.forms.fields.Field subclass
+        """
+        return super(OmniCharField, self).as_form_field(min_length=self.min_length, max_length=self.max_length)
 
 
 class OmniDurationField(OmniField):
