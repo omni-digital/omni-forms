@@ -1075,6 +1075,28 @@ class OmniGenericIPAddressFieldTestCase(TestCase):
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
 
+    def test_protocol(self):
+        """
+        The model should have a protocol field
+        """
+        field = OmniGenericIPAddressField._meta.get_field('protocol')
+        self.assertIsInstance(field, models.CharField)
+        self.assertTrue(field.blank)
+        self.assertFalse(field.null)
+        self.assertEqual(field.max_length, 4)
+        self.assertEqual(field.choices, OmniGenericIPAddressField.PROTOCOL_CHOICES)
+        self.assertEqual(field.default, OmniGenericIPAddressField.PROTOCOL_BOTH)
+
+    def test_unpack_ipv4(self):
+        """
+        The model should have an unpack_ipv4 field
+        """
+        field = OmniGenericIPAddressField._meta.get_field('unpack_ipv4')
+        self.assertIsInstance(field, models.BooleanField)
+        self.assertTrue(field.blank)
+        self.assertFalse(field.null)
+        self.assertFalse(field.default)
+
     def test_field_class(self):
         """
         The model should define the correct field class
@@ -1086,6 +1108,82 @@ class OmniGenericIPAddressFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.TextInput', OmniGenericIPAddressField.FORM_WIDGETS)
+
+    def test_as_form_field(self):
+        """
+        The as_form_field method should pass protocol and unpack_ipv4 to the field constructor
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniGenericIPAddressField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial='192.168.1.1',
+            protocol=OmniGenericIPAddressField.PROTOCOL_BOTH,
+            unpack_ipv4=True,
+            form=form
+        )
+        field.save()
+        field_instance = field.as_form_field()
+        self.assertEqual(field_instance.validators[0].__name__, 'validate_ipv46_address')
+        self.assertTrue(field_instance.unpack_ipv4)
+
+    def test_unpack_ipv4_raises_validation_error_with_ipv4(self):
+        """
+        The clean method should raise a validation error if unpack_ipv4 is selected with any protocol other than both
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniGenericIPAddressField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial='192.168.1.1',
+            protocol=OmniGenericIPAddressField.PROTOCOL_IPV4,
+            unpack_ipv4=True,
+            form=form
+        )
+        self.assertRaises(ValidationError, field.full_clean)
+
+    def test_unpack_ipv4_raises_validation_error_with_ipv6(self):
+        """
+        The clean method should raise a validation error if unpack_ipv4 is selected with any protocol other than both
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniGenericIPAddressField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial='192.168.1.1',
+            protocol=OmniGenericIPAddressField.PROTOCOL_IPV6,
+            unpack_ipv4=True,
+            form=form
+        )
+        self.assertRaises(ValidationError, field.full_clean)
+
+    def test_unpack_ipv4_cleans_without_error(self):
+        """
+        The clean method should not raise a validation error if unpack_ipv4 is selected with protocol both
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniGenericIPAddressField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial='192.168.1.1',
+            protocol=OmniGenericIPAddressField.PROTOCOL_BOTH,
+            unpack_ipv4=True,
+            form=form
+        )
+        field.save()
+        field.full_clean()
 
 
 class OmniTimeFieldTestCase(TestCase):

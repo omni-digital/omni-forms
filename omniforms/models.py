@@ -209,7 +209,10 @@ class OmniCharField(OmniField):
 
         :return: django.forms.fields.Field subclass
         """
-        return super(OmniCharField, self).as_form_field(min_length=self.min_length, max_length=self.max_length)
+        return super(OmniCharField, self).as_form_field(
+            min_length=self.min_length,
+            max_length=self.max_length
+        )
 
 
 class OmniDurationField(OmniField):
@@ -228,9 +231,49 @@ class OmniGenericIPAddressField(OmniField):
     """
     GenericIPAddressField representation
     """
+    PROTOCOL_BOTH = 'both'
+    PROTOCOL_IPV4 = 'IPv4'
+    PROTOCOL_IPV6 = 'IPv6'
+    PROTOCOL_CHOICES = (
+        (PROTOCOL_BOTH, 'Both'),
+        (PROTOCOL_IPV4, 'IPv4'),
+        (PROTOCOL_IPV6, 'IPv6')
+    )
+
     initial = models.GenericIPAddressField(blank=True, null=True)
+    protocol = models.CharField(max_length=4, blank=True, choices=PROTOCOL_CHOICES, default=PROTOCOL_BOTH)
+    unpack_ipv4 = models.BooleanField(default=False, blank=True)
+
     FIELD_CLASS = 'django.forms.GenericIPAddressField'
     FORM_WIDGETS = ('django.forms.widgets.TextInput',)
+
+    def as_form_field(self, **kwargs):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :param kwargs: Extra keyword args to pass to the form field constructor
+        :type kwargs: dict
+
+        :return: django.forms.fields.Field subclass
+        """
+        return super(OmniGenericIPAddressField, self).as_form_field(
+            protocol=self.protocol,
+            unpack_ipv4=self.unpack_ipv4
+        )
+
+    def clean(self):
+        """
+        Cleans the model data
+        Ensures that unpack_ipv4 is only enabled if protocol is set to 'both'
+
+        :raises: ValidationError
+        """
+        if self.unpack_ipv4 and self.protocol != self.PROTOCOL_BOTH:
+            raise ValidationError(
+                'You may only select the \'unpack ipv4\' option if '
+                'the protocol you have selected is \'Both\''
+            )
 
 
 class OmniUUIDField(OmniField):
