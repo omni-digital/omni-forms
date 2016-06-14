@@ -21,17 +21,20 @@ from omniforms.models import (
     OmniField,
     OmniCharField,
     OmniBooleanField,
+    OmniDurationField,
     OmniDateField,
     OmniDateTimeField,
     OmniDecimalField,
     OmniEmailField,
     OmniFileField,
     OmniFloatField,
+    OmniGenericIPAddressField,
     OmniImageField,
     OmniIntegerField,
     OmniTimeField,
     OmniUrlField,
     OmniSlugField,
+    OmniUUIDField,
     OmniManyToManyField,
     OmniForeignKeyField,
     OmniFormHandler,
@@ -535,17 +538,34 @@ class OmniFieldTestCase(TestCase):
         The get_concrete_class_for_model_field method should return the correct OmniField subclass
         """
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.CharField()), OmniCharField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.NullBooleanField()), OmniBooleanField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.BooleanField()), OmniBooleanField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.DateTimeField()), OmniDateTimeField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.DecimalField()), OmniDecimalField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.EmailField()), OmniEmailField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.FloatField()), OmniFloatField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.IntegerField()), OmniIntegerField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.BigIntegerField()), OmniIntegerField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.PositiveIntegerField()), OmniIntegerField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.SmallIntegerField()), OmniIntegerField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.TimeField()), OmniTimeField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.URLField()), OmniUrlField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.SlugField()), OmniSlugField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.FileField()), OmniFileField)
         self.assertEqual(OmniField.get_concrete_class_for_model_field(models.ImageField()), OmniImageField)
+        self.assertEqual(OmniField.get_concrete_class_for_model_field(models.DurationField()), OmniDurationField)
+        self.assertEqual(
+            OmniField.get_concrete_class_for_model_field(models.GenericIPAddressField()),
+            OmniGenericIPAddressField
+        )
+        self.assertEqual(
+            OmniField.get_concrete_class_for_model_field(models.CommaSeparatedIntegerField()),
+            OmniCharField
+        )
+        self.assertEqual(
+            OmniField.get_concrete_class_for_model_field(models.PositiveSmallIntegerField()),
+            OmniIntegerField
+        )
         self.assertEqual(
             OmniField.get_concrete_class_for_model_field(models.ForeignKey(DummyModel2)),
             OmniForeignKeyField
@@ -704,6 +724,38 @@ class OmniCharFieldTestCase(TestCase):
         self.assertIn('django.forms.widgets.PasswordInput', OmniCharField.FORM_WIDGETS)
 
 
+class OmniUUIDFieldTestCase(TestCase):
+    """
+    Tests the OmniUUIDField
+    """
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniField
+        """
+        self.assertTrue(issubclass(OmniUUIDField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should have an initial field
+        """
+        field = OmniUUIDField._meta.get_field('initial')
+        self.assertIsInstance(field, models.UUIDField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniUUIDField.FIELD_CLASS, 'django.forms.UUIDField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.TextInput', OmniUUIDField.FORM_WIDGETS)
+
+
 class OmniBooleanFieldTestCase(TestCase):
     """
     Tests the OmniBooleanField
@@ -798,6 +850,39 @@ class OmniDateFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.DateInput', OmniDateField.FORM_WIDGETS)
+
+
+class OmniDurationFieldTestCase(TestCase):
+    """
+    Tests the OmniDurationField
+    """
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniField
+        """
+        self.assertTrue(issubclass(OmniDurationField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should have an initial field
+        """
+        field = OmniDurationField._meta.get_field('initial')
+        self.assertIsInstance(field, models.DurationField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniDurationField.FIELD_CLASS, 'django.forms.DurationField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.TextInput', OmniDurationField.FORM_WIDGETS)
+        self.assertIn('django.forms.widgets.Textarea', OmniDurationField.FORM_WIDGETS)
 
 
 class OmniDateTimeFieldTestCase(TestCase):
@@ -928,6 +1013,38 @@ class OmniIntegerFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.NumberInput', OmniIntegerField.FORM_WIDGETS)
+
+
+class OmniGenericIPAddressFieldTestCase(TestCase):
+    """
+    Tests the OmniGenericIPAddressField
+    """
+    def test_subclasses_omni_field(self):
+        """
+        The model should subclass OmniField
+        """
+        self.assertTrue(issubclass(OmniGenericIPAddressField, OmniField))
+
+    def test_initial(self):
+        """
+        The model should have an initial field
+        """
+        field = OmniGenericIPAddressField._meta.get_field('initial')
+        self.assertIsInstance(field, models.GenericIPAddressField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_field_class(self):
+        """
+        The model should define the correct field class
+        """
+        self.assertEqual(OmniGenericIPAddressField.FIELD_CLASS, 'django.forms.GenericIPAddressField')
+
+    def test_form_widgets(self):
+        """
+        The model should define the correct form widgets
+        """
+        self.assertIn('django.forms.widgets.TextInput', OmniGenericIPAddressField.FORM_WIDGETS)
 
 
 class OmniTimeFieldTestCase(TestCase):

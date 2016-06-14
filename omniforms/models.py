@@ -96,19 +96,27 @@ class OmniField(models.Model):
             models.CharField: OmniCharField,
             models.TextField: OmniCharField,
             models.BooleanField: OmniBooleanField,
+            models.NullBooleanField: OmniBooleanField,
             models.DateField: OmniDateField,
             models.DateTimeField: OmniDateTimeField,
             models.DecimalField: OmniDecimalField,
             models.EmailField: OmniEmailField,
             models.FloatField: OmniFloatField,
             models.IntegerField: OmniIntegerField,
+            models.BigIntegerField: OmniIntegerField,
+            models.PositiveIntegerField: OmniIntegerField,
+            models.PositiveSmallIntegerField: OmniIntegerField,
+            models.SmallIntegerField: OmniIntegerField,
+            models.CommaSeparatedIntegerField: OmniCharField,
             models.TimeField: OmniTimeField,
             models.URLField: OmniUrlField,
             models.ForeignKey: OmniForeignKeyField,
             models.ManyToManyField: OmniManyToManyField,
             models.SlugField: OmniSlugField,
             models.FileField: OmniFileField,
-            models.ImageField: OmniImageField
+            models.ImageField: OmniImageField,
+            models.DurationField: OmniDurationField,
+            models.GenericIPAddressField: OmniGenericIPAddressField
         }
         field_mapping.update(cls.get_custom_field_mapping())
         return field_mapping.get(model_field.__class__)
@@ -183,6 +191,36 @@ class OmniCharField(OmniField):
         'django.forms.widgets.Textarea',
         'django.forms.widgets.PasswordInput'
     )
+
+
+class OmniDurationField(OmniField):
+    """
+    DurationField representation
+    """
+    initial = models.DurationField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.DurationField'
+    FORM_WIDGETS = (
+        'django.forms.widgets.TextInput',
+        'django.forms.widgets.Textarea'
+    )
+
+
+class OmniGenericIPAddressField(OmniField):
+    """
+    GenericIPAddressField representation
+    """
+    initial = models.GenericIPAddressField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.GenericIPAddressField'
+    FORM_WIDGETS = ('django.forms.widgets.TextInput',)
+
+
+class OmniUUIDField(OmniField):
+    """
+    UUIDField representation
+    """
+    initial = models.UUIDField(blank=True, null=True)
+    FIELD_CLASS = 'django.forms.UUIDField'
+    FORM_WIDGETS = ('django.forms.widgets.TextInput',)
 
 
 class OmniSlugField(OmniField):
