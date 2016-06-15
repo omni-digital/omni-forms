@@ -32,7 +32,6 @@ from omniforms.models import (
     OmniFormEmailHandler,
     OmniFormSaveInstanceHandler
 )
-from omniforms.tests.models import DummyModel
 from omniforms.tests.utils import OmniFormAdminTestCaseStub
 
 
