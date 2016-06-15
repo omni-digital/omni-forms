@@ -9,7 +9,7 @@ from django.contrib.contenttypes.admin import GenericTabularInline
 from omniforms.admin_forms import OmniModelFormAdminForm
 from omniforms.admin_views import OmniModelFormSelectFieldView, OmniModelFormCreateFieldView, OmniModelFormPreviewView
 from omniforms.admin_views import OmniModelFormSelectHandlerView, OmniModelFormCreateHandlerView
-from omniforms.admin_views import OmniModelFormUpdateFieldView
+from omniforms.admin_views import OmniModelFormUpdateFieldView, OmniModelFormUpdateHandlerView
 from omniforms.models import OmniModelForm, OmniField, OmniFormHandler
 
 
@@ -102,6 +102,11 @@ class OmniModelFormAdmin(admin.ModelAdmin):
                 r'^(.+)/add-handler/(.+)/$',
                 self.admin_site.admin_view(OmniModelFormCreateHandlerView.as_view(admin_site=self)),
                 name='omniforms_omnimodelform_createhandler'
+            ),
+            url(
+                r'^(.+)/update-handler/(.+)/$',
+                self.admin_site.admin_view(OmniModelFormUpdateHandlerView.as_view(admin_site=self)),
+                name='omniforms_omnimodelform_updatehandler'
             ),
         ] + super(OmniModelFormAdmin, self).get_urls()
 
