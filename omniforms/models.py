@@ -396,8 +396,26 @@ class OmniFileField(OmniField):
     FileField representation
     """
     initial = None
+    max_length = models.PositiveIntegerField(blank=True, null=True)
+    allow_empty_file = models.BooleanField(default=False)
+
     FIELD_CLASS = 'django.forms.FileField'
     FORM_WIDGETS = ('django.forms.widgets.FileInput',)
+
+    def as_form_field(self, **kwargs):
+        """
+        Method for generating a form field instance from the
+        specified data stored against this model instance
+
+        :param kwargs: Extra keyword args to pass to the form field constructor
+        :type kwargs: dict
+
+        :return: django.forms.fields.Field subclass
+        """
+        return super(OmniFileField, self).as_form_field(
+            max_length=self.max_length,
+            allow_empty_file=self.allow_empty_file
+        )
 
 
 class OmniImageField(OmniField):

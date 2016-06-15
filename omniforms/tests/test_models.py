@@ -1533,6 +1533,23 @@ class OmniFileFieldTestCase(TestCase):
         """
         self.assertIsNone(OmniFileField.initial)
 
+    def test_max_length(self):
+        """
+        The model should define a max_length field
+        """
+        field = OmniFileField._meta.get_field('max_length')
+        self.assertIsInstance(field, models.PositiveIntegerField)
+        self.assertTrue(field.blank)
+        self.assertTrue(field.null)
+
+    def test_allow_empty_file(self):
+        """
+        The model should not define a allow_empty_file field
+        """
+        field = OmniFileField._meta.get_field('allow_empty_file')
+        self.assertIsInstance(field, models.BooleanField)
+        self.assertFalse(field.default)
+
     def test_field_class(self):
         """
         The model should define the correct field class
@@ -1544,6 +1561,26 @@ class OmniFileFieldTestCase(TestCase):
         The model should define the correct form widgets
         """
         self.assertIn('django.forms.widgets.FileInput', OmniFileField.FORM_WIDGETS)
+
+    def test_as_form_field(self):
+        """
+        The as_form_field method should pass the min_length and max_length to the field constructor
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniFileField(
+            name='my_file',
+            label='Please upload a file',
+            required=True,
+            widget_class='django.forms.widgets.FileInput',
+            order=0,
+            max_length=150,
+            allow_empty_file=True,
+            form=form
+        )
+        field.save()
+        field_instance = field.as_form_field()
+        self.assertEqual(field_instance.max_length, 150)
+        self.assertTrue(field_instance.allow_empty_file)
 
 
 class OmniImageFieldTestCase(TestCase):
