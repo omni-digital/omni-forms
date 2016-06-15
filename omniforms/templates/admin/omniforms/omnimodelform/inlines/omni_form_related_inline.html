@@ -30,7 +30,7 @@
           {{ inline_admin_form.original }}
           {% if inline_admin_form.model_admin.show_change_link %}
             {% block change_link %}
-            <a href="{% url inline_admin_form.model_admin.opts|admin_urlname:'change' inline_admin_form.original.pk|admin_urlquote %}" class="inlinechangelink">{% trans "Change" %}</a>
+            <a href="{{ inline_admin_form.original.get_edit_url }}" class="inlinechangelink">{% trans "Change" %}</a>
             {% endblock change_link %}
           {% endif %}
           {% endif %}

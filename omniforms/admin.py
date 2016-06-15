@@ -21,6 +21,8 @@ class OmniRelatedInlineAdmin(GenericTabularInline):
     max_num = 0
     fields = ('name', 'order',)
     readonly_fields = ('name',)
+    show_change_link = True
+    template = 'admin/omniforms/omnimodelform/inlines/omni_form_related_inline.html'
 
 
 class OmniFieldAdmin(OmniRelatedInlineAdmin):
@@ -28,8 +30,6 @@ class OmniFieldAdmin(OmniRelatedInlineAdmin):
     Generic admin for OmniField models
     """
     model = OmniField
-    show_change_link = True
-    template = 'admin/omniforms/omnimodelform/inlines/omni_form_related_field_inline.html'
 
 
 class OmniHandlerAdmin(OmniRelatedInlineAdmin):
