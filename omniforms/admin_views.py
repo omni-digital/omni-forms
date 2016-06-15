@@ -230,7 +230,7 @@ class OmniModelFormSelectFieldView(OmniModelFormSelectRelatedView):
     """
     View for choosing which field a field to the Omni Model Form instance in the django admin
     """
-    template_name = "admin/omniforms/omnimodelform/addfield_form.html"
+    template_name = "admin/omniforms/omnimodelform/selectfield_form.html"
     permission_required = "omniforms.add_omnifield"
     url_name = 'admin:omniforms_omnimodelform_createfield'
 
@@ -248,7 +248,7 @@ class OmniModelFormSelectHandlerView(OmniModelFormSelectRelatedView):
     """
     View for choosing a handler to add to the Omni Model Form instance in the django admin
     """
-    template_name = "admin/omniforms/omnimodelform/addhandler_form.html"
+    template_name = "admin/omniforms/omnimodelform/selecthandler_form.html"
     permission_required = "omniforms.add_omniformhandler"
     url_name = 'admin:omniforms_omnimodelform_createhandler'
 

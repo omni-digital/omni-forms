@@ -52,7 +52,7 @@ class OmniModelFormSelectFieldViewTestCase(OmniFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniModelFormSelectFieldView)
         self.assertIsInstance(response.context['form'], OmniModelFormAddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
-        self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/addfield_form.html")
+        self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/selectfield_form.html")
 
     def test_forms_model_fields_choices(self):
         """
@@ -500,7 +500,7 @@ class OmniModelFormSelectHandlerViewTestCase(OmniFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniModelFormSelectHandlerView)
         self.assertIsInstance(response.context['form'], OmniModelFormAddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
-        self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/addhandler_form.html")
+        self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/selecthandler_form.html")
 
     def test_forms_model_fields_choices(self):
         """
