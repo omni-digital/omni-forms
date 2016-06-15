@@ -8,6 +8,7 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -625,6 +626,18 @@ class OmniFieldTestCase(TestCase):
         field.save()
         field.pk = None  # Remove the PK to make the instance think it's new
         self.assertRaises(IntegrityError, field.save)
+
+    def test_get_edit_url(self):
+        """
+        The get_edit_url method should return the url for editing the resource in the django admin
+        """
+        form = OmniModelFormFactory.create()
+        field = OmniField(name='A', label='A', widget_class='A', form=form)
+        field.save()
+        self.assertEqual(
+            field.get_edit_url(),
+            reverse('admin:omniforms_omnimodelform_updatefield', args=[field.object_id, field.name])
+        )
 
 
 class OmniFieldInstanceTestCase(OmniFormTestCaseStub):
@@ -1759,6 +1772,18 @@ class OmniFormHandlerTestCase(TestCase):
         """
         instance = OmniFormHandler(name='Test handler')
         self.assertRaises(NotImplementedError, instance.handle, Mock())
+
+    def test_get_edit_url(self):
+        """
+        The get_edit_url method should return the url for editing the resource in the django admin
+        """
+        form = OmniModelFormFactory.create()
+        instance = OmniFormHandler(name='Test handler', form=form)
+        instance.save()
+        self.assertEqual(
+            instance.get_edit_url(),
+            reverse('admin:omniforms_omnimodelform_updatehandler', args=[instance.object_id, instance.pk])
+        )
 
 
 class OmniFormHandlerInstanceTestCase(OmniFormTestCaseStub):

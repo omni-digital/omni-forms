@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.fields.related import ForeignObjectRel
 from django.forms import modelform_factory
@@ -182,6 +183,14 @@ class OmniField(models.Model):
             initial=self.specific.initial,
             **kwargs
         )
+
+    def get_edit_url(self):
+        """
+        Generates a URL for editing the field in the django admin
+
+        :return: Edit URL for the admin interface
+        """
+        return reverse('admin:omniforms_omnimodelform_updatefield', args=[self.object_id, self.name])
 
 
 class OmniCharField(OmniField):
@@ -609,6 +618,14 @@ class OmniFormHandler(models.Model):
         :raises: NotImplementedError
         """
         raise NotImplementedError('"{0}" must define it\'s own handle method'.format(self.__class__.__name__))
+
+    def get_edit_url(self):
+        """
+        Generates a URL for editing the handler in the django admin
+
+        :return: Edit URL for the admin interface
+        """
+        return reverse('admin:omniforms_omnimodelform_updatehandler', args=[self.object_id, self.pk])
 
 
 class OmniFormEmailHandler(OmniFormHandler):
