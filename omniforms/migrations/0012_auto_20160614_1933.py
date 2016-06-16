@@ -27,11 +27,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='omnidecimalfield',
             name='max_value',
-            field=models.DecimalField(blank=True, decimal_places=99999, max_digits=9999999, null=True),
+            field=models.DecimalField(blank=True, decimal_places=999, max_digits=1000, null=True),
         ),
         migrations.AddField(
             model_name='omnidecimalfield',
             name='min_value',
-            field=models.DecimalField(blank=True, decimal_places=99999, max_digits=9999999, null=True),
+            field=models.DecimalField(blank=True, decimal_places=999, max_digits=1000, null=True),
         ),
     ]
