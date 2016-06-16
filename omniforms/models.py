@@ -337,9 +337,9 @@ class OmniDecimalField(OmniField):
     """
     DecimalField representation
     """
-    initial = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
-    min_value = models.DecimalField(blank=True, null=True, decimal_places=999, max_digits=1000)
-    max_value = models.DecimalField(blank=True, null=True, decimal_places=999, max_digits=1000)
+    initial = models.DecimalField(blank=True, null=True, decimal_places=100, max_digits=1000)
+    min_value = models.DecimalField(blank=True, null=True, decimal_places=100, max_digits=1000)
+    max_value = models.DecimalField(blank=True, null=True, decimal_places=100, max_digits=1000)
     max_digits = models.PositiveIntegerField()
     decimal_places = models.PositiveIntegerField()
 

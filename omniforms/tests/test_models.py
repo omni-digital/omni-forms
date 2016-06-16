@@ -1030,8 +1030,8 @@ class OmniDecimalFieldTestCase(TestCase):
         self.assertIsInstance(field, models.DecimalField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
-        self.assertEqual(field.decimal_places, 2)
-        self.assertEqual(field.max_digits, 10)
+        self.assertEqual(field.decimal_places, 100)
+        self.assertEqual(field.max_digits, 1000)
 
     def test_min_value(self):
         """
