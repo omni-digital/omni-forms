@@ -7,6 +7,7 @@ from django import forms
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
@@ -49,6 +50,10 @@ from taggit_autosuggest.managers import TaggableManager
 from unittest import skipUnless
 
 import django
+import os
+
+
+TEST_FILE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class OmniFormBaseTestCase(TestCase):
@@ -1877,6 +1882,11 @@ class OmniFormEmailHandlerTestCase(TestCase):
     """
     Tests the OmniFormEmailHandler
     """
+    def setUp(self):
+        super(OmniFormEmailHandlerTestCase, self).setUp()
+        self.pdf_file = open(os.path.join(TEST_FILE_DIR, 'tests', 'files', 'test.pdf'), 'rb')
+        self.image_file = open(os.path.join(TEST_FILE_DIR, 'tests', 'files', 'blank.gif'), 'rb')
+
     def test_extends_base_class(self):
         """
         The model should extend OmniFormHandler
@@ -1939,6 +1949,25 @@ class OmniFormEmailHandlerTestCase(TestCase):
             ['a@example.com', 'b@example.com'],
             fail_silently=False
         )
+
+    @patch('omniforms.models.EmailMessage.attach')
+    @patch('django.core.files.uploadedfile.InMemoryUploadedFile.read', Mock(return_value='Content'))
+    def test_attaches_files(self, patched_method):
+        """
+        Uploaded files should be attached to the email
+        """
+        pdf = InMemoryUploadedFile(self.pdf_file, None, 'test.pdf', 'application/pdf', 1024, None)
+        gif = InMemoryUploadedFile(self.image_file, None, 'test.gif', 'image/gif', 1024, None)
+        form = Mock(attributes=['cleaned_data'])
+        form.cleaned_data = {'user': 'Bob', 'pdf': pdf, 'gif': gif}
+        instance = OmniFormEmailHandler(
+            template='Hello {{ user }}',
+            recipients='a@example.com,b@example.com',
+            subject='This is a test'
+        )
+        instance.handle(form)
+        patched_method.assert_any_call('test.pdf', 'Content', 'application/pdf')
+        patched_method.assert_any_call('test.gif', 'Content', 'image/gif')
 
 
 class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):

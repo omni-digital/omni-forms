@@ -8,7 +8,8 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
-from django.core.mail import send_mail
+from django.core.files import File
+from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.fields.related import ForeignObjectRel
@@ -671,6 +672,21 @@ class OmniFormEmailHandler(OmniFormHandler):
         """
         return Template(self.template).render(Context(context_data))
 
+    @staticmethod
+    def get_files(form):
+        """
+        Method for getting all uploaded files from the forms cleaned data
+
+        :param form: Valid form instance
+        :return: List of uploaded file instances
+        """
+        return list(
+            filter(
+                lambda value: isinstance(value, File),
+                form.cleaned_data.values()
+            )
+        )
+
     def handle(self, form):
         """
         Handle method
@@ -679,13 +695,17 @@ class OmniFormEmailHandler(OmniFormHandler):
         :param form: Valid form instance
         :type form: django.forms.Form
         """
-        send_mail(
+        message = EmailMessage(
             self.subject,
             self._render_template(form.cleaned_data),
             settings.DEFAULT_FROM_EMAIL,
-            self.recipients.split(','),
-            fail_silently=False
+            self.recipients.split(',')
         )
+
+        for file_object in self.get_files(form):
+            message.attach(file_object.name, file_object.read(), file_object.content_type)
+
+        message.send()
 
 
 class OmniFormSaveInstanceHandler(OmniFormHandler):
