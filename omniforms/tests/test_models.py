@@ -1929,11 +1929,13 @@ class OmniFormEmailHandlerTestCase(TestCase):
         self.assertEqual('Hello Bob', instance._render_template({'user': 'Bob'}))
 
     @override_settings(DEFAULT_FROM_EMAIL='administrator@example.com')
-    @patch('omniforms.models.send_mail')
-    def test_handle(self, patched_method):
+    @patch('omniforms.models.EmailMessage.__init__')
+    @patch('omniforms.models.EmailMessage.send')
+    def test_handle(self, send, init):
         """
         The handle method should send an email
         """
+        init.return_value = None
         form = Mock(attributes=['cleaned_data'])
         form.cleaned_data = {'user': 'Bob'}
         instance = OmniFormEmailHandler(
@@ -1942,13 +1944,13 @@ class OmniFormEmailHandlerTestCase(TestCase):
             subject='This is a test'
         )
         instance.handle(form)
-        patched_method.assert_called_with(
+        init.assert_called_with(
             'This is a test',
             'Hello Bob',
             'administrator@example.com',
-            ['a@example.com', 'b@example.com'],
-            fail_silently=False
+            ['a@example.com', 'b@example.com']
         )
+        send.assert_called_with()
 
     @patch('omniforms.models.EmailMessage.attach')
     @patch('django.core.files.uploadedfile.InMemoryUploadedFile.read', Mock(return_value='Content'))
