@@ -1,5 +1,6 @@
 
 from setuptools import find_packages, setup
+import omniforms
 import os
 
 
@@ -12,7 +13,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='omniforms',
-    version='0.1',
+    version=omniforms.get_version(),
     packages=find_packages(exclude=['app']),
     include_package_data=True,
     license='MIT',
