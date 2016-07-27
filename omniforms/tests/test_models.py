@@ -158,6 +158,23 @@ class OmniModelFormTestCase(TestCase):
         self.handler_1 = OmniFormEmailHandlerFactory.create(form=self.omniform)
         self.handler_2 = OmniFormEmailHandlerFactory.create(form=self.omniform)
 
+    def test_get_field(self):
+        """
+        The _get_field method should return a form field instance
+        """
+        field_1 = self.omniform._get_field('title')
+        field_2 = self.omniform._get_field('agree')
+        field_3 = self.omniform._get_field('fictional')
+        self.assertIsInstance(field_1, forms.CharField)
+        self.assertIsInstance(field_1.widget, forms.TextInput)
+        self.assertEqual(field_1.label, 'Please give us a title')
+        self.assertTrue(field_1.required)
+        self.assertIsInstance(field_2, forms.BooleanField)
+        self.assertIsInstance(field_2.widget, forms.CheckboxInput)
+        self.assertEqual(field_2.label, 'Please agree')
+        self.assertTrue(field_2.required)
+        self.assertIsNone(field_3)
+
     def test_get_form_class(self):
         """
         The get_form_class method should return a form class
@@ -167,31 +184,30 @@ class OmniModelFormTestCase(TestCase):
 
     @patch('omniforms.models.OmniModelForm.used_field_names',
            PropertyMock(return_value=['foo', 'bar', 'baz']))
-    @patch('omniforms.models.OmniModelForm._get_field_help_texts')
-    @patch('omniforms.models.OmniModelForm._get_field_widgets')
-    @patch('omniforms.models.OmniModelForm._get_field_labels')
     @patch('omniforms.models.OmniModelForm._get_base_form_class')
     @patch('omniforms.models.modelform_factory')
-    def test_get_form_class_calls_modelform_factory(
-            self, modelform_factory, _get_base_form_class,
-            _get_field_labels, _get_field_widgets, _get_field_help_texts
-    ):
+    def test_get_form_class_calls_modelform_factory(self, modelform_factory, _get_base_form_class):
         """
         The get_form_class method should call down to modelform_factory
         """
         _get_base_form_class.return_value = Mock()
-        _get_field_labels.return_value = Mock()
-        _get_field_widgets.return_value = Mock()
-        _get_field_help_texts.return_value = Mock()
         self.omniform.get_form_class()
         modelform_factory.assert_called_with(
             self.omniform.content_type.model_class(),
             form=_get_base_form_class.return_value,
             fields=['foo', 'bar', 'baz'],
-            labels=_get_field_labels.return_value,
-            widgets=_get_field_widgets.return_value,
-            help_texts=_get_field_help_texts.return_value
+            formfield_callback=self.omniform.formfield_callback
         )
+
+    @patch('omniforms.models.OmniModelForm._get_field')
+    def test_formfield_callback(self, patched_method):
+        """
+        The formfield_callback method of the omniform should return a form field
+        """
+        field = Mock()
+        field.name = 'title'
+        self.omniform.formfield_callback(field)
+        patched_method.assert_called_with('title')
 
     def test_get_field_labels(self):
         """

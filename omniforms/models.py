@@ -800,6 +800,22 @@ class FormGeneratorMixin(object):
         """
         return [field.specific.as_form_field() for field in self.fields.all()]
 
+    def _get_field(self, name):
+        """
+        Method for getting a field by its name
+
+        :param name: Field name
+        :type name: str|unicode
+
+        :return: field instance
+        """
+        try:
+            field = self.fields.get(name=name)
+        except self.fields.model.DoesNotExist:
+            return None
+        else:
+            return field.specific.as_form_field()
+
     def get_initial_data(self):
         """
         Method for getting the initial data for all fields on the form
@@ -891,6 +907,16 @@ class OmniModelFormBase(OmniFormBase):
             {'_handlers': [handler.specific for handler in self.handlers.all()]}
         )
 
+    def formfield_callback(self, model_field, **kwargs):
+        """
+        Custom formfield callback for the model form factory
+
+        :param model_field: The model field to get a form field for
+        :param kwargs: Default keyword args
+        :return: Form field or None
+        """
+        return self._get_field(model_field.name)
+
     def get_form_class(self):
         """
         Method for generating a form class from the data contained within the model
@@ -901,9 +927,7 @@ class OmniModelFormBase(OmniFormBase):
             self.content_type.model_class(),
             form=self._get_base_form_class(),
             fields=self.used_field_names,
-            labels=self._get_field_labels(),
-            widgets=self._get_field_widgets(),
-            help_texts=self._get_field_help_texts()
+            formfield_callback=self.formfield_callback
         )
 
     @cached_property
