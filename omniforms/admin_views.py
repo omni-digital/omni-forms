@@ -342,21 +342,6 @@ class OmniModelFormFieldView(OmniModelFormRelatedView):
         context_data['model_field_name'] = self.model_field.name
         return context_data
 
-    def get_initial(self):
-        """
-        Gets initial data for the form
-
-        :return: Dict of initial data
-        """
-        initial = super(OmniModelFormFieldView, self).get_initial()
-        initial['required'] = self._field_is_required
-        initial['label'] = self.model_field.verbose_name.capitalize()
-        initial['name'] = self.model_field.name
-        initial['widget_class'] = self.model.FORM_WIDGETS[0]
-        if issubclass(self.model, OmniRelatedField):
-            initial['related_type'] = ContentType.objects.get_for_model(self.model_field.rel.to).pk
-        return initial
-
     def _get_form_widgets(self):
         """
         Returns a dict of form widgets keyed by field name
@@ -418,6 +403,21 @@ class OmniModelFormCreateFieldView(OmniModelFormFieldView, CreateView):
         if args[1] in self.omni_form.used_field_names:
             raise Http404
         return super(OmniModelFormCreateFieldView, self).dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        """
+        Gets initial data for the form
+
+        :return: Dict of initial data
+        """
+        initial = super(OmniModelFormCreateFieldView, self).get_initial()
+        initial['required'] = self._field_is_required
+        initial['label'] = self.model_field.verbose_name.capitalize()
+        initial['name'] = self.model_field.name
+        initial['widget_class'] = self.model.FORM_WIDGETS[0]
+        if issubclass(self.model, OmniRelatedField):
+            initial['related_type'] = ContentType.objects.get_for_model(self.model_field.rel.to).pk
+        return initial
 
 
 class OmniModelFormUpdateFieldView(OmniModelFormFieldView, UpdateView):
