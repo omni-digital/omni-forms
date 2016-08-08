@@ -2007,7 +2007,7 @@ class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
         """
         self.assertTrue(issubclass(OmniFormSaveInstanceHandler, OmniFormHandler))
 
-    @skipUnless(django.get_version() < '1.9', 'Tests functionality specific to django versions < 1.9')
+    @skipUnless(django.VERSION < (1, 9, 0, 'final', 0), 'Tests functionality specific to django versions < 1.9')
     @patch('django.forms.models.save_instance')
     def test_handle_django_lte_18(self, patched_method):
         """
@@ -2024,7 +2024,7 @@ class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
             construct=False
         )
 
-    @skipUnless(django.get_version() >= '1.9', 'Tests functionality specific to django versions >= 1.9')
+    @skipUnless(django.VERSION >= (1, 9, 0, 'final', 0), 'Tests functionality specific to django versions >= 1.9')
     def test_handle(self):
         """
         The handle method should call down to the save_instance function
