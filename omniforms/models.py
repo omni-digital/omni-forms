@@ -753,7 +753,7 @@ class OmniFormSaveInstanceHandler(OmniFormHandler):
     def handle(self, form):
         """
         Handle method
-        Sends an email to the specified recipients
+        Saves object instance to the database
 
         :param form: Valid form instance
         :type form: django.forms.Form
