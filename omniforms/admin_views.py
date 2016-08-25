@@ -157,6 +157,17 @@ class OmniModelFormRelatedView(OmniFormAdminView):
             'content_type': forms.HiddenInput,
         }
 
+    def _get_help_texts(self):
+        """
+        Returns a dict of form help texts keyed by field name
+
+        :return: Dict of field help texts
+        """
+        return {
+            field.name: field.help_text
+            for field in self.model._meta.fields
+        }
+
     def get_form_class(self):
         """
         Method for generating a form class for the view
@@ -167,7 +178,8 @@ class OmniModelFormRelatedView(OmniFormAdminView):
             self.model,
             exclude=self.exclude,
             form=self.form_class,
-            widgets=self._get_form_widgets()
+            widgets=self._get_form_widgets(),
+            help_texts=self._get_help_texts(),
         )
 
     def get_success_url(self):
