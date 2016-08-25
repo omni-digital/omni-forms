@@ -655,6 +655,18 @@ class OmniFormEmailHandler(OmniFormHandler):
     recipients = models.TextField()
     template = models.TextField()
 
+    def __init__(self, *args, **kwargs):
+        super(OmniFormEmailHandler, self).__init__(*args, **kwargs)
+
+        # Dynamically update 'template' field help text with variables
+        # that are available
+        used_fields = self.form.used_field_names
+        self._meta.get_field('template').help_text = (
+            'Variables available: {used_fields}.'.format(
+                used_fields=', '.join(used_fields)
+            )
+        )
+
     class Meta(object):
         """
         Django properties
