@@ -660,12 +660,13 @@ class OmniFormEmailHandler(OmniFormHandler):
 
         # Dynamically update 'template' field help text with variables
         # that are available
-        used_fields = self.form.used_field_names
-        self._meta.get_field('template').help_text = (
-            'Variables available: {used_fields}.'.format(
-                used_fields=', '.join(used_fields)
+        if self.form:
+            used_fields = self.form.used_field_names
+            self._meta.get_field('template').help_text = (
+                'Variables available: {used_fields}.'.format(
+                    used_fields=', '.join(used_fields)
+                )
             )
-        )
 
     class Meta(object):
         """
