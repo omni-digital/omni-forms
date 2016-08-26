@@ -450,6 +450,15 @@ class OmniModelFormTestCase(TestCase):
         self.assertIn('slug', model_field_names)
         self.assertIn('other_models', model_field_names)
 
+    def test_template_field_dynamic_help_text(self):
+        """
+        The model should dynamically update template field help text to
+        list the variables available in the context
+        """
+        help_text = self.handler_1._meta.get_field('template').help_text
+        self.assertIn(self.field_1.name, help_text)
+        self.assertIn(self.field_2.name, help_text)
+
 
 class OmniFieldTestCase(TestCase):
     """
