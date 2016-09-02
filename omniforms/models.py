@@ -655,6 +655,19 @@ class OmniFormEmailHandler(OmniFormHandler):
     recipients = models.TextField()
     template = models.TextField()
 
+    def __init__(self, *args, **kwargs):
+        super(OmniFormEmailHandler, self).__init__(*args, **kwargs)
+
+        # Dynamically update 'template' field help text with variables
+        # that are available
+        if self.form:
+            used_fields = self.form.used_field_names
+            self._meta.get_field('template').help_text = (
+                'Variables available: {used_fields}.'.format(
+                    used_fields=', '.join(used_fields)
+                )
+            )
+
     class Meta(object):
         """
         Django properties
@@ -753,7 +766,7 @@ class OmniFormSaveInstanceHandler(OmniFormHandler):
     def handle(self, form):
         """
         Handle method
-        Sends an email to the specified recipients
+        Saves object instance to the database
 
         :param form: Valid form instance
         :type form: django.forms.Form

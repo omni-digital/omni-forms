@@ -104,7 +104,7 @@ This app is compatible with the following django versions:
 
  - Django 1.8.x
  - Django 1.9.x
- - Djang0 1.10.x
+ - Django 1.10.x
 
 ## ChangeLog
 
