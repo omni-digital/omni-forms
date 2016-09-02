@@ -41,7 +41,8 @@ from omniforms.models import (
     OmniForeignKeyField,
     OmniFormHandler,
     OmniFormEmailHandler,
-    OmniFormSaveInstanceHandler
+    OmniFormSaveInstanceHandler,
+    TemplateHelpTextLazy
 )
 from omniforms.tests.factories import DummyModelFactory, OmniModelFormFactory, OmniFormEmailHandlerFactory
 from omniforms.tests.models import TaggableManagerField, DummyModel2
@@ -449,15 +450,6 @@ class OmniModelFormTestCase(TestCase):
         self.assertIn('some_url', model_field_names)
         self.assertIn('slug', model_field_names)
         self.assertIn('other_models', model_field_names)
-
-    def test_template_field_dynamic_help_text(self):
-        """
-        The model should dynamically update template field help text to
-        list the variables available in the context
-        """
-        help_text = self.handler_1._meta.get_field('template').help_text
-        self.assertIn(self.field_1.name, help_text)
-        self.assertIn(self.field_2.name, help_text)
 
 
 class OmniFieldTestCase(TestCase):
@@ -1853,6 +1845,47 @@ class OmniFormHandlerTestCase(TestCase):
         )
 
 
+class TemplateHelpTextLazyTestCase(OmniFormTestCaseStub):
+    """
+    Tests the TemplateHelpTextLazy class
+    """
+    def setUp(self):
+        super(TemplateHelpTextLazyTestCase, self).setUp()
+        self.handler = OmniFormEmailHandler(
+            name='Send Email',
+            order=0,
+            template='Hello {{ user }}',
+            recipients='a@example.com,b@example.com',
+            subject='This is a test',
+            form=self.omni_form
+        )
+        self.handler.save()
+
+    def test_generates_help_text(self):
+        """
+        The instance should generate appropriate help text
+        """
+        self.title_field = OmniCharField.objects.create(name='title', label='title', form=self.omni_form)
+        self.agree_field = OmniBooleanField.objects.create(name='agree', label='agree', form=self.omni_form)
+        self.some_date_field = OmniCharField.objects.create(name='some_date', label='some_date', form=self.omni_form)
+        self.instance = TemplateHelpTextLazy(self.handler)
+        self.assertEqual(
+            '{0}'.format(self.instance),
+            'Please enter the content of the email here. '
+            'Available tokens are {{ title }}, {{ agree }}, {{ some_date }}'
+        )
+
+    def test_generates_simple_help_text(self):
+        """
+        The instance should generate appropriate help text
+        """
+        self.instance = TemplateHelpTextLazy(self.handler)
+        self.assertEqual(
+            '{0}'.format(self.instance),
+            'Please enter the content of the email here.'
+        )
+
+
 class OmniFormHandlerInstanceTestCase(OmniFormTestCaseStub):
     """
     Tests the OmniFormHandler class
@@ -1917,6 +1950,17 @@ class OmniFormEmailHandlerTestCase(TestCase):
         The model should extend OmniFormHandler
         """
         self.assertTrue(issubclass(OmniFormEmailHandler, OmniFormHandler))
+
+    def test_template_help_text(self):
+        """
+        The 'template' fields help text should be an instance of TemplateHelpTextLazy
+        """
+        instance = OmniFormEmailHandler(
+            template='Hello {{ user }}',
+            recipients='a@example.com,b@example.com',
+            subject='This is a test'
+        )
+        self.assertIsInstance(instance._meta.get_field('template').help_text, TemplateHelpTextLazy)
 
     def test_recipients_field(self):
         """
