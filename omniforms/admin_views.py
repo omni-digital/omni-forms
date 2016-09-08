@@ -484,6 +484,16 @@ class OmniModelFormCreateHandlerView(OmniModelFormHandlerView, CreateView):
             self.model = model_class
         return super(OmniModelFormCreateHandlerView, self).dispatch(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        """
+        Creates a handler instance to add to the form so that help text can be generated correctly
+
+        :return: Dict of keyword args to be used when instanciating the form
+        """
+        form_kwargs = super(OmniModelFormCreateHandlerView, self).get_form_kwargs()
+        form_kwargs['instance'] = self.model(form=self.omni_form)
+        return form_kwargs
+
     def get_context_data(self, **kwargs):
         """
         Adds the handler content type id to the context
