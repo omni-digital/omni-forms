@@ -647,6 +647,38 @@ class OmniFormHandler(models.Model):
         return reverse('admin:omniforms_omnimodelform_updatehandler', args=[self.object_id, self.pk])
 
 
+@python_2_unicode_compatible
+class TemplateHelpTextLazy(object):
+    """
+    Lazy object for generating help text for the
+    OmniFormEmailHandler models 'template' field
+    """
+    def __init__(self, instance):
+        """
+        Sets up the instance
+
+        :param instance: OmniFormEmailHandler model instance
+        :type instance: OmniFormEmailHandler
+        """
+        super(TemplateHelpTextLazy, self).__init__()
+        self.instance = instance
+
+    def __str__(self):
+        """
+        Generates the string representation of the help text
+
+        :return: Help text content
+        """
+        help_text = 'Please enter the content of the email here.'
+        if self.instance.form:
+            used_fields = self.instance.form.used_field_names
+            if len(used_fields) > 0:
+                help_text += ' Available tokens are {0}'.format(
+                    ', '.join(['{{ %s }}' % field for field in used_fields])
+                )
+        return help_text
+
+
 class OmniFormEmailHandler(OmniFormHandler):
     """
     Email handler for the form builder
@@ -656,17 +688,17 @@ class OmniFormEmailHandler(OmniFormHandler):
     template = models.TextField()
 
     def __init__(self, *args, **kwargs):
-        super(OmniFormEmailHandler, self).__init__(*args, **kwargs)
+        """
+        Sets the help text for the 'template' field
 
-        # Dynamically update 'template' field help text with variables
-        # that are available
-        if self.form:
-            used_fields = self.form.used_field_names
-            self._meta.get_field('template').help_text = (
-                'Variables available: {used_fields}.'.format(
-                    used_fields=', '.join(used_fields)
-                )
-            )
+        :param args: Default positional args
+        :type args: ()
+
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+        """
+        super(OmniFormEmailHandler, self).__init__(*args, **kwargs)
+        self._meta.get_field('template').help_text = TemplateHelpTextLazy(self)
 
     class Meta(object):
         """

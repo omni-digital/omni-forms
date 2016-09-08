@@ -607,6 +607,15 @@ class OmniModelFormCreateHandlerViewTestCase(OmniFormAdminTestCaseStub):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
+    def test_form_instanciated_with_new_instance(self):
+        """
+        The create form should be instanciated with a new (unpersisted) model instance
+        """
+        response = self.client.get(self.url)
+        form = response.context['form']
+        self.assertIsNotNone(form.instance)
+        self.assertEqual(form.instance.form, self.omni_form)
+
     def test_raises_404_if_content_type_invalid(self):
         """
         The view should raise an HTTP 404 response if the specified content type is not a subclass of OmniFormHandler
