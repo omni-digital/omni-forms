@@ -4,6 +4,8 @@
 
 Omni forms is a simple form builder with admin integration for django versions >= 1.8.
 
+This package allows you to expose models to your users and let them configure forms, and specify actions on those forms through handlers.
+
 ## Installation
 
 !Pypi release coming soon
@@ -16,14 +18,14 @@ Once you've done this run `python manage.py migrate` to migrate your database.
 
 ## Configuration
 
-The OmniForms application can be configured in a number of different ways:
+The OmniForms application can be configured in a number of different ways, including allowing for the use of custom field types and limiting the models in your application that are exposed to it.
 
 ### Permitted content types
 
-You may not want administrators to be able to create forms for _all_ different types of content in your database.  There are 2 different ways of restricting the types of content that can be associated with model forms created through the admin interface:
+You may not want administrators to be able to create forms for _all_ different types of content in your database.  There are 2 different ways of restricting the types of content that can be associated with model forms created through the admin interface: whitelisting and blacklisting.
 
 
-## OMNI_FORMS_CONTENT_TYPES
+### Whitelisting models with OMNI_FORMS_CONTENT_TYPES
 
 It is possible to define specific apps and/or models which can be used by the omniforms app using the `OMNI_FORMS_CONTENT_TYPES` setting.
 
@@ -42,7 +44,7 @@ OMNI_FORMS_CONTENT_TYPES = [
 If the `OMNI_FORMS_CONTENT_TYPES` setting is not defined it will default to `None` and the `OMNI_FORMS_EXCLUDED_CONTENT_TYPES` setting will be used instead (default values or otherwise).
 
 
-## OMNI_FORMS_EXCLUDED_CONTENT_TYPES
+### Blacklisting models with OMNI_FORMS_EXCLUDED_CONTENT_TYPES
 
 It is possible to prevent model forms from being created for specific apps or specific models using the `OMNI_FORMS_EXCLUDED_CONTENT_TYPES` setting.
 
@@ -97,6 +99,15 @@ OMNI_FORMS_CUSTOM_FIELD_MAPPING = {
 ```
 
 It is important to note that the dictionary values defined within the `OMNI_FORMS_CUSTOM_FIELD_MAPPING` MUST be subclasses of `omniforms.models.OmniField`.  If you attempt to register Field handlers that do not subclass `omniforms.models.OmniField` an ImproperlyConfigured exception will be raised.
+
+
+## Usage
+The Omni Forms package once installed will give you a new app in your admin interface called 'Omni Forms'. Here you will be able to create a new form, specify which model it points to, and which fields on that model need to be exposed to the end user.
+
+The form builder allows for the configuration of multiple widget types for the fields on a given model (where appropriate). Furthermore, it also allows for the creation of handlers wwhich (as their name suggest) handle the data submitted to the form in some way. Currently, two handlers are available: the form save handler which saves the data to the underlying model, and the e-mail handler which allows for emails to be sent to specified persons upon form submission.
+
+When you have built your form, you are able to preview its appearance and behaviour in the admin using the 'preview' function.
+
 
 ## Compatibility
 
