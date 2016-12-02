@@ -26,7 +26,7 @@ setup(
     url='https://github.com/omni-digital/omni-forms/',
     download_url='https://github.com/omni-digital/omni-forms/tarball/{0}'.format(omniforms.get_version()),
     author='Omni Digital',
-    author_email='yourname@example.com',
+    author_email='dev@omni-digital.co.uk',
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
