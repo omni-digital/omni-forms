@@ -2,7 +2,7 @@ Omni Forms
 ==========
 
 Omni forms is a simple form builder with admin integration for django
-versions >= 1.8.
+versions >= 1.8 that allows you to easily create forms for your django website.
 
 Installation
 ------------
