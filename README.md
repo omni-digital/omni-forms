@@ -1,10 +1,12 @@
+[![Omni Forms on pypi](https://img.shields.io/badge/pypi-0.1.0-green.svg)](https://pypi.python.org/pypi/omniforms)
+![MIT license](https://img.shields.io/badge/licence-MIT-blue.svg)
 ![Build status](https://travis-ci.org/omni-digital/omni-forms.svg?branch=master)
 
 # Omni Forms
 
-Omni forms is a simple form builder with admin integration for django versions >= 1.8.
+Omni forms is a simple form builder with admin integration for django versions >= 1.8 that allows you to easily create forms for your django website.
 
-## Installation
+`pip install omniforms`
 
 !Pypi release coming soon
 
