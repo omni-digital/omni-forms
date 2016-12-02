@@ -8,8 +8,6 @@ Omni forms is a simple form builder with admin integration for django versions >
 
 `pip install omniforms`
 
-!Pypi release coming soon
-
 Once the package has been installed just add `omni_forms` to `INSTALLED_APPS` in your settings file:
 
 `INSTALLED_APPS += ('omni_forms',)`

@@ -7,7 +7,7 @@ versions >= 1.8 that allows you to easily create forms for your django website.
 Installation
 ------------
 
-!Pypi release coming soon
+``pip install omniforms``
 
 Once the package has been installed just add ``omni_forms`` to
 ``INSTALLED_APPS`` in your settings file:
