@@ -14,7 +14,7 @@ from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, CreateView, DetailView, UpdateView
 from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormFieldForm
-from omniforms.models import OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
+from omniforms.models import OmniForm, OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
 
 
 class AdminView(PermissionRequiredMixin, FormView):
@@ -68,6 +68,8 @@ class OmniFormAdminView(AdminView):
     """
     Admin view for working with omni forms
     """
+    omni_form_model_class = None
+
     def __init__(self, **kwargs):
         """
         Sets up attributes required for the view
@@ -78,8 +80,7 @@ class OmniFormAdminView(AdminView):
         super(OmniFormAdminView, self).__init__(**kwargs)
         self.omni_form = None
 
-    @staticmethod
-    def _load_omni_form(pk):
+    def _load_omni_form(self, pk):
         """
         Loads the omin form instance from the database or raises an HTTP 404
 
@@ -88,7 +89,7 @@ class OmniFormAdminView(AdminView):
 
         :return: OmniForm model instance
         """
-        return get_object_or_404(OmniModelForm, pk=pk)
+        return get_object_or_404(self.omni_form_model_class, pk=pk)
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -132,6 +133,7 @@ class OmniModelFormRelatedView(OmniFormAdminView):
     """
     View class for Creating/Updating OmniForm related objects
     """
+    omni_form_model_class = OmniModelForm
     form_class = forms.ModelForm
     exclude = ('real_type',)
 
@@ -203,6 +205,7 @@ class OmniModelFormSelectRelatedView(OmniFormAdminView):
     template_name = None
     permission_required = None
     url_name = None
+    omni_form_model_class = OmniModelForm
     form_class = OmniModelFormAddRelatedForm
 
     def _get_form_choices(self):
@@ -560,6 +563,7 @@ class OmniModelFormPreviewView(OmniFormAdminView, DetailView):
     Preview view for the omni model form
     """
     model = OmniModelForm
+    omni_form_model_class = OmniModelForm
     template_name = 'admin/omniforms/omnimodelform/preview.html'
     permission_required = "omniforms.add_omnifield"
 
