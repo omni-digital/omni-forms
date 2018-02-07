@@ -100,11 +100,19 @@ It is important to note that the dictionary values defined within the `OMNI_FORM
 
 ## Compatibility
 
-This app is compatible with the following django versions:
+### Django
 
  - Django 1.8.x
  - Django 1.9.x
  - Django 1.10.x
+ - Django 1.11.x
+
+### Python
+
+ - Python 2.7
+ - Python 3.4
+ - Python 3.5
+ - Python 3.6
 
 ## ChangeLog
 
