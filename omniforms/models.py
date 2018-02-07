@@ -650,7 +650,9 @@ class OmniFormHandler(models.Model):
 
         :return: Edit URL for the admin interface
         """
-        return reverse('admin:omniforms_omnimodelform_updatehandler', args=[self.object_id, self.pk])
+        if isinstance(self.form, OmniModelForm):
+            return reverse('admin:omniforms_omnimodelform_updatehandler', args=[self.object_id, self.pk])
+        return reverse('admin:omniforms_omniform_updatehandler', args=[self.object_id, self.pk])
 
 
 @python_2_unicode_compatible
