@@ -11,6 +11,7 @@ from omniforms.admin_views import OmniModelFormSelectFieldView, OmniModelFormCre
 from omniforms.admin_views import OmniModelFormSelectHandlerView, OmniModelFormCreateHandlerView
 from omniforms.admin_views import OmniModelFormUpdateFieldView, OmniModelFormUpdateHandlerView
 from omniforms.admin_views import OmniFormSelectFieldView, OmniFormCreateFieldView, OmniFormUpdateFieldView
+from omniforms.admin_views import OmniFormPreviewView
 from omniforms.models import OmniForm, OmniModelForm, OmniField, OmniFormHandler
 
 
@@ -129,6 +130,11 @@ class OmniFormAdmin(admin.ModelAdmin):
         :return: list of urls
         """
         return [
+            url(
+                r'^(.+)/preview/$',
+                self.admin_site.admin_view(OmniFormPreviewView.as_view(admin_site=self)),
+                name='omniforms_omniform_preview'
+            ),
             url(
                 r'^(.+)/add-field/$',
                 self.admin_site.admin_view(OmniFormSelectFieldView.as_view(admin_site=self)),

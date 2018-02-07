@@ -246,6 +246,42 @@ class RelatedView(OmniFormAdminView):
             return reverse(self.change_url_name, args=[self.omni_form.pk])
 
 
+class PreviewView(DetailView):
+    """
+    Preview view for the omni model form
+    """
+    omni_form = None
+
+    def get_object(self, queryset=None):
+        """
+        Custom implementation of get_object
+
+        :return: OmniModelForm instance
+        """
+        return self.omni_form
+
+    def get_form_class(self):
+        """
+        Method for getting a form class for the preview view
+
+        :return: Form class
+        """
+        return self.omni_form.get_form_class()
+
+    def get_context_data(self, **kwargs):
+        """
+        Adds the omni form form instance to the context for the preview
+
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+
+        :return: Dict of context data for the template
+        """
+        context_data = super(PreviewView, self).get_context_data(**kwargs)
+        context_data['form'] = self.get_form(self.get_form_class())
+        return context_data
+
+
 ######################################################
 ################## MODEL FORM VIEWS ##################
 ######################################################
@@ -584,7 +620,7 @@ class OmniModelFormUpdateHandlerView(OmniModelFormHandlerView, UpdateView):
         return super(OmniModelFormUpdateHandlerView, self).dispatch(request, *args, **kwargs)
 
 
-class OmniModelFormPreviewView(OmniFormAdminView, DetailView):
+class OmniModelFormPreviewView(PreviewView, OmniFormAdminView):
     """
     Preview view for the omni model form
     """
@@ -592,35 +628,6 @@ class OmniModelFormPreviewView(OmniFormAdminView, DetailView):
     omni_form_model_class = OmniModelForm
     template_name = 'admin/omniforms/omnimodelform/preview.html'
     permission_required = "omniforms.add_omnifield"
-
-    def get_object(self, queryset=None):
-        """
-        Custom implementation of get_object
-
-        :return: OmniModelForm instance
-        """
-        return self.omni_form
-
-    def get_form_class(self):
-        """
-        Method for getting a form class for the preview view
-
-        :return: Form class
-        """
-        return self.omni_form.get_form_class()
-
-    def get_context_data(self, **kwargs):
-        """
-        Adds the omni form form instance to the context for the preview
-
-        :param kwargs: Default keyword args
-        :type kwargs: {}
-
-        :return: Dict of context data for the template
-        """
-        context_data = super(OmniModelFormPreviewView, self).get_context_data(**kwargs)
-        context_data['form'] = self.get_form(self.get_form_class())
-        return context_data
 
 
 ######################################################
@@ -789,3 +796,13 @@ class OmniFormUpdateFieldView(OmniFormFieldView, UpdateView):
     """
     permission_required = "omniforms.change_omnifield"
     template_name = 'admin/omniforms/omniform/field_form.html'
+
+
+class OmniFormPreviewView(PreviewView, OmniFormAdminView):
+    """
+    Preview view for the omni form
+    """
+    model = OmniForm
+    omni_form_model_class = OmniForm
+    template_name = 'admin/omniforms/omniform/preview.html'
+    permission_required = "omniforms.add_omnifield"

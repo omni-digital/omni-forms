@@ -4,5 +4,6 @@
 {% block after_related_objects %}
     {% if original %}
     <a href="{% url opts|admin_urlname:'addfield' original.pk|admin_urlquote %}" class="addlink">Add Field</a>
+    <a href="{% url opts|admin_urlname:'preview' original.pk|admin_urlquote %}">Preview Form</a>
     {% endif %}
 {% endblock %}
