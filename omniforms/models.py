@@ -191,7 +191,13 @@ class OmniField(models.Model):
 
         :return: Edit URL for the admin interface
         """
-        return reverse('admin:omniforms_omnimodelform_updatefield', args=[self.object_id, self.name])
+        if isinstance(self.form, OmniModelForm):
+            return reverse('admin:omniforms_omnimodelform_updatefield', args=[self.object_id, self.name])
+
+        return reverse(
+            'admin:omniforms_omniform_updatefield',
+            args=[self.object_id, self.real_type_id, self.name]
+        )
 
 
 class OmniCharField(OmniField):
@@ -1058,6 +1064,26 @@ class OmniForm(OmniFormBase):
     """
     fields = GenericRelation(OmniField)
     handlers = GenericRelation(OmniFormHandler)
+
+    def _get_fields(self):
+        """
+        Method for getting all fields for the form class
+
+        :return: list of form field instances
+        """
+        return {field.name: field.specific.as_form_field() for field in self.fields.all()}
+
+    def get_form_class(self):
+        """
+        Method for generating a form class from the data contained within the model
+
+        :return: ModelForm class
+        """
+        return type(
+            self._get_form_class_name(),
+            (forms.Form,),
+            self._get_fields()
+        )
 
 
 class OmniModelForm(OmniModelFormBase):

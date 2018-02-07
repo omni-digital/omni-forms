@@ -17,6 +17,9 @@ from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormFiel
 from omniforms.models import OmniForm, OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
 
 
+###################################################
+################## GENERIC VIEWS ##################
+###################################################
 class AdminView(PermissionRequiredMixin, FormView):
     """
     Admin view mixin
@@ -129,11 +132,58 @@ class OmniFormAdminView(AdminView):
         return context_data
 
 
-class OmniModelFormRelatedView(OmniFormAdminView):
+class SelectRelatedView(OmniFormAdminView):
+    """
+    View for selecting a related model type to add to the Omni Form instance in the django admin
+    This view does not actually create the related instance but allows the administrator to select the
+    type of related object that should be attached to the omni form
+    """
+    template_name = None
+    permission_required = None
+    url_name = None
+    omni_form_model_class = None
+    form_class = None
+
+    def _get_form_choices(self):
+        """
+        Method for getting choices for the form instance
+
+        :raises: NotImplementedError
+        """
+        raise NotImplementedError('\'{0}\' must implement its own _get_form_choices '
+                                  'method'.format(self.__class__.__name__))
+
+    def get_form_kwargs(self):
+        """
+        Custom implementation of get_form_kwargs
+        Adds a list of model fields to the kwargs for use in the form
+
+        :return: Dict of kwargs for the form
+        """
+        form_kwargs = super(SelectRelatedView, self).get_form_kwargs()
+        form_kwargs['choices'] = self._get_form_choices()
+        return form_kwargs
+
+    def form_valid(self, form):
+        """
+        Called when the submitted form is valid
+
+        :param form: Valid form instance
+        :type form: omniforms.admin_forms.OmniModelFormAddRelatedForm
+
+        :return: Http Response
+        """
+        url = reverse(self.url_name, args=(self.omni_form.pk, form.cleaned_data['choices']))
+        return HttpResponseRedirect(url)
+
+
+class RelatedView(OmniFormAdminView):
     """
     View class for Creating/Updating OmniForm related objects
     """
-    omni_form_model_class = OmniModelForm
+    model = None
+    add_another_url_name = None
+    change_url_name = None
     form_class = forms.ModelForm
     exclude = ('real_type',)
 
@@ -143,7 +193,7 @@ class OmniModelFormRelatedView(OmniFormAdminView):
 
         :return: Dict of initial data
         """
-        initial = super(OmniModelFormRelatedView, self).get_initial()
+        initial = super(RelatedView, self).get_initial()
         initial['content_type'] = ContentType.objects.get_for_model(self.omni_form).pk
         initial['object_id'] = self.omni_form.pk
         return initial
@@ -193,52 +243,28 @@ class OmniModelFormRelatedView(OmniFormAdminView):
         if '_addanother' in self.request.POST:
             return reverse(self.add_another_url_name, args=[self.omni_form.pk])
         else:
-            return reverse('admin:omniforms_omnimodelform_change', args=[self.omni_form.pk])
+            return reverse(self.change_url_name, args=[self.omni_form.pk])
 
 
-class OmniModelFormSelectRelatedView(OmniFormAdminView):
+######################################################
+################## MODEL FORM VIEWS ##################
+######################################################
+class OmniModelFormSelectRelatedView(SelectRelatedView):
     """
     View for selecting a related model type to add to the Omni Model Form instance in the django admin
     This view does not actually create the related instance but allows the administrator to select the
     type of related object that should be attached to the omni form
     """
-    template_name = None
-    permission_required = None
-    url_name = None
     omni_form_model_class = OmniModelForm
     form_class = OmniModelFormAddRelatedForm
 
-    def _get_form_choices(self):
-        """
-        Method for getting choices for the form instance
 
-        :raises: NotImplementedError
-        """
-        raise NotImplementedError('\'{0}\' must implement its own _get_form_choices '
-                                  'method'.format(self.__class__.__name__))
-
-    def get_form_kwargs(self):
-        """
-        Custom implementation of get_form_kwargs
-        Adds a list of model fields to the kwargs for use in the form
-
-        :return: Dict of kwargs for the form
-        """
-        form_kwargs = super(OmniModelFormSelectRelatedView, self).get_form_kwargs()
-        form_kwargs['choices'] = self._get_form_choices()
-        return form_kwargs
-
-    def form_valid(self, form):
-        """
-        Called when the submitted form is valid
-
-        :param form: Valid form instance
-        :type form: omniforms.admin_forms.OmniModelFormAddRelatedForm
-
-        :return: Http Response
-        """
-        url = reverse(self.url_name, args=(self.omni_form.pk, form.cleaned_data['choices']))
-        return HttpResponseRedirect(url)
+class OmniModelFormRelatedView(RelatedView):
+    """
+    View class for Creating/Updating OmniForm related objects
+    """
+    omni_form_model_class = OmniModelForm
+    change_url_name = 'admin:omniforms_omnimodelform_change'
 
 
 class OmniModelFormSelectFieldView(OmniModelFormSelectRelatedView):
@@ -595,3 +621,171 @@ class OmniModelFormPreviewView(OmniFormAdminView, DetailView):
         context_data = super(OmniModelFormPreviewView, self).get_context_data(**kwargs)
         context_data['form'] = self.get_form(self.get_form_class())
         return context_data
+
+
+######################################################
+################## BASIC FORM VIEWS ##################
+######################################################
+class OmniFormSelectRelatedView(SelectRelatedView):
+    """
+    View for selecting a related model type to add to the Omni Form instance in the django admin
+    This view does not actually create the related instance but allows the administrator to select the
+    type of related object that should be attached to the omni form
+    """
+    omni_form_model_class = OmniForm
+    form_class = OmniModelFormAddRelatedForm
+
+
+class OmniFormRelatedView(RelatedView):
+    """
+    View class for Creating/Updating OmniForm related objects
+    """
+    omni_form_model_class = OmniForm
+    change_url_name = 'admin:omniforms_omniform_change'
+
+
+class OmniFormFieldView(OmniFormRelatedView):
+    """
+    View for creating/editing OmniModelForm fields
+    """
+    add_another_url_name = 'admin:omniforms_omniform_addfield'
+    form_class = OmniModelFormFieldForm
+    model = None
+
+    def __init__(self, *args, **kwargs):
+        """
+        Sets up attributes required for the view
+
+        :param args: Default positional args
+        :type args: ()
+
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+        """
+        super(OmniFormFieldView, self).__init__(*args, **kwargs)
+        self.model_field = None
+        self.object = None
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Custom dispatch method
+        Gets the omni form instance and sets the model for the view
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+        """
+        self.omni_form = self._load_omni_form(args[0])
+        try:
+            self.model = ContentType.objects.get(pk=args[1]).model_class()
+        except ContentType.DoesNotExist:
+            raise Http404
+        return super(OmniFormFieldView, self).dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        """
+        Custom implementation of get_object
+        Returns the field with the specified name belonging to the omni form
+
+        :param queryset: Queryset of model instances to get the model instance from
+        :type queryset: django.db.models.query.QuerySet
+
+        :return: OmniField model instance
+        """
+        try:
+            return self.omni_form.fields.get(name=self.args[2])
+        except OmniField.DoesNotExist:
+            raise Http404
+
+    def _get_form_widgets(self):
+        """
+        Returns a dict of form widgets keyed by field name
+
+        :return: Dict of field widgets
+        """
+        widgets = super(OmniFormFieldView, self)._get_form_widgets()
+        widgets.update({
+            'widget_class': forms.HiddenInput(attrs={
+                'value': self.model.FORM_WIDGETS[0]
+            }),
+        })
+
+        if len(self.model.FORM_WIDGETS) > 1:
+            choices = map(lambda x: (x, x.rsplit('.')[-1]), self.model.FORM_WIDGETS)
+            widgets['widget_class'] = forms.Select(choices=choices)
+
+        return widgets
+
+    def get_form_class(self):
+        """
+        Method for generating a form class for the view
+
+        :return: ModelForm class
+        """
+        return modelform_factory(
+            self.model,
+            exclude=self.exclude,
+            form=self.form_class,
+            widgets=self._get_form_widgets(),
+            help_texts=self._get_help_texts(),
+        )
+
+
+class OmniFormSelectFieldView(OmniFormSelectRelatedView):
+    """
+    View for choosing which field a field to the Omni Form instance in the django admin
+    """
+    template_name = "admin/omniforms/omniform/selectfield_form.html"
+    permission_required = "omniforms.add_omnifield"
+    url_name = 'admin:omniforms_omniform_createfield'
+
+    def _get_form_choices(self):
+        """
+        Custom implementation of get_form_kwargs
+        Adds a list of model fields to the kwargs for use in the form
+
+        :return: Dict of kwargs for the form
+        """
+        return [
+            [instance.pk, instance.name] for instance in ContentType.objects.order_by('model')
+            if issubclass(instance.model_class(), OmniField)
+            and instance.model_class() != OmniField
+        ]
+
+
+class OmniFormCreateFieldView(OmniFormFieldView, CreateView):
+    """
+    Creates a form field for the specified form
+    """
+    template_name = 'admin/omniforms/omniform/field_form.html'
+    permission_required = "omniforms.add_omnifield"
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Custom dispatch method
+        Gets the omni form instance and sets the model for the view
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+        """
+        self.omni_form = self._load_omni_form(args[0])
+        return super(OmniFormCreateFieldView, self).dispatch(request, *args, **kwargs)
+
+
+class OmniFormUpdateFieldView(OmniFormFieldView, UpdateView):
+    """
+    View class for updating an existing field
+    """
+    permission_required = "omniforms.change_omnifield"
+    template_name = 'admin/omniforms/omniform/field_form.html'

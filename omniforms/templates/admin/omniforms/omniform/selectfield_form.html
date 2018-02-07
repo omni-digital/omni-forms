@@ -1,0 +1,21 @@
+{% extends 'admin/omniforms/omnimodelform/selectrelated_form.html' %}{% load i18n admin_urls %}
+
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+        &rsaquo; {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+        &rsaquo; {% if has_change_permission %}<a href="{% url opts|admin_urlname:'change' omni_form.pk %}">{{ omni_form|capfirst }}</a>{% else %}{{ omni_form|truncatewords:"18" }}{% endif %}
+        &rsaquo; Add Field
+    </div>
+    {% endblock %}
+{% endif %}
+
+
+{% block submit_buttons_bottom %}
+<div class="submit-row">
+    <input type="submit" value="Add field" class="default" name="_save">
+</div>
+{% endblock %}
