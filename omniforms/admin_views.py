@@ -246,6 +246,27 @@ class RelatedView(OmniFormAdminView):
             return reverse(self.change_url_name, args=[self.omni_form.pk])
 
 
+class SelectHandlerViewMixin(object):
+    """
+    View for choosing a handler to add to the Omni Model Form instance in the django admin
+    """
+    def _get_form_choices(self):
+        """
+        Method for getting form handler model class content types
+
+        :return: Queryset of ContentType model instances
+        """
+        content_types = filter(
+            lambda x: (
+                x.model_class() is not None and
+                issubclass(x.model_class(), OmniFormHandler) and
+                x.model_class() != OmniFormHandler
+            ),
+            ContentType.objects.all()
+        )
+        return [(content_type.pk, '{0}'.format(content_type)) for content_type in content_types]
+
+
 class PreviewView(DetailView):
     """
     Preview view for the omni model form
@@ -321,29 +342,13 @@ class OmniModelFormSelectFieldView(OmniModelFormSelectRelatedView):
         return self.omni_form.get_model_field_choices()
 
 
-class OmniModelFormSelectHandlerView(OmniModelFormSelectRelatedView):
+class OmniModelFormSelectHandlerView(SelectHandlerViewMixin, OmniModelFormSelectRelatedView):
     """
     View for choosing a handler to add to the Omni Model Form instance in the django admin
     """
     template_name = "admin/omniforms/omnimodelform/selecthandler_form.html"
     permission_required = "omniforms.add_omniformhandler"
     url_name = 'admin:omniforms_omnimodelform_createhandler'
-
-    def _get_form_choices(self):
-        """
-        Method for getting form handler model class content types
-
-        :return: Queryset of ContentType model instances
-        """
-        content_types = filter(
-            lambda x: (
-                x.model_class() is not None and
-                issubclass(x.model_class(), OmniFormHandler) and
-                x.model_class() != OmniFormHandler
-            ),
-            ContentType.objects.all()
-        )
-        return [(content_type.pk, '{0}'.format(content_type)) for content_type in content_types]
 
 
 class OmniModelFormFieldView(OmniModelFormRelatedView):
@@ -796,6 +801,130 @@ class OmniFormUpdateFieldView(OmniFormFieldView, UpdateView):
     """
     permission_required = "omniforms.change_omnifield"
     template_name = 'admin/omniforms/omniform/field_form.html'
+
+
+class OmniFormSelectHandlerView(SelectHandlerViewMixin, OmniFormSelectRelatedView):
+    """
+    View for choosing a handler to add to the Omni Form instance in the django admin
+    """
+    template_name = "admin/omniforms/omniform/selecthandler_form.html"
+    permission_required = "omniforms.add_omniformhandler"
+    url_name = 'admin:omniforms_omniform_createhandler'
+
+
+class OmniFormHandlerView(OmniFormRelatedView):
+    """
+    View for creating/editing OmniForm handlers
+    """
+    add_another_url_name = 'admin:omniforms_omniform_addhandler'
+
+
+class OmniFormCreateHandlerView(OmniFormHandlerView, CreateView):
+    """
+    Creates a form handler for the specified form
+    """
+    template_name = 'admin/omniforms/omniform/handler_form.html'
+    permission_required = "omniforms.add_omniformhandler"
+
+    def __init__(self, **kwargs):
+        super(OmniFormCreateHandlerView, self).__init__(**kwargs)
+        self.content_type_id = None
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Custom dispatch method
+        Gets the omni form instance and sets the model for the view
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+        """
+        self.content_type_id = args[1]
+        try:
+            content_type = ContentType.objects.get(pk=self.content_type_id)
+        except ContentType.DoesNotExist:
+            raise Http404
+        else:
+            model_class = content_type.model_class()
+            if not issubclass(model_class, OmniFormHandler) or model_class == OmniFormHandler:
+                raise Http404
+            self.model = model_class
+        return super(OmniFormCreateHandlerView, self).dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        """
+        Creates a handler instance to add to the form so that help text can be generated correctly
+
+        :return: Dict of keyword args to be used when instanciating the form
+        """
+        form_kwargs = super(OmniFormCreateHandlerView, self).get_form_kwargs()
+        form_kwargs['instance'] = self.model(form=self.omni_form)
+        return form_kwargs
+
+    def get_context_data(self, **kwargs):
+        """
+        Adds the handler content type id to the context
+
+        :param kwargs: Default positional args
+        :type kwargs: {}
+
+        :return: Dict of context data for rendering the template
+        """
+        context_data = super(OmniFormCreateHandlerView, self).get_context_data(**kwargs)
+        context_data['handler_content_type_id'] = self.content_type_id
+        return context_data
+
+
+class OmniFormUpdateHandlerView(OmniFormHandlerView, UpdateView):
+    """
+    View class for updating an existing handler
+    """
+    permission_required = "omniforms.change_omniformhandler"
+    template_name = 'admin/omniforms/omniform/handler_form.html'
+
+    def __init__(self, **kwargs):
+        super(OmniFormUpdateHandlerView, self).__init__(**kwargs)
+        self.object = None
+
+    def get_object(self, queryset=None):
+        """
+        Gets the handler instance for editing
+
+        :param queryset: Queryset from which to get the handler instance
+        :type queryset: django.db.models.Queryset
+
+        :return: Omni Model Form Handler instance
+        """
+        try:
+            return self.omni_form.handlers.get(pk=self.args[1]).specific
+        except OmniFormHandler.DoesNotExist:
+            raise Http404
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Custom dispatch method
+        Loads the omni form, gets the handler and sets the model class on the view accordingly
+
+        :param request: Http Request instance
+        :type request: django.http.HttpRequest
+
+        :param args: Default positional args
+        :type args: ()
+
+        :param kwargs: Default keyword args
+        :type kwargs: {}
+
+        :return: Http Response
+        """
+        self.omni_form = self._load_omni_form(args[0])
+        self.object = self.get_object()
+        self.model = self.object.__class__
+        return super(OmniFormUpdateHandlerView, self).dispatch(request, *args, **kwargs)
 
 
 class OmniFormPreviewView(PreviewView, OmniFormAdminView):

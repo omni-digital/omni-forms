@@ -933,6 +933,15 @@ class OmniFormBase(FormGeneratorMixin, models.Model):
         """
         return self.title
 
+    @cached_property
+    def used_field_names(self):
+        """
+        Property for getting the names of all fields associated with the form
+
+        :return: List of available field names
+        """
+        return self.fields.values_list('name', flat=True)
+
 
 class OmniModelFormBase(OmniFormBase):
     """
@@ -980,15 +989,6 @@ class OmniModelFormBase(OmniFormBase):
             fields=self.used_field_names,
             formfield_callback=self.formfield_callback
         )
-
-    @cached_property
-    def used_field_names(self):
-        """
-        Property for getting the names of all fields associated with the form
-
-        :return: List of available field names
-        """
-        return self.fields.values_list('name', flat=True)
 
     def get_model_fields(self):
         """

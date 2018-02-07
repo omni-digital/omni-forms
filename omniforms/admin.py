@@ -11,7 +11,8 @@ from omniforms.admin_views import OmniModelFormSelectFieldView, OmniModelFormCre
 from omniforms.admin_views import OmniModelFormSelectHandlerView, OmniModelFormCreateHandlerView
 from omniforms.admin_views import OmniModelFormUpdateFieldView, OmniModelFormUpdateHandlerView
 from omniforms.admin_views import OmniFormSelectFieldView, OmniFormCreateFieldView, OmniFormUpdateFieldView
-from omniforms.admin_views import OmniFormPreviewView
+from omniforms.admin_views import OmniFormPreviewView, OmniFormSelectHandlerView, OmniFormCreateHandlerView
+from omniforms.admin_views import OmniFormUpdateHandlerView
 from omniforms.models import OmniForm, OmniModelForm, OmniField, OmniFormHandler
 
 
@@ -149,6 +150,21 @@ class OmniFormAdmin(admin.ModelAdmin):
                 r'^(.+)/update-field/(.+)/(.+)/$',
                 self.admin_site.admin_view(OmniFormUpdateFieldView.as_view(admin_site=self)),
                 name='omniforms_omniform_updatefield'
+            ),
+            url(
+                r'^(.+)/add-handler/$',
+                self.admin_site.admin_view(OmniFormSelectHandlerView.as_view(admin_site=self)),
+                name='omniforms_omniform_addhandler'
+            ),
+            url(
+                r'^(.+)/add-handler/(.+)/$',
+                self.admin_site.admin_view(OmniFormCreateHandlerView.as_view(admin_site=self)),
+                name='omniforms_omniform_createhandler'
+            ),
+            url(
+                r'^(.+)/update-handler/(.+)/$',
+                self.admin_site.admin_view(OmniFormUpdateHandlerView.as_view(admin_site=self)),
+                name='omniforms_omniform_updatehandler'
             ),
         ] + super(OmniFormAdmin, self).get_urls()
 
