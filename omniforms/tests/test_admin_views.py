@@ -60,7 +60,7 @@ class OmniModelFormSelectFieldViewTestCase(OmniModelFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniModelFormSelectFieldView)
         self.assertIsInstance(response.context['form'], AddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
-        self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/selectfield_form.html")
+        self.assertTemplateUsed(response, "admin/omniforms/base/selectfield_form.html")
 
     def test_forms_model_fields_choices(self):
         """
@@ -508,7 +508,7 @@ class OmniModelFormSelectHandlerViewTestCase(OmniModelFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniModelFormSelectHandlerView)
         self.assertIsInstance(response.context['form'], AddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
-        self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/selecthandler_form.html")
+        self.assertTemplateUsed(response, "admin/omniforms/base/selecthandler_form.html")
 
     def test_forms_model_fields_choices(self):
         """
@@ -813,7 +813,7 @@ class OmniFormSelectFieldViewTestCase(OmniBasicFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniFormSelectFieldView)
         self.assertIsInstance(response.context['form'], AddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
-        self.assertTemplateUsed(response, "admin/omniforms/omniform/selectfield_form.html")
+        self.assertTemplateUsed(response, "admin/omniforms/base/selectfield_form.html")
 
     def test_forms_model_fields_choices(self):
         """
@@ -1142,7 +1142,7 @@ class OmniFormSelectHandlerViewTestCase(OmniBasicFormAdminTestCaseStub):
         self.assertIsInstance(response.context['view'], OmniFormSelectHandlerView)
         self.assertIsInstance(response.context['form'], AddRelatedForm)
         self.assertEqual(response.context['omni_form'], self.omni_form)
-        self.assertTemplateUsed(response, "admin/omniforms/omniform/selecthandler_form.html")
+        self.assertTemplateUsed(response, "admin/omniforms/base/selecthandler_form.html")
 
     def test_forms_model_fields_choices(self):
         """

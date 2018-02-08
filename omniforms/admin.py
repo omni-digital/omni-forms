@@ -25,7 +25,7 @@ class OmniRelatedInlineAdmin(GenericTabularInline):
     fields = ('name', 'order',)
     readonly_fields = ('name',)
     show_change_link = True
-    template = 'admin/omniforms/omnimodelform/inlines/omni_form_related_inline.html'
+    template = 'admin/omniforms/base/inlines/omni_form_related_inline.html'
 
 
 class OmniFieldAdmin(OmniRelatedInlineAdmin):

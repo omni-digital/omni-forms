@@ -431,7 +431,7 @@ class OmniModelFormSelectFieldView(OmniModelFormSelectRelatedView):
     """
     View for choosing which field a field to the Omni Model Form instance in the django admin
     """
-    template_name = "admin/omniforms/omnimodelform/selectfield_form.html"
+    template_name = "admin/omniforms/base/selectfield_form.html"
     permission_required = "omniforms.add_omnifield"
     url_name = 'admin:omniforms_omnimodelform_createfield'
 
@@ -449,7 +449,7 @@ class OmniModelFormSelectHandlerView(SelectHandlerViewMixin, OmniModelFormSelect
     """
     View for choosing a handler to add to the Omni Model Form instance in the django admin
     """
-    template_name = "admin/omniforms/omnimodelform/selecthandler_form.html"
+    template_name = "admin/omniforms/base/selecthandler_form.html"
     permission_required = "omniforms.add_omniformhandler"
     url_name = 'admin:omniforms_omnimodelform_createhandler'
 
@@ -759,7 +759,7 @@ class OmniFormSelectFieldView(OmniFormSelectRelatedView):
     """
     View for choosing which field a field to the Omni Form instance in the django admin
     """
-    template_name = "admin/omniforms/omniform/selectfield_form.html"
+    template_name = "admin/omniforms/base/selectfield_form.html"
     permission_required = "omniforms.add_omnifield"
     url_name = 'admin:omniforms_omniform_createfield'
 
@@ -814,7 +814,7 @@ class OmniFormSelectHandlerView(SelectHandlerViewMixin, OmniFormSelectRelatedVie
     """
     View for choosing a handler to add to the Omni Form instance in the django admin
     """
-    template_name = "admin/omniforms/omniform/selecthandler_form.html"
+    template_name = "admin/omniforms/base/selecthandler_form.html"
     permission_required = "omniforms.add_omniformhandler"
     url_name = 'admin:omniforms_omniform_createhandler'
 
