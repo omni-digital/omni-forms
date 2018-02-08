@@ -565,7 +565,7 @@ class OmniModelFormCreateFieldView(OmniModelFormFieldView, CreateView):
     """
     Creates a form field for the specified form
     """
-    template_name = 'admin/omniforms/omnimodelform/field_form.html'
+    template_name = 'admin/omniforms/base/field_form.html'
     permission_required = "omniforms.add_omnifield"
 
     def dispatch(self, request, *args, **kwargs):
@@ -610,7 +610,7 @@ class OmniModelFormUpdateFieldView(OmniModelFormFieldView, UpdateView):
     View class for updating an existing field
     """
     permission_required = "omniforms.change_omnifield"
-    template_name = 'admin/omniforms/omnimodelform/field_form.html'
+    template_name = 'admin/omniforms/base/field_form.html'
 
 
 class OmniModelFormHandlerView(OmniModelFormRelatedView):
@@ -781,7 +781,7 @@ class OmniFormCreateFieldView(OmniFormFieldView, CreateView):
     """
     Creates a form field for the specified form
     """
-    template_name = 'admin/omniforms/omniform/field_form.html'
+    template_name = 'admin/omniforms/base/field_form.html'
     permission_required = "omniforms.add_omnifield"
 
     def dispatch(self, request, *args, **kwargs):
@@ -807,7 +807,7 @@ class OmniFormUpdateFieldView(OmniFormFieldView, UpdateView):
     View class for updating an existing field
     """
     permission_required = "omniforms.change_omnifield"
-    template_name = 'admin/omniforms/omniform/field_form.html'
+    template_name = 'admin/omniforms/base/field_form.html'
 
 
 class OmniFormSelectHandlerView(SelectHandlerViewMixin, OmniFormSelectRelatedView):

@@ -136,7 +136,7 @@ class OmniModelFormCreateFieldViewTestCase(OmniModelFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertTemplateUsed(response, 'admin/omniforms/omnimodelform/field_form.html')
+        self.assertTemplateUsed(response, 'admin/omniforms/base/field_form.html')
         self.assertIsInstance(response.context['view'], OmniModelFormCreateFieldView)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertEqual(response.context['model_field_name'], 'title')
@@ -363,7 +363,7 @@ class OmniModelFormUpdateFieldViewTestCase(OmniModelFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertTemplateUsed(response, 'admin/omniforms/omnimodelform/field_form.html')
+        self.assertTemplateUsed(response, 'admin/omniforms/base/field_form.html')
         self.assertIsInstance(response.context['view'], OmniModelFormUpdateFieldView)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertEqual(response.context['model_field_name'], 'title')
@@ -895,7 +895,7 @@ class OmniFormCreateFieldViewTestCase(OmniBasicFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertTemplateUsed(response, 'admin/omniforms/omniform/field_form.html')
+        self.assertTemplateUsed(response, 'admin/omniforms/base/field_form.html')
         self.assertIsInstance(response.context['view'], OmniFormCreateFieldView)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertIsInstance(response.context['form'], FieldForm)
@@ -1006,7 +1006,7 @@ class OmniFormUpdateFieldViewTestCase(OmniBasicFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertTemplateUsed(response, 'admin/omniforms/omniform/field_form.html')
+        self.assertTemplateUsed(response, 'admin/omniforms/base/field_form.html')
         self.assertIsInstance(response.context['view'], OmniFormUpdateFieldView)
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertIsInstance(response.context['form'], FieldForm)
