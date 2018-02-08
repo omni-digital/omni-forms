@@ -9,21 +9,21 @@ from django.test import TestCase
 from omniforms.tests.factories import OmniModelFormFactory
 
 
-class OmniFormTestCaseStub(TestCase):
+class OmniModelFormTestCaseStub(TestCase):
     """
     Test Stub for the omniforms app
     """
     def setUp(self):
-        super(OmniFormTestCaseStub, self).setUp()
+        super(OmniModelFormTestCaseStub, self).setUp()
         self.omni_form = OmniModelFormFactory.create()
 
 
-class OmniFormAdminTestCaseStub(OmniFormTestCaseStub):
+class OmniModelFormAdminTestCaseStub(OmniModelFormTestCaseStub):
     """
     Test Stub for the omniforms app
     """
     def setUp(self):
-        super(OmniFormAdminTestCaseStub, self).setUp()
+        super(OmniModelFormAdminTestCaseStub, self).setUp()
         user_model = get_user_model()
         # Create a user
         self.user = user_model(username='test', email='test@example.com', is_staff=True)

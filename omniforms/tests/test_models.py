@@ -51,7 +51,7 @@ from omniforms.tests.factories import (
     OmniFormEmailHandlerFactory
 )
 from omniforms.tests.models import TaggableManagerField, DummyModel2
-from omniforms.tests.utils import OmniFormTestCaseStub
+from omniforms.tests.utils import OmniModelFormTestCaseStub
 from taggit_autosuggest.managers import TaggableManager
 from unittest import skipUnless
 
@@ -112,7 +112,7 @@ class OmniModelFormBaseTestCase(TestCase):
         self.assertFalse(field.null)
 
 
-class OmniFormTestCase(OmniFormTestCaseStub):
+class OmniFormTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniForm model
     """
@@ -750,7 +750,7 @@ class OmniFieldTestCase(TestCase):
         )
 
 
-class OmniFieldInstanceTestCase(OmniFormTestCaseStub):
+class OmniFieldInstanceTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniField model
     """
@@ -1722,7 +1722,7 @@ class OmniImageFieldTestCase(TestCase):
         self.assertIn('django.forms.widgets.FileInput', OmniImageField.FORM_WIDGETS)
 
 
-class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):
+class OmniManyToManyFieldTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniManyToManyField
     """
@@ -1789,7 +1789,7 @@ class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):
         self.assertEquals(list(instance.queryset), list(Permission.objects.all()))
 
 
-class OmniForeignKeyFieldTestCase(OmniFormTestCaseStub):
+class OmniForeignKeyFieldTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniForeignKeyField
     """
@@ -1945,7 +1945,7 @@ class OmniFormHandlerTestCase(TestCase):
         )
 
 
-class TemplateHelpTextLazyTestCase(OmniFormTestCaseStub):
+class TemplateHelpTextLazyTestCase(OmniModelFormTestCaseStub):
     """
     Tests the TemplateHelpTextLazy class
     """
@@ -1986,7 +1986,7 @@ class TemplateHelpTextLazyTestCase(OmniFormTestCaseStub):
         )
 
 
-class OmniFormHandlerInstanceTestCase(OmniFormTestCaseStub):
+class OmniFormHandlerInstanceTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniFormHandler class
     """
@@ -2141,7 +2141,7 @@ class OmniFormEmailHandlerTestCase(TestCase):
         patched_method.assert_any_call('test.gif', 'Content', 'image/gif')
 
 
-class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
+class OmniFormSaveInstanceHandlerTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniFormSaveInstanceHandler
     """

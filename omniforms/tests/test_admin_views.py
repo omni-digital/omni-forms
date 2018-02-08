@@ -32,10 +32,10 @@ from omniforms.models import (
     OmniFormEmailHandler,
     OmniFormSaveInstanceHandler
 )
-from omniforms.tests.utils import OmniFormAdminTestCaseStub
+from omniforms.tests.utils import OmniModelFormAdminTestCaseStub
 
 
-class OmniModelFormSelectFieldViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormSelectFieldViewTestCase(OmniModelFormAdminTestCaseStub):
     """
     Tests the OmniModelFormSelectFieldView
     """
@@ -104,7 +104,7 @@ class OmniModelFormSelectFieldViewTestCase(OmniFormAdminTestCaseStub):
         self.assertRedirects(response, reverse('admin:index'))
 
 
-class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormCreateFieldViewTestCase(OmniModelFormAdminTestCaseStub):
     """
     Tests the OmniModelFormSelectFieldView
     """
@@ -322,7 +322,7 @@ class OmniModelFormCreateFieldViewTestCase(OmniFormAdminTestCaseStub):
         self.assertRedirects(response, reverse('admin:index'))
 
 
-class OmniModelFormUpdateFieldViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormUpdateFieldViewTestCase(OmniModelFormAdminTestCaseStub):
     """
     Tests the OmniModelFormUpdateFieldView
     """
@@ -447,7 +447,7 @@ class OmniModelFormUpdateFieldViewTestCase(OmniFormAdminTestCaseStub):
         self.assertRedirects(response, reverse('admin:index'))
 
 
-class OmniModelFormPreviewViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormPreviewViewTestCase(OmniModelFormAdminTestCaseStub):
     """
     Tests the OmniModelFormPreviewView
     """
@@ -483,7 +483,7 @@ class OmniModelFormPreviewViewTestCase(OmniFormAdminTestCaseStub):
         self.assertRedirects(response, reverse('admin:index'))
 
 
-class OmniModelFormSelectHandlerViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormSelectHandlerViewTestCase(OmniModelFormAdminTestCaseStub):
     """
     Tests the OmniModelFormSelectHandlerView
     """
@@ -567,7 +567,7 @@ class OmniModelFormSelectHandlerViewTestCase(OmniFormAdminTestCaseStub):
         OmniModelFormSelectHandlerView()._get_form_choices()
 
 
-class OmniModelFormCreateHandlerViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormCreateHandlerViewTestCase(OmniModelFormAdminTestCaseStub):
     """
     Tests the OmniModelFormCreateHandlerView
     """
@@ -687,7 +687,7 @@ class OmniModelFormCreateHandlerViewTestCase(OmniFormAdminTestCaseStub):
         self.assertRedirects(response, reverse('admin:omniforms_omnimodelform_addhandler', args=[self.omni_form.pk]))
 
 
-class OmniModelFormUpdateHandlerViewTestCase(OmniFormAdminTestCaseStub):
+class OmniModelFormUpdateHandlerViewTestCase(OmniModelFormAdminTestCaseStub):
     """
     Tests the OmniModelFormUpdateHandlerView
     """
