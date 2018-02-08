@@ -17,7 +17,8 @@ from omniforms.admin_views import (
     OmniModelFormUpdateHandlerView,
     OmniFormSelectFieldView,
     OmniFormCreateFieldView,
-    OmniFormUpdateFieldView
+    OmniFormUpdateFieldView,
+    OmniFormSelectHandlerView
 )
 from omniforms.models import (
     OmniModelForm,
@@ -1122,90 +1123,90 @@ class OmniFormPreviewViewTestCase(OmniBasicFormAdminTestCaseStub):
         self.assertRedirects(response, reverse('admin:index'))
 
 
-# class OmniModelFormSelectHandlerViewTestCase(OmniModelFormAdminTestCaseStub):
-#     """
-#     Tests the OmniModelFormSelectHandlerView
-#     """
-#     def setUp(self):
-#         super(OmniModelFormSelectHandlerViewTestCase, self).setUp()
-#         self.url = reverse('admin:omniforms_omnimodelform_addhandler', args=[self.omni_form.pk])
-#
-#     def test_renders(self):
-#         """
-#         The view should render
-#         """
-#         response = self.client.get(self.url)
-#         self.assertIsInstance(response.context['view'], OmniModelFormSelectHandlerView)
-#         self.assertIsInstance(response.context['form'], AddRelatedForm)
-#         self.assertEqual(response.context['omni_form'], self.omni_form)
-#         self.assertTemplateUsed(response, "admin/omniforms/omnimodelform/selecthandler_form.html")
-#
-#     def test_forms_model_fields_choices(self):
-#         """
-#         The forms choices.queryset should be constructed properly
-#         """
-#         response = self.client.get(self.url)
-#         form = response.context['form']
-#         for content_type_id, content_type_name in form.fields['choices'].choices:
-#             content_type = ContentType.objects.get(pk=content_type_id)
-#             self.assertTrue(
-#                 issubclass(content_type.model_class(), OmniFormHandler) and
-#                 content_type.model_class() != OmniFormHandler
-#             )
-#
-#     def test_raises_404(self):
-#         """
-#         The view should raise an HTTP 404 if the omni_form does not exist
-#         """
-#         response = self.client.get(reverse('admin:omniforms_omnimodelform_addhandler', args=[999999999]))
-#         self.assertEqual(response.status_code, 404)
-#
-#     def test_redirects_to_create_handler_view(self):
-#         """
-#         The view should redirect to the CreateHandler view on successful form submission
-#         """
-#         content_type = ContentType.objects.get_for_model(OmniFormEmailHandler)
-#         response = self.client.post(self.url, data={'choices': content_type.pk}, follow=True)
-#         expected_url = reverse('admin:omniforms_omnimodelform_createhandler', args=[self.omni_form.pk, content_type.pk])
-#         self.assertRedirects(response, expected_url)
-#
-#     def test_staff_required(self):
-#         """
-#         The view should not be accessible to non staff users
-#         """
-#         self.user.is_staff = False
-#         self.user.save()
-#         response = self.client.get(self.url, follow=True)
-#         redirect_url = '{0}?next={1}'.format(reverse('admin:login'), self.url)
-#         self.assertRedirects(response, redirect_url)
-#
-#     def test_permission_required(self):
-#         """
-#         The view should require the omniforms.add_omnifield permission
-#         """
-#         self.user.user_permissions.remove(self.add_handler_permission)
-#         response = self.client.get(self.url, follow=True)
-#         self.assertRedirects(response, reverse('admin:index'))
-#
-#     def test_get_form_choices(self):
-#         """
-#         The _get_form_choices method of the view should return content types that are OmniFormHandler subclasses
-#         """
-#         choices = OmniModelFormSelectHandlerView()._get_form_choices()
-#         email_handler_ctype = ContentType.objects.get_for_model(OmniFormEmailHandler)
-#         save_instance_handler_ctype = ContentType.objects.get_for_model(OmniFormSaveInstanceHandler)
-#         self.assertIn((email_handler_ctype.pk, '{0}'.format(email_handler_ctype)), choices)
-#         self.assertIn((save_instance_handler_ctype.pk, '{0}'.format(save_instance_handler_ctype)), choices)
-#
-#     @patch('omniforms.models.ContentType.model_class')
-#     def test_get_form_choices_does_not_fail_if_model_class_is_none(self, patched_method):
-#         """
-#         The _get_form_choices method of the view should not raise an exception if the model class could not be resolved
-#         """
-#         patched_method.return_value = None
-#         OmniModelFormSelectHandlerView()._get_form_choices()
-#
-#
+class OmniFormSelectHandlerViewTestCase(OmniBasicFormAdminTestCaseStub):
+    """
+    Tests the OmniFormSelectHandlerView
+    """
+    def setUp(self):
+        super(OmniFormSelectHandlerViewTestCase, self).setUp()
+        self.url = reverse('admin:omniforms_omniform_addhandler', args=[self.omni_form.pk])
+
+    def test_renders(self):
+        """
+        The view should render
+        """
+        response = self.client.get(self.url)
+        self.assertIsInstance(response.context['view'], OmniFormSelectHandlerView)
+        self.assertIsInstance(response.context['form'], AddRelatedForm)
+        self.assertEqual(response.context['omni_form'], self.omni_form)
+        self.assertTemplateUsed(response, "admin/omniforms/omniform/selecthandler_form.html")
+
+    def test_forms_model_fields_choices(self):
+        """
+        The forms choices.queryset should be constructed properly
+        """
+        response = self.client.get(self.url)
+        form = response.context['form']
+        for content_type_id, content_type_name in form.fields['choices'].choices:
+            content_type = ContentType.objects.get(pk=content_type_id)
+            self.assertTrue(
+                issubclass(content_type.model_class(), OmniFormHandler) and
+                content_type.model_class() != OmniFormHandler
+            )
+
+    def test_raises_404(self):
+        """
+        The view should raise an HTTP 404 if the omni_form does not exist
+        """
+        response = self.client.get(reverse('admin:omniforms_omniform_addhandler', args=[999999999]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_redirects_to_create_handler_view(self):
+        """
+        The view should redirect to the CreateHandler view on successful form submission
+        """
+        content_type = ContentType.objects.get_for_model(OmniFormEmailHandler)
+        response = self.client.post(self.url, data={'choices': content_type.pk}, follow=True)
+        expected_url = reverse('admin:omniforms_omniform_createhandler', args=[self.omni_form.pk, content_type.pk])
+        self.assertRedirects(response, expected_url)
+
+    def test_staff_required(self):
+        """
+        The view should not be accessible to non staff users
+        """
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get(self.url, follow=True)
+        redirect_url = '{0}?next={1}'.format(reverse('admin:login'), self.url)
+        self.assertRedirects(response, redirect_url)
+
+    def test_permission_required(self):
+        """
+        The view should require the omniforms.add_omnifield permission
+        """
+        self.user.user_permissions.remove(self.add_handler_permission)
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, reverse('admin:index'))
+
+    def test_get_form_choices(self):
+        """
+        The _get_form_choices method of the view should return content types that are OmniFormHandler subclasses
+        """
+        choices = OmniFormSelectHandlerView()._get_form_choices()
+        email_handler_ctype = ContentType.objects.get_for_model(OmniFormEmailHandler)
+        save_instance_handler_ctype = ContentType.objects.get_for_model(OmniFormSaveInstanceHandler)
+        self.assertIn((email_handler_ctype.pk, '{0}'.format(email_handler_ctype)), choices)
+        self.assertIn((save_instance_handler_ctype.pk, '{0}'.format(save_instance_handler_ctype)), choices)
+
+    @patch('omniforms.models.ContentType.model_class')
+    def test_get_form_choices_does_not_fail_if_model_class_is_none(self, patched_method):
+        """
+        The _get_form_choices method of the view should not raise an exception if the model class could not be resolved
+        """
+        patched_method.return_value = None
+        OmniModelFormSelectHandlerView()._get_form_choices()
+
+
 # class OmniModelFormCreateHandlerViewTestCase(OmniModelFormAdminTestCaseStub):
 #     """
 #     Tests the OmniModelFormCreateHandlerView
