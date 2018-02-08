@@ -28,7 +28,7 @@ class AddRelatedForm(forms.Form):
         self.fields['choices'].choices = choices
 
 
-class OmniModelFormFieldForm(forms.ModelForm):
+class FieldForm(forms.ModelForm):
     """
     Model form for creating omni field instances
     """
