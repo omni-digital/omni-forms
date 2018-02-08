@@ -935,7 +935,7 @@ class OmniFormBase(FormGeneratorMixin, models.Model):
         """
         return self.title
 
-    @cached_property
+    @property
     def used_field_names(self):
         """
         Property for getting the names of all fields associated with the form
