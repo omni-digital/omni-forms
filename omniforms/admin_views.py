@@ -17,9 +17,6 @@ from omniforms.admin_forms import AddRelatedForm, FieldForm
 from omniforms.models import OmniForm, OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
 
 
-###################################################
-################## GENERIC VIEWS ##################
-###################################################
 class AdminView(PermissionRequiredMixin, FormView):
     """
     Admin view mixin
@@ -412,9 +409,6 @@ class PreviewView(DetailView):
         return context_data
 
 
-######################################################
-################## MODEL FORM VIEWS ##################
-######################################################
 class OmniModelFormSelectRelatedView(SelectRelatedView):
     """
     View for selecting a related model type to add to the Omni Model Form instance in the django admin
@@ -651,9 +645,6 @@ class OmniModelFormPreviewView(PreviewView, OmniFormAdminView):
     permission_required = "omniforms.add_omnifield"
 
 
-######################################################
-################## BASIC FORM VIEWS ##################
-######################################################
 class OmniFormSelectRelatedView(SelectRelatedView):
     """
     View for selecting a related model type to add to the Omni Form instance in the django admin
