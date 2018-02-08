@@ -13,7 +13,7 @@ from django.forms import modelform_factory
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, CreateView, DetailView, UpdateView
-from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormFieldForm
+from omniforms.admin_forms import AddRelatedForm, OmniModelFormFieldForm
 from omniforms.models import OmniForm, OmniModelForm, OmniField, OmniRelatedField, OmniFormHandler
 
 
@@ -169,7 +169,7 @@ class SelectRelatedView(OmniFormAdminView):
         Called when the submitted form is valid
 
         :param form: Valid form instance
-        :type form: omniforms.admin_forms.OmniModelFormAddRelatedForm
+        :type form: omniforms.admin_forms.AddRelatedForm
 
         :return: Http Response
         """
@@ -422,7 +422,7 @@ class OmniModelFormSelectRelatedView(SelectRelatedView):
     type of related object that should be attached to the omni form
     """
     omni_form_model_class = OmniModelForm
-    form_class = OmniModelFormAddRelatedForm
+    form_class = AddRelatedForm
 
 
 class OmniModelFormRelatedView(RelatedView):
@@ -661,7 +661,7 @@ class OmniFormSelectRelatedView(SelectRelatedView):
     type of related object that should be attached to the omni form
     """
     omni_form_model_class = OmniForm
-    form_class = OmniModelFormAddRelatedForm
+    form_class = AddRelatedForm
 
 
 class OmniFormRelatedView(RelatedView):

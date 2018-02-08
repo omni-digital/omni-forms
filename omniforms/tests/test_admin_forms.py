@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase, override_settings
-from omniforms.admin_forms import OmniModelFormAddRelatedForm, OmniModelFormAdminForm
+from omniforms.admin_forms import AddRelatedForm, OmniModelFormAdminForm
 from omniforms.models import OmniModelForm
 from omniforms.tests.models import DummyModel
 
@@ -19,13 +19,13 @@ class OmniModelFormAddFieldFormTestCase(TestCase):
         """
         The form class should extend django.forms.Form
         """
-        self.assertTrue(issubclass(OmniModelFormAddRelatedForm, forms.Form))
+        self.assertTrue(issubclass(AddRelatedForm, forms.Form))
 
     def test_model_field(self):
         """
         The form should have a choices field
         """
-        field = OmniModelFormAddRelatedForm(choices=[]).fields['choices']
+        field = AddRelatedForm(choices=[]).fields['choices']
         self.assertIsInstance(field, forms.ChoiceField)
 
     def test_model_field_choices(self):
@@ -33,7 +33,7 @@ class OmniModelFormAddFieldFormTestCase(TestCase):
         The forms choices field should take the choices from the kwargs on instanciation
         """
         choices = [('a', 'A'), ('b', 'B'), ('c', 'C')]
-        field = OmniModelFormAddRelatedForm(choices=choices).fields['choices']
+        field = AddRelatedForm(choices=choices).fields['choices']
         self.assertEqual(field.choices, choices)
 
 

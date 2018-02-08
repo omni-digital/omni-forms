@@ -12,7 +12,7 @@ from omniforms.models import OmniModelForm
 import json
 
 
-class OmniModelFormAddRelatedForm(forms.Form):
+class AddRelatedForm(forms.Form):
     """
     Form for chosing a field to add to the omni form
     """
@@ -24,7 +24,7 @@ class OmniModelFormAddRelatedForm(forms.Form):
         Sets choices on the 'field' field
         """
         choices = kwargs.pop('choices')
-        super(OmniModelFormAddRelatedForm, self).__init__(*args, **kwargs)
+        super(AddRelatedForm, self).__init__(*args, **kwargs)
         self.fields['choices'].choices = choices
 
 
