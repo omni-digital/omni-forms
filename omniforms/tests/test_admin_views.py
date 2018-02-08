@@ -469,7 +469,7 @@ class OmniModelFormPreviewViewTestCase(OmniModelFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertTemplateUsed(response, 'admin/omniforms/omnimodelform/preview.html')
+        self.assertTemplateUsed(response, 'admin/omniforms/base/preview.html')
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertEqual(response.context['form'].__class__.__name__, self.omni_form.get_form_class().__name__)
 
@@ -1103,7 +1103,7 @@ class OmniFormPreviewViewTestCase(OmniBasicFormAdminTestCaseStub):
         The view should render
         """
         response = self.client.get(self.url)
-        self.assertTemplateUsed(response, 'admin/omniforms/omniform/preview.html')
+        self.assertTemplateUsed(response, 'admin/omniforms/base/preview.html')
         self.assertEqual(response.context['omni_form'], self.omni_form)
         self.assertEqual(response.context['form'].__class__.__name__, self.omni_form.get_form_class().__name__)
 

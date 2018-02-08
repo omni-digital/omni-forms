@@ -641,7 +641,7 @@ class OmniModelFormPreviewView(PreviewView, OmniFormAdminView):
     """
     model = OmniModelForm
     omni_form_model_class = OmniModelForm
-    template_name = 'admin/omniforms/omnimodelform/preview.html'
+    template_name = 'admin/omniforms/base/preview.html'
     permission_required = "omniforms.add_omnifield"
 
 
@@ -847,5 +847,5 @@ class OmniFormPreviewView(PreviewView, OmniFormAdminView):
     """
     model = OmniForm
     omni_form_model_class = OmniForm
-    template_name = 'admin/omniforms/omniform/preview.html'
+    template_name = 'admin/omniforms/base/preview.html'
     permission_required = "omniforms.add_omnifield"
