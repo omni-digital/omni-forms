@@ -44,9 +44,14 @@ from omniforms.models import (
     OmniFormSaveInstanceHandler,
     TemplateHelpTextLazy
 )
-from omniforms.tests.factories import DummyModelFactory, OmniModelFormFactory, OmniFormEmailHandlerFactory
+from omniforms.tests.factories import (
+    DummyModelFactory,
+    OmniFormFactory,
+    OmniModelFormFactory,
+    OmniFormEmailHandlerFactory
+)
 from omniforms.tests.models import TaggableManagerField, DummyModel2
-from omniforms.tests.utils import OmniFormTestCaseStub
+from omniforms.tests.utils import OmniModelFormTestCaseStub
 from taggit_autosuggest.managers import TaggableManager
 from unittest import skipUnless
 
@@ -107,13 +112,35 @@ class OmniModelFormBaseTestCase(TestCase):
         self.assertFalse(field.null)
 
 
-class OmniFormTestCase(OmniFormTestCaseStub):
+class OmniFormTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniForm model
     """
     def setUp(self):
         super(OmniFormTestCase, self).setUp()
         self.omniform = OmniForm.objects.create(title='test model')
+        self.field_1 = OmniCharField(
+            name='title',
+            label='Please give us a title',
+            required=True,
+            widget_class='django.forms.widgets.TextInput',
+            order=0,
+            initial='Some title...',
+            form=self.omniform
+        )
+        self.field_1.save()
+        self.field_2 = OmniBooleanField(
+            name='agree',
+            label='Please agree',
+            required=True,
+            widget_class='django.forms.widgets.CheckboxInput',
+            order=1,
+            initial=True,
+            form=self.omniform
+        )
+        self.field_2.save()
+        self.handler_1 = OmniFormEmailHandlerFactory.create(form=self.omniform)
+        self.handler_2 = OmniFormEmailHandlerFactory.create(form=self.omniform)
 
     def test_get_form_class_name(self):
         """
@@ -127,6 +154,52 @@ class OmniFormTestCase(OmniFormTestCaseStub):
         """
         form_class = self.omniform.get_form_class()
         self.assertTrue(issubclass(form_class, forms.Form))
+        self.assertEqual(form_class.__name__, 'OmniFormTestModel')
+        form = form_class()
+
+        # Test the title field
+        self.assertIsInstance(form.fields['title'], forms.CharField)
+        self.assertIsInstance(form.fields['title'].widget, forms.TextInput)
+        self.assertEqual(form.fields['title'].label, 'Please give us a title')
+        self.assertEqual(form.fields['title'].initial, 'Some title...')
+        self.assertTrue(form.fields['title'].required)
+
+        # Test the agree field
+        self.assertIsInstance(form.fields['agree'], forms.BooleanField)
+        self.assertIsInstance(form.fields['agree'].widget, forms.CheckboxInput)
+        self.assertEqual(form.fields['agree'].label, 'Please agree')
+        self.assertTrue(form.fields['agree'].initial)
+        self.assertTrue(form.fields['agree'].required)
+
+    def test_used_field_names(self):
+        """
+        The used_field_names property of the model should return names of fields used on the form
+        """
+        used_field_names = self.omniform.used_field_names
+        self.assertEqual(len(used_field_names), 2)
+        self.assertIn('title', used_field_names)
+        self.assertIn('agree', used_field_names)
+
+    def test_get_fields(self):
+        """
+        The method should return the correct fields as a dict
+        """
+        fields = self.omniform._get_fields()
+        self.assertEqual(2, len(fields))
+
+        # Test the title field
+        self.assertIsInstance(fields['title'], forms.CharField)
+        self.assertIsInstance(fields['title'].widget, forms.TextInput)
+        self.assertEqual(fields['title'].label, 'Please give us a title')
+        self.assertEqual(fields['title'].initial, 'Some title...')
+        self.assertTrue(fields['title'].required)
+
+        # Test the agree field
+        self.assertIsInstance(fields['agree'], forms.BooleanField)
+        self.assertIsInstance(fields['agree'].widget, forms.CheckboxInput)
+        self.assertEqual(fields['agree'].label, 'Please agree')
+        self.assertTrue(fields['agree'].initial)
+        self.assertTrue(fields['agree'].required)
 
 
 class OmniModelFormTestCase(TestCase):
@@ -649,7 +722,7 @@ class OmniFieldTestCase(TestCase):
         field.pk = None  # Remove the PK to make the instance think it's new
         self.assertRaises(IntegrityError, field.save)
 
-    def test_get_edit_url(self):
+    def test_get_edit_url_model_form(self):
         """
         The get_edit_url method should return the url for editing the resource in the django admin
         """
@@ -661,8 +734,23 @@ class OmniFieldTestCase(TestCase):
             reverse('admin:omniforms_omnimodelform_updatefield', args=[field.object_id, field.name])
         )
 
+    def test_get_edit_url_basic_form(self):
+        """
+        The get_edit_url method should return the url for editing the resource in the django admin
+        """
+        form = OmniFormFactory.create()
+        field = OmniField(name='A', label='A', widget_class='A', form=form)
+        field.save()
+        self.assertEqual(
+            field.get_edit_url(),
+            reverse(
+                'admin:omniforms_omniform_updatefield',
+                args=[field.object_id, field.real_type_id, field.name]
+            )
+        )
 
-class OmniFieldInstanceTestCase(OmniFormTestCaseStub):
+
+class OmniFieldInstanceTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniField model
     """
@@ -1634,7 +1722,7 @@ class OmniImageFieldTestCase(TestCase):
         self.assertIn('django.forms.widgets.FileInput', OmniImageField.FORM_WIDGETS)
 
 
-class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):
+class OmniManyToManyFieldTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniManyToManyField
     """
@@ -1701,7 +1789,7 @@ class OmniManyToManyFieldTestCase(OmniFormTestCaseStub):
         self.assertEquals(list(instance.queryset), list(Permission.objects.all()))
 
 
-class OmniForeignKeyFieldTestCase(OmniFormTestCaseStub):
+class OmniForeignKeyFieldTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniForeignKeyField
     """
@@ -1832,7 +1920,7 @@ class OmniFormHandlerTestCase(TestCase):
         instance = OmniFormHandler(name='Test handler')
         self.assertRaises(NotImplementedError, instance.handle, Mock())
 
-    def test_get_edit_url(self):
+    def test_get_edit_url_model_form(self):
         """
         The get_edit_url method should return the url for editing the resource in the django admin
         """
@@ -1844,8 +1932,20 @@ class OmniFormHandlerTestCase(TestCase):
             reverse('admin:omniforms_omnimodelform_updatehandler', args=[instance.object_id, instance.pk])
         )
 
+    def test_get_edit_url_basic_form(self):
+        """
+        The get_edit_url method should return the url for editing the resource in the django admin
+        """
+        form = OmniFormFactory.create()
+        instance = OmniFormHandler(name='Test handler', form=form)
+        instance.save()
+        self.assertEqual(
+            instance.get_edit_url(),
+            reverse('admin:omniforms_omniform_updatehandler', args=[instance.object_id, instance.pk])
+        )
 
-class TemplateHelpTextLazyTestCase(OmniFormTestCaseStub):
+
+class TemplateHelpTextLazyTestCase(OmniModelFormTestCaseStub):
     """
     Tests the TemplateHelpTextLazy class
     """
@@ -1886,7 +1986,7 @@ class TemplateHelpTextLazyTestCase(OmniFormTestCaseStub):
         )
 
 
-class OmniFormHandlerInstanceTestCase(OmniFormTestCaseStub):
+class OmniFormHandlerInstanceTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniFormHandler class
     """
@@ -2041,7 +2141,7 @@ class OmniFormEmailHandlerTestCase(TestCase):
         patched_method.assert_any_call('test.gif', 'Content', 'image/gif')
 
 
-class OmniFormSaveInstanceHandlerTestCase(OmniFormTestCaseStub):
+class OmniFormSaveInstanceHandlerTestCase(OmniModelFormTestCaseStub):
     """
     Tests the OmniFormSaveInstanceHandler
     """

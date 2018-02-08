@@ -191,7 +191,13 @@ class OmniField(models.Model):
 
         :return: Edit URL for the admin interface
         """
-        return reverse('admin:omniforms_omnimodelform_updatefield', args=[self.object_id, self.name])
+        if isinstance(self.form, OmniModelForm):
+            return reverse('admin:omniforms_omnimodelform_updatefield', args=[self.object_id, self.name])
+
+        return reverse(
+            'admin:omniforms_omniform_updatefield',
+            args=[self.object_id, self.real_type_id, self.name]
+        )
 
 
 class OmniCharField(OmniField):
@@ -644,7 +650,9 @@ class OmniFormHandler(models.Model):
 
         :return: Edit URL for the admin interface
         """
-        return reverse('admin:omniforms_omnimodelform_updatehandler', args=[self.object_id, self.pk])
+        if isinstance(self.form, OmniModelForm):
+            return reverse('admin:omniforms_omnimodelform_updatehandler', args=[self.object_id, self.pk])
+        return reverse('admin:omniforms_omniform_updatehandler', args=[self.object_id, self.pk])
 
 
 @python_2_unicode_compatible
@@ -843,7 +851,7 @@ class FormGeneratorMixin(object):
 
         :return: list of form field instances
         """
-        return [field.specific.as_form_field() for field in self.fields.all()]
+        return {field.name: field.specific.as_form_field() for field in self.fields.all()}
 
     def _get_field(self, name):
         """
@@ -893,18 +901,6 @@ class FormGeneratorMixin(object):
         """
         return {field.name: field.help_text for field in self.fields.all()}
 
-    def get_form_class(self):
-        """
-        Method for generating a form class from the data contained within the model
-
-        :return: ModelForm class
-        """
-        return type(
-            self._get_form_class_name(),
-            (forms.Form,),
-            {'base_fields': self._get_fields()}
-        )
-
 
 @python_2_unicode_compatible
 class OmniFormBase(FormGeneratorMixin, models.Model):
@@ -926,6 +922,15 @@ class OmniFormBase(FormGeneratorMixin, models.Model):
         :return: String representation of the instance
         """
         return self.title
+
+    @property
+    def used_field_names(self):
+        """
+        Property for getting the names of all fields associated with the form
+
+        :return: List of available field names
+        """
+        return self.fields.values_list('name', flat=True)
 
 
 class OmniModelFormBase(OmniFormBase):
@@ -961,28 +966,6 @@ class OmniModelFormBase(OmniFormBase):
         :return: Form field or None
         """
         return self._get_field(model_field.name)
-
-    def get_form_class(self):
-        """
-        Method for generating a form class from the data contained within the model
-
-        :return: ModelForm class
-        """
-        return modelform_factory(
-            self.content_type.model_class(),
-            form=self._get_base_form_class(),
-            fields=self.used_field_names,
-            formfield_callback=self.formfield_callback
-        )
-
-    @cached_property
-    def used_field_names(self):
-        """
-        Property for getting the names of all fields associated with the form
-
-        :return: List of available field names
-        """
-        return self.fields.values_list('name', flat=True)
 
     def get_model_fields(self):
         """
@@ -1059,6 +1042,18 @@ class OmniForm(OmniFormBase):
     fields = GenericRelation(OmniField)
     handlers = GenericRelation(OmniFormHandler)
 
+    def get_form_class(self):
+        """
+        Method for generating a form class from the data contained within the model
+
+        :return: ModelForm class
+        """
+        return type(
+            self._get_form_class_name(),
+            (forms.Form,),
+            self._get_fields()
+        )
+
 
 class OmniModelForm(OmniModelFormBase):
     """
@@ -1066,3 +1061,16 @@ class OmniModelForm(OmniModelFormBase):
     """
     fields = GenericRelation(OmniField)
     handlers = GenericRelation(OmniFormHandler)
+
+    def get_form_class(self):
+        """
+        Method for generating a form class from the data contained within the model
+
+        :return: ModelForm class
+        """
+        return modelform_factory(
+            self.content_type.model_class(),
+            form=self._get_base_form_class(),
+            fields=self.used_field_names,
+            formfield_callback=self.formfield_callback
+        )

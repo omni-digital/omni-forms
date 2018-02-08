@@ -10,7 +10,10 @@ from omniforms.admin_forms import OmniModelFormAdminForm
 from omniforms.admin_views import OmniModelFormSelectFieldView, OmniModelFormCreateFieldView, OmniModelFormPreviewView
 from omniforms.admin_views import OmniModelFormSelectHandlerView, OmniModelFormCreateHandlerView
 from omniforms.admin_views import OmniModelFormUpdateFieldView, OmniModelFormUpdateHandlerView
-from omniforms.models import OmniModelForm, OmniField, OmniFormHandler
+from omniforms.admin_views import OmniFormSelectFieldView, OmniFormCreateFieldView, OmniFormUpdateFieldView
+from omniforms.admin_views import OmniFormPreviewView, OmniFormSelectHandlerView, OmniFormCreateHandlerView
+from omniforms.admin_views import OmniFormUpdateHandlerView
+from omniforms.models import OmniForm, OmniModelForm, OmniField, OmniFormHandler
 
 
 class OmniRelatedInlineAdmin(GenericTabularInline):
@@ -22,7 +25,7 @@ class OmniRelatedInlineAdmin(GenericTabularInline):
     fields = ('name', 'order',)
     readonly_fields = ('name',)
     show_change_link = True
-    template = 'admin/omniforms/omnimodelform/inlines/omni_form_related_inline.html'
+    template = 'admin/omniforms/base/inlines/omni_form_related_inline.html'
 
 
 class OmniFieldAdmin(OmniRelatedInlineAdmin):
@@ -112,3 +115,58 @@ class OmniModelFormAdmin(admin.ModelAdmin):
 
 
 admin.site.register(OmniModelForm, OmniModelFormAdmin)
+
+
+class OmniFormAdmin(admin.ModelAdmin):
+    """
+    Admin class for OmniForm model instances
+    """
+    inlines = [OmniFieldAdmin, OmniHandlerAdmin]
+
+    def get_urls(self):
+        """
+        Method for getting urls for the admin class
+        Adds extra urls for managing fields on the OmniModelForm instance
+
+        :return: list of urls
+        """
+        return [
+            url(
+                r'^(.+)/preview/$',
+                self.admin_site.admin_view(OmniFormPreviewView.as_view(admin_site=self)),
+                name='omniforms_omniform_preview'
+            ),
+            url(
+                r'^(.+)/add-field/$',
+                self.admin_site.admin_view(OmniFormSelectFieldView.as_view(admin_site=self)),
+                name='omniforms_omniform_addfield'
+            ),
+            url(
+                r'^(.+)/add-field/(.+)/$',
+                self.admin_site.admin_view(OmniFormCreateFieldView.as_view(admin_site=self)),
+                name='omniforms_omniform_createfield'
+            ),
+            url(
+                r'^(.+)/update-field/(.+)/(.+)/$',
+                self.admin_site.admin_view(OmniFormUpdateFieldView.as_view(admin_site=self)),
+                name='omniforms_omniform_updatefield'
+            ),
+            url(
+                r'^(.+)/add-handler/$',
+                self.admin_site.admin_view(OmniFormSelectHandlerView.as_view(admin_site=self)),
+                name='omniforms_omniform_addhandler'
+            ),
+            url(
+                r'^(.+)/add-handler/(.+)/$',
+                self.admin_site.admin_view(OmniFormCreateHandlerView.as_view(admin_site=self)),
+                name='omniforms_omniform_createhandler'
+            ),
+            url(
+                r'^(.+)/update-handler/(.+)/$',
+                self.admin_site.admin_view(OmniFormUpdateHandlerView.as_view(admin_site=self)),
+                name='omniforms_omniform_updatehandler'
+            ),
+        ] + super(OmniFormAdmin, self).get_urls()
+
+
+admin.site.register(OmniForm, OmniFormAdmin)
