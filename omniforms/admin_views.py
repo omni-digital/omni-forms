@@ -624,7 +624,7 @@ class OmniModelFormCreateHandlerView(CreateHandlerView, OmniModelFormHandlerView
     """
     Creates a form handler for the specified form
     """
-    template_name = 'admin/omniforms/omnimodelform/handler_form.html'
+    template_name = 'admin/omniforms/base/handler_form.html'
     permission_required = "omniforms.add_omniformhandler"
 
 
@@ -632,7 +632,7 @@ class OmniModelFormUpdateHandlerView(UpdateHandlerView, OmniModelFormHandlerView
     """
     View class for updating an existing handler
     """
-    template_name = 'admin/omniforms/omnimodelform/handler_form.html'
+    template_name = 'admin/omniforms/base/handler_form.html'
 
 
 class OmniModelFormPreviewView(PreviewView, OmniFormAdminView):
@@ -830,7 +830,7 @@ class OmniFormCreateHandlerView(CreateHandlerView, OmniFormHandlerView):
     """
     Creates a form handler for the specified form
     """
-    template_name = 'admin/omniforms/omniform/handler_form.html'
+    template_name = 'admin/omniforms/base/handler_form.html'
     permission_required = "omniforms.add_omniformhandler"
 
 
@@ -838,7 +838,7 @@ class OmniFormUpdateHandlerView(UpdateHandlerView, OmniFormHandlerView):
     """
     View class for updating an existing handler
     """
-    template_name = 'admin/omniforms/omniform/handler_form.html'
+    template_name = 'admin/omniforms/base/handler_form.html'
 
 
 class OmniFormPreviewView(PreviewView, OmniFormAdminView):
