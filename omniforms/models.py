@@ -224,7 +224,7 @@ class OmniField(models.Model):
             label=self.specific.label,
             help_text=self.specific.help_text,
             required=self.specific.required,
-            initial=self.specific.initial,
+            initial=self.specific.initial_data,
             **kwargs
         )
 
@@ -247,7 +247,7 @@ class OmniCharField(OmniField):
     """
     CharField representation
     """
-    initial = models.TextField(
+    initial_data = models.TextField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -296,7 +296,7 @@ class OmniDurationField(OmniField):
     """
     DurationField representation
     """
-    initial = models.DurationField(
+    initial_data = models.DurationField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -327,7 +327,7 @@ class OmniGenericIPAddressField(OmniField):
         (PROTOCOL_IPV6, 'IPv6')
     )
 
-    initial = models.GenericIPAddressField(
+    initial_data = models.GenericIPAddressField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -387,7 +387,7 @@ class OmniUUIDField(OmniField):
     """
     UUIDField representation
     """
-    initial = models.UUIDField(
+    initial_data = models.UUIDField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -406,7 +406,7 @@ class OmniSlugField(OmniField):
     """
     SlugField representation
     """
-    initial = models.SlugField(
+    initial_data = models.SlugField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -428,7 +428,7 @@ class OmniBooleanField(OmniField):
     """
     BooleanField representation
     """
-    initial = models.NullBooleanField(
+    initial_data = models.NullBooleanField(
         help_text=_('If provided, initial data will appear in this field by default.')
     )
     FIELD_CLASS = 'django.forms.BooleanField'
@@ -445,7 +445,7 @@ class OmniDateField(OmniField):
     """
     DateField representation
     """
-    initial = models.DateField(
+    initial_data = models.DateField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -464,7 +464,7 @@ class OmniDateTimeField(OmniField):
     """
     DateTimeField representation
     """
-    initial = models.DateTimeField(
+    initial_data = models.DateTimeField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -483,7 +483,7 @@ class OmniDecimalField(OmniField):
     """
     DecimalField representation
     """
-    initial = models.DecimalField(
+    initial_data = models.DecimalField(
         blank=True,
         null=True,
         decimal_places=100,
@@ -542,7 +542,7 @@ class OmniEmailField(OmniField):
     """
     EmailField representation
     """
-    initial = models.EmailField(
+    initial_data = models.EmailField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -587,7 +587,7 @@ class OmniFileField(OmniField):
     """
     FileField representation
     """
-    initial = None
+    initial_data = None
     max_length = models.PositiveIntegerField(
         blank=True,
         null=True,
@@ -630,7 +630,7 @@ class OmniImageField(OmniField):
     """
     ImageField representation
     """
-    initial = None
+    initial_data = None
     FIELD_CLASS = 'django.forms.ImageField'
     FORM_WIDGETS = ('django.forms.widgets.FileInput',)
 
@@ -645,7 +645,7 @@ class OmniFloatField(OmniField):
     """
     FloatField representation
     """
-    initial = models.FloatField(
+    initial_data = models.FloatField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -690,7 +690,7 @@ class OmniIntegerField(OmniField):
     """
     IntegerField representation
     """
-    initial = models.IntegerField(
+    initial_data = models.IntegerField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -735,7 +735,7 @@ class OmniTimeField(OmniField):
     """
     TimeField representation
     """
-    initial = models.TimeField(
+    initial_data = models.TimeField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -754,7 +754,7 @@ class OmniUrlField(OmniField):
     """
     IntegerField representation
     """
-    initial = models.URLField(
+    initial_data = models.URLField(
         blank=True,
         null=True,
         help_text=_('If provided, initial data will appear in this field by default.')
@@ -800,7 +800,7 @@ class OmniRelatedField(OmniField):
     Represents a field with relationships
     """
     related_type = models.ForeignKey(ContentType, related_name='+')
-    initial = None
+    initial_data = None
 
     def as_form_field(self):
         """
@@ -817,7 +817,7 @@ class OmniRelatedField(OmniField):
             label=self.specific.label,
             help_text=self.specific.help_text,
             required=self.specific.required,
-            initial=self.specific.initial
+            initial=self.specific.initial_data
         )
 
 
@@ -1158,7 +1158,7 @@ class FormGeneratorMixin(object):
 
         :return: Dict of initial data where the dict key is the field name
         """
-        return {field.name: field.specific.initial for field in self.fields.all()}
+        return {field.name: field.specific.initial_data for field in self.fields.all()}
 
     def _get_field_widgets(self):
         """

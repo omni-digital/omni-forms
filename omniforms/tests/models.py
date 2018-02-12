@@ -44,11 +44,11 @@ class TaggableManagerField(OmniField):
     """
     Model to test custom field mappings
     """
-    initial = None
+    initial_data = None
 
 
 class TaggableManagerInvalidField(models.Model):
     """
     Model to test custom field mappings
     """
-    initial = None
+    initial_data = None

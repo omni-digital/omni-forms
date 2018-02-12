@@ -125,7 +125,7 @@ class OmniFormTestCase(OmniModelFormTestCaseStub):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='Some title...',
+            initial_data='Some title...',
             form=self.omniform
         )
         self.field_1.save()
@@ -135,7 +135,7 @@ class OmniFormTestCase(OmniModelFormTestCaseStub):
             required=True,
             widget_class='django.forms.widgets.CheckboxInput',
             order=1,
-            initial=True,
+            initial_data=True,
             form=self.omniform
         )
         self.field_2.save()
@@ -215,7 +215,7 @@ class OmniModelFormTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='Some title...',
+            initial_data='Some title...',
             form=self.omniform
         )
         self.field_1.save()
@@ -225,7 +225,7 @@ class OmniModelFormTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.CheckboxInput',
             order=1,
-            initial=True,
+            initial_data=True,
             form=self.omniform
         )
         self.field_2.save()
@@ -854,7 +854,7 @@ class OmniCharFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniCharField._meta.get_field('initial')
+        field = OmniCharField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.TextField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -904,7 +904,7 @@ class OmniCharFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='Some title...',
+            initial_data='Some title...',
             min_length=10,
             max_length=150,
             form=form
@@ -929,7 +929,7 @@ class OmniUUIDFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniUUIDField._meta.get_field('initial')
+        field = OmniUUIDField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.UUIDField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -961,7 +961,7 @@ class OmniBooleanFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniBooleanField._meta.get_field('initial')
+        field = OmniBooleanField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.NullBooleanField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -993,7 +993,7 @@ class OmniEmailFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniEmailField._meta.get_field('initial')
+        field = OmniEmailField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.EmailField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1041,7 +1041,7 @@ class OmniEmailFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.EmailInput',
             order=0,
-            initial='test@example.com',
+            initial_data='test@example.com',
             min_length=10,
             max_length=150,
             form=form
@@ -1066,7 +1066,7 @@ class OmniDateFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniDateField._meta.get_field('initial')
+        field = OmniDateField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.DateField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1098,7 +1098,7 @@ class OmniDurationFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniDurationField._meta.get_field('initial')
+        field = OmniDurationField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.DurationField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1131,7 +1131,7 @@ class OmniDateTimeFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniDateTimeField._meta.get_field('initial')
+        field = OmniDateTimeField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.DateTimeField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1163,7 +1163,7 @@ class OmniDecimalFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniDecimalField._meta.get_field('initial')
+        field = OmniDecimalField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.DecimalField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1229,7 +1229,7 @@ class OmniDecimalFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial=10.8,
+            initial_data=10.8,
             min_value=0.0,
             max_value=999.987,
             max_digits=999,
@@ -1258,7 +1258,7 @@ class OmniFloatFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniFloatField._meta.get_field('initial')
+        field = OmniFloatField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.FloatField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1304,7 +1304,7 @@ class OmniFloatFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.NumberInput',
             order=0,
-            initial=10.8,
+            initial_data=10.8,
             min_value=10,
             max_value=999,
             form=form
@@ -1329,7 +1329,7 @@ class OmniIntegerFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniIntegerField._meta.get_field('initial')
+        field = OmniIntegerField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.IntegerField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1375,7 +1375,7 @@ class OmniIntegerFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.NumberInput',
             order=0,
-            initial=10,
+            initial_data=10,
             min_value=5,
             max_value=999,
             form=form
@@ -1400,7 +1400,7 @@ class OmniGenericIPAddressFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniGenericIPAddressField._meta.get_field('initial')
+        field = OmniGenericIPAddressField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.GenericIPAddressField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1450,7 +1450,7 @@ class OmniGenericIPAddressFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='192.168.1.1',
+            initial_data='192.168.1.1',
             protocol=OmniGenericIPAddressField.PROTOCOL_BOTH,
             unpack_ipv4=True,
             form=form
@@ -1471,7 +1471,7 @@ class OmniGenericIPAddressFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='192.168.1.1',
+            initial_data='192.168.1.1',
             protocol=OmniGenericIPAddressField.PROTOCOL_IPV4,
             unpack_ipv4=True,
             form=form
@@ -1489,7 +1489,7 @@ class OmniGenericIPAddressFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='192.168.1.1',
+            initial_data='192.168.1.1',
             protocol=OmniGenericIPAddressField.PROTOCOL_IPV6,
             unpack_ipv4=True,
             form=form
@@ -1507,7 +1507,7 @@ class OmniGenericIPAddressFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='192.168.1.1',
+            initial_data='192.168.1.1',
             protocol=OmniGenericIPAddressField.PROTOCOL_BOTH,
             unpack_ipv4=True,
             form=form
@@ -1530,7 +1530,7 @@ class OmniTimeFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniTimeField._meta.get_field('initial')
+        field = OmniTimeField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.TimeField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1562,7 +1562,7 @@ class OmniUrlFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniUrlField._meta.get_field('initial')
+        field = OmniUrlField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.URLField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1610,7 +1610,7 @@ class OmniUrlFieldTestCase(TestCase):
             required=True,
             widget_class='django.forms.widgets.TextInput',
             order=0,
-            initial='http://www.google.com',
+            initial_data='http://www.google.com',
             min_length=10,
             max_length=150,
             form=form
@@ -1635,7 +1635,7 @@ class OmniSlugFieldTestCase(TestCase):
         """
         The model should have an initial field
         """
-        field = OmniSlugField._meta.get_field('initial')
+        field = OmniSlugField._meta.get_field('initial_data')
         self.assertIsInstance(field, models.SlugField)
         self.assertTrue(field.blank)
         self.assertTrue(field.null)
@@ -1668,7 +1668,7 @@ class OmniFileFieldTestCase(TestCase):
         """
         The model should not allow initial data
         """
-        self.assertIsNone(OmniFileField.initial)
+        self.assertIsNone(OmniFileField.initial_data)
 
     def test_max_length(self):
         """
@@ -1734,7 +1734,7 @@ class OmniImageFieldTestCase(TestCase):
         """
         The model should not allow initial data
         """
-        self.assertIsNone(OmniImageField.initial)
+        self.assertIsNone(OmniImageField.initial_data)
 
     def test_field_class(self):
         """
@@ -1776,7 +1776,7 @@ class OmniManyToManyFieldTestCase(OmniModelFormTestCaseStub):
         """
         The model should have an initial field
         """
-        self.assertIsNone(OmniManyToManyField.initial)
+        self.assertIsNone(OmniManyToManyField.initial_data)
 
     def test_field_class(self):
         """
@@ -1843,7 +1843,7 @@ class OmniForeignKeyFieldTestCase(OmniModelFormTestCaseStub):
         """
         The model should have an initial field
         """
-        self.assertIsNone(OmniForeignKeyField.initial)
+        self.assertIsNone(OmniForeignKeyField.initial_data)
 
     def test_field_class(self):
         """
