@@ -86,6 +86,7 @@ class OmniField(models.Model):
         """
         ordering = ('order',)
         unique_together = ('name', 'content_type', 'object_id')
+        verbose_name = 'Field'
 
     def __str__(self):
         """
@@ -269,6 +270,12 @@ class OmniCharField(OmniField):
         'django.forms.widgets.PasswordInput'
     )
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Char Field'
+
     def as_form_field(self, **kwargs):
         """
         Method for generating a form field instance from the
@@ -299,6 +306,12 @@ class OmniDurationField(OmniField):
         'django.forms.widgets.TextInput',
         'django.forms.widgets.Textarea'
     )
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Duration Field'
 
 
 class OmniGenericIPAddressField(OmniField):
@@ -334,6 +347,12 @@ class OmniGenericIPAddressField(OmniField):
 
     FIELD_CLASS = 'django.forms.GenericIPAddressField'
     FORM_WIDGETS = ('django.forms.widgets.TextInput',)
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'IP Address Field'
 
     def as_form_field(self, **kwargs):
         """
@@ -376,6 +395,12 @@ class OmniUUIDField(OmniField):
     FIELD_CLASS = 'django.forms.UUIDField'
     FORM_WIDGETS = ('django.forms.widgets.TextInput',)
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'UUID Field'
+
 
 class OmniSlugField(OmniField):
     """
@@ -392,6 +417,12 @@ class OmniSlugField(OmniField):
         'django.forms.widgets.HiddenInput'
     )
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Slug Field'
+
 
 class OmniBooleanField(OmniField):
     """
@@ -402,6 +433,12 @@ class OmniBooleanField(OmniField):
     )
     FIELD_CLASS = 'django.forms.BooleanField'
     FORM_WIDGETS = ('django.forms.widgets.CheckboxInput',)
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Boolean Field'
 
 
 class OmniDateField(OmniField):
@@ -416,6 +453,12 @@ class OmniDateField(OmniField):
     FIELD_CLASS = 'django.forms.DateField'
     FORM_WIDGETS = ('django.forms.widgets.DateInput',)
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Date Field'
+
 
 class OmniDateTimeField(OmniField):
     """
@@ -428,6 +471,12 @@ class OmniDateTimeField(OmniField):
     )
     FIELD_CLASS = 'django.forms.DateTimeField'
     FORM_WIDGETS = ('django.forms.widgets.DateTimeInput',)
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'DateTime Field'
 
 
 class OmniDecimalField(OmniField):
@@ -464,6 +513,12 @@ class OmniDecimalField(OmniField):
 
     FIELD_CLASS = 'django.forms.DecimalField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Decimal Field'
 
     def as_form_field(self, **kwargs):
         """
@@ -506,6 +561,12 @@ class OmniEmailField(OmniField):
     FIELD_CLASS = 'django.forms.EmailField'
     FORM_WIDGETS = ('django.forms.widgets.EmailInput',)
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Email Field'
+
     def as_form_field(self, **kwargs):
         """
         Method for generating a form field instance from the
@@ -543,6 +604,12 @@ class OmniFileField(OmniField):
     FIELD_CLASS = 'django.forms.FileField'
     FORM_WIDGETS = ('django.forms.widgets.FileInput',)
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'File Field'
+
     def as_form_field(self, **kwargs):
         """
         Method for generating a form field instance from the
@@ -567,6 +634,12 @@ class OmniImageField(OmniField):
     FIELD_CLASS = 'django.forms.ImageField'
     FORM_WIDGETS = ('django.forms.widgets.FileInput',)
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Image Field'
+
 
 class OmniFloatField(OmniField):
     """
@@ -590,6 +663,12 @@ class OmniFloatField(OmniField):
 
     FIELD_CLASS = 'django.forms.FloatField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Float Field'
 
     def as_form_field(self, **kwargs):
         """
@@ -630,6 +709,12 @@ class OmniIntegerField(OmniField):
     FIELD_CLASS = 'django.forms.IntegerField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Integer Field'
+
     def as_form_field(self, **kwargs):
         """
         Method for generating a form field instance from the
@@ -658,6 +743,12 @@ class OmniTimeField(OmniField):
     FIELD_CLASS = 'django.forms.TimeField'
     FORM_WIDGETS = ('django.forms.widgets.TimeInput',)
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Time Field'
+
 
 class OmniUrlField(OmniField):
     """
@@ -681,6 +772,12 @@ class OmniUrlField(OmniField):
 
     FIELD_CLASS = 'django.forms.URLField'
     FORM_WIDGETS = ('django.forms.widgets.URLInput',)
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'URL Field'
 
     def as_form_field(self, **kwargs):
         """
@@ -731,6 +828,12 @@ class OmniManyToManyField(OmniRelatedField):
     FIELD_CLASS = 'django.forms.ModelMultipleChoiceField'
     FORM_WIDGETS = ('django.forms.SelectMultiple', 'django.forms.CheckboxSelectMultiple')
 
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Many To Many Field'
+
 
 class OmniForeignKeyField(OmniRelatedField):
     """
@@ -738,6 +841,12 @@ class OmniForeignKeyField(OmniRelatedField):
     """
     FIELD_CLASS = 'django.forms.ModelChoiceField'
     FORM_WIDGETS = ('django.forms.Select', 'django.forms.RadioSelect')
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Foreign Key Field'
 
 
 @python_2_unicode_compatible
