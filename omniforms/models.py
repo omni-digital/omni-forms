@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.core.files import File
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.fields.related import ForeignObjectRel
 from django.forms import modelform_factory
@@ -18,6 +19,7 @@ from django.template import Template, Context
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
+from django.utils.translation import ugettext_lazy as _
 from omniforms.forms import OmniModelFormBaseForm
 import re
 
@@ -27,7 +29,14 @@ class OmniField(models.Model):
     """
     Base class for omni fields
     """
-    name = models.CharField(max_length=255)
+    name = models.CharField(
+        max_length=255,
+        validators=[RegexValidator(
+            regex='^[a-z0-9_]+$',
+            message=_('The name may only contain alphanumeric characters and underscores.'),
+            code='invalid_field_name'
+        )]
+    )
     label = models.CharField(max_length=255)
     help_text = models.TextField(blank=True, null=True)
     required = models.BooleanField(default=False)
