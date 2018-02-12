@@ -32,7 +32,7 @@ class OmniField(models.Model):
         max_length=255,
         help_text=_(
             'The name of this field. May only contain alphanumeric characters '
-            'and underscores. Must start and enc with an alphanumeric character.'
+            'and underscores. Must start and end with an alphanumeric character.'
         )
     )
     label = models.CharField(
