@@ -18,6 +18,7 @@ from django.template import Template, Context
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
+from django.utils.translation import ugettext_lazy as _
 from omniforms.forms import OmniModelFormBaseForm
 import re
 
@@ -27,12 +28,47 @@ class OmniField(models.Model):
     """
     Base class for omni fields
     """
-    name = models.CharField(max_length=255)
-    label = models.CharField(max_length=255)
-    help_text = models.TextField(blank=True, null=True)
-    required = models.BooleanField(default=False)
-    widget_class = models.CharField(max_length=255)
-    order = models.IntegerField(default=0)
+    name = models.CharField(
+        max_length=255,
+        help_text=_(
+            'The name of this field. May only contain alphanumeric characters '
+            'and underscores. Must start and end with an alphanumeric character.'
+        )
+    )
+    label = models.CharField(
+        max_length=255,
+        help_text=_(
+            'Appears next to the form field and should identify it\'s purpose. '
+            'Example, for an email field this could be \'Email address\''
+        )
+    )
+    help_text = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_(
+            'Provide any information that may assist users in '
+            'filling out this form field here'
+        )
+    )
+    required = models.BooleanField(
+        default=False,
+        help_text=_(
+            'If checked, users must provide data within this field. '
+            'If not checked the field is optional'
+        )
+    )
+    widget_class = models.CharField(
+        max_length=255,
+        help_text=_('Determines how the field is displayed in the generated form')
+    )
+    order = models.IntegerField(
+        default=0,
+        help_text=_(
+            'Determines where this field appears relative to other fields in the form. Smaller values '
+            'cause the field to float to the top of the form, larger numbers cause the field to sink '
+            'to the bottom of the form'
+        )
+    )
     real_type = models.ForeignKey(ContentType, related_name='+')  # The Real OmniField type (set in the save method)
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
@@ -204,9 +240,21 @@ class OmniCharField(OmniField):
     """
     CharField representation
     """
-    initial = models.TextField(blank=True, null=True)
-    max_length = models.PositiveIntegerField(default=255, blank=True)
-    min_length = models.PositiveIntegerField(default=0, blank=True)
+    initial = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
+    max_length = models.PositiveIntegerField(
+        default=255,
+        blank=True,
+        help_text=_('The maximum amount of data that can be entered into this field')
+    )
+    min_length = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        help_text=_('The minimum amount of data that can be entered into this field')
+    )
 
     FIELD_CLASS = 'django.forms.CharField'
     FORM_WIDGETS = (
@@ -235,7 +283,11 @@ class OmniDurationField(OmniField):
     """
     DurationField representation
     """
-    initial = models.DurationField(blank=True, null=True)
+    initial = models.DurationField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
     FIELD_CLASS = 'django.forms.DurationField'
     FORM_WIDGETS = (
         'django.forms.widgets.TextInput',
@@ -256,9 +308,23 @@ class OmniGenericIPAddressField(OmniField):
         (PROTOCOL_IPV6, 'IPv6')
     )
 
-    initial = models.GenericIPAddressField(blank=True, null=True)
-    protocol = models.CharField(max_length=4, blank=True, choices=PROTOCOL_CHOICES, default=PROTOCOL_BOTH)
-    unpack_ipv4 = models.BooleanField(default=False, blank=True)
+    initial = models.GenericIPAddressField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
+    protocol = models.CharField(
+        max_length=4,
+        blank=True,
+        choices=PROTOCOL_CHOICES,
+        default=PROTOCOL_BOTH,
+        help_text=_('Please select which protocol data entered into this field must adhere to')
+    )
+    unpack_ipv4 = models.BooleanField(
+        default=False,
+        blank=True,
+        help_text=_('If checked IPV4 addresses will be unpacked')
+    )
 
     FIELD_CLASS = 'django.forms.GenericIPAddressField'
     FORM_WIDGETS = ('django.forms.widgets.TextInput',)
@@ -296,7 +362,11 @@ class OmniUUIDField(OmniField):
     """
     UUIDField representation
     """
-    initial = models.UUIDField(blank=True, null=True)
+    initial = models.UUIDField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
     FIELD_CLASS = 'django.forms.UUIDField'
     FORM_WIDGETS = ('django.forms.widgets.TextInput',)
 
@@ -305,7 +375,11 @@ class OmniSlugField(OmniField):
     """
     SlugField representation
     """
-    initial = models.SlugField(blank=True, null=True)
+    initial = models.SlugField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
     FIELD_CLASS = 'django.forms.SlugField'
     FORM_WIDGETS = (
         'django.forms.widgets.TextInput',
@@ -317,7 +391,9 @@ class OmniBooleanField(OmniField):
     """
     BooleanField representation
     """
-    initial = models.NullBooleanField()
+    initial = models.NullBooleanField(
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
     FIELD_CLASS = 'django.forms.BooleanField'
     FORM_WIDGETS = ('django.forms.widgets.CheckboxInput',)
 
@@ -326,7 +402,11 @@ class OmniDateField(OmniField):
     """
     DateField representation
     """
-    initial = models.DateField(blank=True, null=True)
+    initial = models.DateField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
     FIELD_CLASS = 'django.forms.DateField'
     FORM_WIDGETS = ('django.forms.widgets.DateInput',)
 
@@ -335,7 +415,11 @@ class OmniDateTimeField(OmniField):
     """
     DateTimeField representation
     """
-    initial = models.DateTimeField(blank=True, null=True)
+    initial = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
     FIELD_CLASS = 'django.forms.DateTimeField'
     FORM_WIDGETS = ('django.forms.widgets.DateTimeInput',)
 
@@ -344,11 +428,33 @@ class OmniDecimalField(OmniField):
     """
     DecimalField representation
     """
-    initial = models.DecimalField(blank=True, null=True, decimal_places=100, max_digits=1000)
-    min_value = models.DecimalField(blank=True, null=True, decimal_places=100, max_digits=1000)
-    max_value = models.DecimalField(blank=True, null=True, decimal_places=100, max_digits=1000)
-    max_digits = models.PositiveIntegerField()
-    decimal_places = models.PositiveIntegerField()
+    initial = models.DecimalField(
+        blank=True,
+        null=True,
+        decimal_places=100,
+        max_digits=1000,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
+    min_value = models.DecimalField(
+        blank=True,
+        null=True,
+        decimal_places=100,
+        max_digits=1000,
+        help_text=_('The minimum value that may be entered into this field')
+    )
+    max_value = models.DecimalField(
+        blank=True,
+        null=True,
+        decimal_places=100,
+        max_digits=1000,
+        help_text=_('The maximum value that may be entered into this field')
+    )
+    max_digits = models.PositiveIntegerField(
+        help_text=_('The maximum number of digits that may be entered into this field')
+    )
+    decimal_places = models.PositiveIntegerField(
+        help_text=_('The expected number of decimal places that must be entered into this field')
+    )
 
     FIELD_CLASS = 'django.forms.DecimalField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
@@ -375,9 +481,21 @@ class OmniEmailField(OmniField):
     """
     EmailField representation
     """
-    initial = models.EmailField(blank=True, null=True)
-    max_length = models.PositiveIntegerField(default=255, blank=True)
-    min_length = models.PositiveIntegerField(default=0, blank=True)
+    initial = models.EmailField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
+    max_length = models.PositiveIntegerField(
+        default=255,
+        blank=True,
+        help_text=_('The maximum amount of data that can be entered into this field')
+    )
+    min_length = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        help_text=_('The minimum amount of data that can be entered into this field')
+    )
 
     FIELD_CLASS = 'django.forms.EmailField'
     FORM_WIDGETS = ('django.forms.widgets.EmailInput',)
@@ -403,8 +521,18 @@ class OmniFileField(OmniField):
     FileField representation
     """
     initial = None
-    max_length = models.PositiveIntegerField(blank=True, null=True)
-    allow_empty_file = models.BooleanField(default=False)
+    max_length = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text=_('The maximum amount of data that can be entered into this field')
+    )
+    allow_empty_file = models.BooleanField(
+        default=False,
+        help_text=_(
+            'If checked empty files may be uploaded using this field. '
+            'Otherwise uploaded files may not be empty'
+        )
+    )
 
     FIELD_CLASS = 'django.forms.FileField'
     FORM_WIDGETS = ('django.forms.widgets.FileInput',)
@@ -438,9 +566,21 @@ class OmniFloatField(OmniField):
     """
     FloatField representation
     """
-    initial = models.FloatField(blank=True, null=True)
-    min_value = models.FloatField(blank=True, null=True)
-    max_value = models.FloatField(blank=True, null=True)
+    initial = models.FloatField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
+    min_value = models.FloatField(
+        blank=True,
+        null=True,
+        help_text=_('The minimum value that may be entered into this field')
+    )
+    max_value = models.FloatField(
+        blank=True,
+        null=True,
+        help_text=_('The maximum value that may be entered into this field')
+    )
 
     FIELD_CLASS = 'django.forms.FloatField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
@@ -465,9 +605,21 @@ class OmniIntegerField(OmniField):
     """
     IntegerField representation
     """
-    initial = models.IntegerField(blank=True, null=True)
-    min_value = models.IntegerField(blank=True, null=True)
-    max_value = models.IntegerField(blank=True, null=True)
+    initial = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
+    min_value = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text=_('The minimum value that may be entered into this field')
+    )
+    max_value = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text=_('The maximum value that may be entered into this field')
+    )
 
     FIELD_CLASS = 'django.forms.IntegerField'
     FORM_WIDGETS = ('django.forms.widgets.NumberInput',)
@@ -492,7 +644,11 @@ class OmniTimeField(OmniField):
     """
     TimeField representation
     """
-    initial = models.TimeField(blank=True, null=True)
+    initial = models.TimeField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
     FIELD_CLASS = 'django.forms.TimeField'
     FORM_WIDGETS = ('django.forms.widgets.TimeInput',)
 
@@ -501,9 +657,21 @@ class OmniUrlField(OmniField):
     """
     IntegerField representation
     """
-    initial = models.URLField(blank=True, null=True)
-    max_length = models.PositiveIntegerField(default=255, blank=True)
-    min_length = models.PositiveIntegerField(default=0, blank=True)
+    initial = models.URLField(
+        blank=True,
+        null=True,
+        help_text=_('If provided, initial data will appear in this field by default.')
+    )
+    max_length = models.PositiveIntegerField(
+        default=255,
+        blank=True,
+        help_text=_('The maximum amount of data that can be entered into this field')
+    )
+    min_length = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        help_text=_('The minimum amount of data that can be entered into this field')
+    )
 
     FIELD_CLASS = 'django.forms.URLField'
     FORM_WIDGETS = ('django.forms.widgets.URLInput',)
