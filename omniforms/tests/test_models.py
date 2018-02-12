@@ -539,6 +539,33 @@ class OmniFieldTestCase(TestCase):
         self.assertFalse(field.blank)
         self.assertFalse(field.null)
 
+    def test_name_field_invalid(self):
+        """
+        The name field should not validate if ti contains invalid characters
+        """
+        instance = OmniField(name='this is an invalid field name')
+        try:
+            instance.full_clean()
+        except ValidationError as err:
+            self.assertIn(
+                'The name may only contain alphanumeric characters and underscores.',
+                err.error_dict['name'][0].messages
+            )
+        else:
+            self.fail('Validation error not raised')
+
+    def test_name_field_valid(self):
+        """
+        The name field should validate
+        """
+        instance = OmniField(name='this_is_a_valid_field')
+        try:
+            instance.full_clean()
+        except ValidationError as err:
+            self.assertNotIn('name', err.error_dict)
+        else:
+            self.fail('Validation error not raised')
+
     def test_label_field(self):
         """
         The model should have a label field

@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.core.files import File
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.fields.related import ForeignObjectRel
 from django.forms import modelform_factory
@@ -30,6 +31,11 @@ class OmniField(models.Model):
     """
     name = models.CharField(
         max_length=255,
+        validators=[RegexValidator(
+            regex='^[a-z0-9_]+$',
+            message=_('The name may only contain alphanumeric characters and underscores.'),
+            code='invalid_field_name'
+        )],
         help_text=_(
             'The name of this field. May only contain alphanumeric characters '
             'and underscores. Must start and end with an alphanumeric character.'
