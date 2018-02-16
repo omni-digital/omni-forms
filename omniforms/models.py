@@ -3,7 +3,6 @@
 Models for the omniforms app
 """
 from __future__ import unicode_literals
-from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -20,7 +19,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.translation import ugettext_lazy as _
-from omniforms.forms import OmniModelFormBaseForm
+from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
 import re
 
 
@@ -1325,6 +1324,18 @@ class OmniForm(OmniFormBase):
     fields = GenericRelation(OmniField)
     handlers = GenericRelation(OmniFormHandler)
 
+    def _get_base_form_class(self):
+        """
+        Helper method for getting the base ModelForm class for use with the model form factory
+
+        :return: ModelForm instance
+        """
+        return type(
+            self._get_form_class_name(),
+            (OmniFormBaseForm,),
+            {'_handlers': [handler.specific for handler in self.handlers.all()]}
+        )
+
     def get_form_class(self):
         """
         Method for generating a form class from the data contained within the model
@@ -1333,7 +1344,7 @@ class OmniForm(OmniFormBase):
         """
         return type(
             self._get_form_class_name(),
-            (forms.Form,),
+            (self._get_base_form_class(),),
             self._get_fields()
         )
 

@@ -15,7 +15,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.module_loading import import_string
 from mock import Mock, patch, PropertyMock
-from omniforms.forms import OmniModelFormBaseForm
+from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
 from omniforms.models import (
     OmniFormBase,
     OmniModelFormBase,
@@ -153,7 +153,7 @@ class OmniFormTestCase(OmniModelFormTestCaseStub):
         The _get_form_class method should return a form class
         """
         form_class = self.omniform.get_form_class()
-        self.assertTrue(issubclass(form_class, forms.Form))
+        self.assertTrue(issubclass(form_class, OmniFormBaseForm))
         self.assertEqual(form_class.__name__, 'OmniFormTestModel')
         form = form_class()
 
