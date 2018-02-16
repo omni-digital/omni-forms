@@ -5,7 +5,7 @@ The Omniforms app
 from __future__ import unicode_literals
 
 
-VERSION = ['0', '2', '0', 'rc3']
+VERSION = ['0', '2', '0']
 
 
 def get_version():
