@@ -117,3 +117,4 @@ It is important to note that the dictionary values defined within the `OMNI_FORM
 ## ChangeLog
 
  - 0.1 - Initial Build
+ - 0.2 - Adds ability to create arbitrary non model form instances
