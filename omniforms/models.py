@@ -848,6 +848,81 @@ class OmniForeignKeyField(OmniRelatedField):
         verbose_name = 'Foreign Key Field'
 
 
+class ChoiceFieldMixin(models.Model):
+    """
+    Provides common functionality for choice fields
+    """
+    initial_data = None
+    choices = models.TextField(
+        help_text='Please add one choice per line.'
+    )
+
+    class Meta(object):
+        """
+        Django model properties
+        """
+        abstract = True
+
+    def _get_field_choices(self):
+        """
+        Generates a list of form field choices from the choices field data
+
+        :return: List of form field choices
+        """
+        choices = []
+        for choice in self.choices.splitlines():
+            choice = choice.strip()
+            if not choice:
+                continue
+            choices.append([choice, choice])
+        return choices
+
+    def as_form_field(self, **kwargs):
+        """
+        Adds the field choices to the field constructor kwargs
+        before calling super and passing the choice along as well
+
+        :param kwargs: Default keyword args
+        :return: field instance
+        """
+        kwargs['choices'] = self._get_field_choices()
+        return super(ChoiceFieldMixin, self).as_form_field(**kwargs)
+
+
+class OmniChoiceField(ChoiceFieldMixin, OmniField):
+    """
+    Custom choice field type for the omni form
+    """
+    FIELD_CLASS = 'django.forms.ChoiceField'
+    FORM_WIDGETS = (
+        'django.forms.widgets.Select',
+        'django.forms.widgets.RadioSelect'
+    )
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Choice Field'
+
+
+class OmniMultipleChoiceField(ChoiceFieldMixin, OmniField):
+    """
+    Custom multiple choice field type for the omni form
+    """
+    FIELD_CLASS = 'django.forms.MultipleChoiceField'
+    FORM_WIDGETS = (
+        'django.forms.widgets.SelectMultiple',
+        'django.forms.widgets.CheckboxSelectMultiple'
+    )
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Multiple Choice Field'
+
+
 @python_2_unicode_compatible
 class OmniFormHandler(models.Model):
     """

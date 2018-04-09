@@ -39,6 +39,8 @@ from omniforms.models import (
     OmniUUIDField,
     OmniManyToManyField,
     OmniForeignKeyField,
+    OmniMultipleChoiceField,
+    OmniChoiceField,
     OmniFormHandler,
     OmniFormEmailHandler,
     OmniFormSaveInstanceHandler,
@@ -1881,6 +1883,122 @@ class OmniForeignKeyFieldTestCase(OmniModelFormTestCaseStub):
         self.assertTrue(self.field.required)
         self.assertIsInstance(instance.widget, widget_class)
         self.assertEquals(list(instance.queryset), list(Permission.objects.all()))
+
+
+class OmniChoiceFieldTestCase(TestCase):
+    """
+    Tests the OmniChoiceField model
+    """
+    def test_inheritance(self):
+        """
+        The model should inherit from OmniField
+        """
+        self.assertTrue(issubclass(OmniChoiceField, OmniField))
+
+    def test_initial_data(self):
+        """
+        The model should have no initial data
+        """
+        self.assertIsNone(OmniChoiceField.initial_data)
+
+    def test_choices_field(self):
+        """
+        The model should have a choices field
+        """
+        field = OmniChoiceField._meta.get_field('choices')
+        self.assertIsInstance(field, models.TextField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_field_class(self):
+        """
+        The model should have an appropriate field class
+        """
+        self.assertEqual(OmniChoiceField.FIELD_CLASS, 'django.forms.ChoiceField')
+
+    def test_form_widgets(self):
+        """
+        The model should have appropriate field widgets defined
+        """
+        self.assertIn('django.forms.widgets.Select', OmniChoiceField.FORM_WIDGETS)
+        self.assertIn('django.forms.widgets.RadioSelect', OmniChoiceField.FORM_WIDGETS)
+
+    def test_as_form_field_choices(self):
+        """
+        The method should generate the correct form field choices
+        """
+        form = OmniForm.objects.create(title='Dummy form')
+        instance = OmniChoiceField.objects.create(
+            name='choices',
+            label='choices',
+            widget_class='django.forms.widgets.Select',
+            choices='foo\n\n   bar \n\n\n baz',
+            form=form
+        )
+        field = instance.as_form_field()
+
+        self.assertEqual(3, len(field.choices))
+        self.assertIn(['foo', 'foo'], field.choices)
+        self.assertIn(['bar', 'bar'], field.choices)
+        self.assertIn(['baz', 'baz'], field.choices)
+
+
+class OmniMultipleChoiceFieldTestCase(TestCase):
+    """
+    Tests the OmniMultipleChoiceField model
+    """
+    def test_inheritance(self):
+        """
+        The model should inherit from OmniField
+        """
+        self.assertTrue(issubclass(OmniMultipleChoiceField, OmniField))
+
+    def test_initial_data(self):
+        """
+        The model should have no initial data
+        """
+        self.assertIsNone(OmniMultipleChoiceField.initial_data)
+
+    def test_choices_field(self):
+        """
+        The model should have a choices field
+        """
+        field = OmniMultipleChoiceField._meta.get_field('choices')
+        self.assertIsInstance(field, models.TextField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_field_class(self):
+        """
+        The model should have an appropriate field class
+        """
+        self.assertEqual(OmniMultipleChoiceField.FIELD_CLASS, 'django.forms.MultipleChoiceField')
+
+    def test_form_widgets(self):
+        """
+        The model should have appropriate field widgets defined
+        """
+        self.assertIn('django.forms.widgets.SelectMultiple', OmniMultipleChoiceField.FORM_WIDGETS)
+        self.assertIn('django.forms.widgets.CheckboxSelectMultiple', OmniMultipleChoiceField.FORM_WIDGETS)
+
+    def test_as_form_field_choices(self):
+        """
+        The method should generate the correct form field choices
+        """
+        form = OmniForm.objects.create(title='Dummy form')
+        instance = OmniMultipleChoiceField.objects.create(
+            name='choices',
+            label='choices',
+            widget_class='django.forms.widgets.SelectMultiple',
+            choices='foo\n\n   bar \n\n\n baz',
+            form=form
+        )
+        field = instance.as_form_field()
+
+        self.assertEqual(3, len(field.choices))
+        self.assertIn(['foo', 'foo'], field.choices)
+        self.assertIn(['bar', 'bar'], field.choices)
+        self.assertIn(['baz', 'baz'], field.choices)
 
 
 class OmniFormHandlerTestCase(TestCase):
