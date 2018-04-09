@@ -118,3 +118,4 @@ It is important to note that the dictionary values defined within the `OMNI_FORM
 
  - 0.1 - Initial Build
  - 0.2 - Adds ability to create arbitrary non model form instances
+ - 0.3 - Adds OmniChoiceField and OmniMultipleChoiceField form field types
