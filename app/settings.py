@@ -17,19 +17,44 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+
+    'wagtail.wagtailcore.middleware.SiteMiddleware',
+    'wagtail.wagtailredirects.middleware.RedirectMiddleware',
 )
 
 INSTALLED_APPS = [
+    'wagtail.contrib.modeladmin',
+    'wagtail.contrib.settings',
+    'wagtail.contrib.table_block',
+    'wagtail.contrib.wagtailroutablepage',
+    'wagtail.contrib.wagtailsitemaps',
+    'wagtail.contrib.wagtailsearchpromotions',
+    'wagtail.wagtaildocs',
+    'wagtail.wagtailforms',
+    'wagtail.wagtailredirects',
+    'wagtail.wagtailembeds',
+    'wagtail.wagtailsites',
+    'wagtail.wagtailusers',
+    'wagtail.wagtailsnippets',
+    'wagtail.wagtailimages',
+    'wagtail.wagtailsearch',
+    'wagtail.wagtailadmin',
+    'wagtail.wagtailcore',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'modelcluster',
     'taggit',
     'taggit_autosuggest',
-    'omniforms.tests',
+
     'omniforms',
+    'omniforms.wagtail',
+    'omniforms.tests',
 ]
 
 STATIC_URL = '/static/'
@@ -54,6 +79,7 @@ TEMPLATES = [{
             'django.template.context_processors.request',
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
+            'wagtail.contrib.settings.context_processors.settings',
         ],
     },
 }]
