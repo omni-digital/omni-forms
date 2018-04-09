@@ -1885,7 +1885,6 @@ class OmniForeignKeyFieldTestCase(OmniModelFormTestCaseStub):
         self.assertEquals(list(instance.queryset), list(Permission.objects.all()))
 
 
-
 class OmniChoiceFieldTestCase(TestCase):
     """
     Tests the OmniChoiceField model
