@@ -1,0 +1,37 @@
+{% load wagtail_omni_forms_tags %}
+
+<li class="{% admin_field_classes_for_object field %}">
+    <h2>{{ field.label_tag }}</h2>
+    <fieldset>
+        <legend>{{ field.label }}</legend>
+        <ul class="fields">
+            <li>
+                <div class="{% admin_field_classes_for_field field %}">
+                    <div class="field-content">
+                        <div class="input">
+                            {{ field }}
+                            <span></span>
+                            {% if field|widget_type == "datetimeinput" %}
+                                <script>initDateTimeChooser("{{ field.auto_id }}", {"dayOfWeekStart": 1, "format": "Y-m-d H:i"});</script>
+                            {% elif field|widget_type == "dateinput" %}
+                                <script>initDateChooser("{{ field.auto_id }}", {"dayOfWeekStart": 1, "format": "Y-m-d"});</script>
+                            {% elif field|widget_type == "timeinput" %}
+                                <script>initTimeChooser("{{ field.auto_id }}");</script>
+                            {% endif %}
+                        </div>
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <p class="error-message">
+                                    <span>{{ error }}</span>
+                                </p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+</li>
