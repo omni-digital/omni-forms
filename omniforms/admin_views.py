@@ -772,7 +772,8 @@ class OmniFormSelectFieldView(OmniFormSelectRelatedView):
         """
         return [
             [instance.pk, instance.name] for instance in ContentType.objects.order_by('model')
-            if issubclass(instance.model_class(), OmniField)
+            if instance.model_class() is not None
+            and issubclass(instance.model_class(), OmniField)
             and instance.model_class() != OmniField
         ]
 
