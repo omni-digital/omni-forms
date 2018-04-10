@@ -1,4 +1,4 @@
-from mock import patch
+from mock import Mock, patch
 
 from django import forms
 from django.conf import settings
@@ -14,6 +14,7 @@ from omniforms.models import OmniCharField, OmniField, OmniFormHandler, OmniForm
 from omniforms.tests.factories import OmniFormFactory, OmniCharFieldFactory, OmniFormEmailHandlerFactory, UserFactory
 from omniforms.wagtail import model_admin_views
 from omniforms.wagtail.forms import WagtailOmniFormCloneForm
+from omniforms.wagtail.model_admin_views import OmniFormBaseView
 from omniforms.wagtail.wagtail_hooks import WagtailOmniFormModelAdmin
 
 
@@ -31,6 +32,14 @@ class ModelAdminTestCaseStub(TestCase):
         cls.editor_group = Group.objects.get(name='Editors')
         cls.add_permission = Permission.objects.get(codename='add_omniform')
         cls.change_permission = Permission.objects.get(codename='change_omniform')
+        # Field permissions
+        cls.add_charfield_permission = Permission.objects.get(codename='add_omnicharfield')
+        cls.change_charfield_permission = Permission.objects.get(codename='change_omnicharfield')
+        cls.delete_charfield_permission = Permission.objects.get(codename='delete_omnicharfield')
+        # Handler permissions
+        cls.add_emailhandler_permission = Permission.objects.get(codename='add_omniformemailhandler')
+        cls.change_emailhandler_permission = Permission.objects.get(codename='change_omniformemailhandler')
+        cls.delete_emailhandler_permission = Permission.objects.get(codename='delete_omniformemailhandler')
         # Create a user to work with
         cls.user = UserFactory.create(is_staff=True)
 
@@ -39,12 +48,32 @@ class ModelAdminTestCaseStub(TestCase):
         # Assign omni forms permissions to user
         self.user.user_permissions.add(self.add_permission)
         self.user.user_permissions.add(self.change_permission)
+        # Assign omni fields permissions to user
+        self.user.user_permissions.add(self.add_charfield_permission)
+        self.user.user_permissions.add(self.change_charfield_permission)
+        self.user.user_permissions.add(self.delete_charfield_permission)
+        # Assign omni handlers permissions to user
+        self.user.user_permissions.add(self.add_emailhandler_permission)
+        self.user.user_permissions.add(self.change_emailhandler_permission)
+        self.user.user_permissions.add(self.delete_emailhandler_permission)
         # Assign editor group to user
         self.user.groups.add(self.editor_group)
         # Save the user
         self.user.save()
         # Log the user in
         self.client.force_login(self.user)
+
+
+class OmniFormBaseViewTestCase(TestCase):
+    """
+    Tests the OmniFormBaseView class
+    """
+    def test_get_model_permission(self):
+        """
+        The method should return the correct permission string
+        """
+        perm = OmniFormBaseView._get_model_permission(OmniCharField, 'add')
+        self.assertEqual(perm, 'omniforms.add_omnicharfield')
 
 
 class SelectFieldViewTestCase(ModelAdminTestCaseStub):
@@ -74,6 +103,7 @@ class SelectFieldViewTestCase(ModelAdminTestCaseStub):
         self.assertEqual(response.context['instance'], self.form)
         self.assertEqual(response.context['view'].get_page_title(), 'Select field to add to form')
 
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @override_settings(WAGTAIL_OMNI_FORM_OMITTED_FIELDS=['OmniDurationField', 'OmniFileField'])
     def test_form_choices(self):
         """
@@ -113,6 +143,7 @@ class SelectFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
@@ -208,6 +239,7 @@ class SelectHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
@@ -477,6 +509,20 @@ class AddFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch(
+        'omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj',
+        Mock(return_value=True)
+    )
+    def test_user_can_edit_obj_false_without_perm(self):
+        """
+        The view should return a 403 response if the user cannot add the field
+        """
+        self.user.user_permissions.remove(self.add_charfield_permission)
+        self.user.save()
+        response = self.client.get(self.url)
+        self.assertEqual(403, response.status_code)
+
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
@@ -674,6 +720,20 @@ class AddHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch(
+        'omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj',
+        Mock(return_value=True)
+    )
+    def test_user_can_edit_obj_false_without_perm(self):
+        """
+        The view should return a 403 response if the user cannot add the handler
+        """
+        self.user.user_permissions.remove(self.add_emailhandler_permission)
+        self.user.save()
+        response = self.client.get(self.url)
+        self.assertEqual(403, response.status_code)
+
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
@@ -880,6 +940,20 @@ class ChangeFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch(
+        'omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj',
+        Mock(return_value=True)
+    )
+    def test_user_can_edit_obj_false_without_perm(self):
+        """
+        The view should return a 403 response if the user cannot change the field
+        """
+        self.user.user_permissions.remove(self.change_charfield_permission)
+        self.user.save()
+        response = self.client.get(self.url)
+        self.assertEqual(403, response.status_code)
+
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
@@ -1056,6 +1130,20 @@ class ChangeHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch(
+        'omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj',
+        Mock(return_value=True)
+    )
+    def test_user_can_edit_obj_false_without_perm(self):
+        """
+        The view should return a 403 response if the user cannot change the handler
+        """
+        self.user.user_permissions.remove(self.change_emailhandler_permission)
+        self.user.save()
+        response = self.client.get(self.url)
+        self.assertEqual(403, response.status_code)
+
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
@@ -1168,6 +1256,20 @@ class DeleteFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch(
+        'omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj',
+        Mock(return_value=True)
+    )
+    def test_user_can_edit_obj_false_without_perm(self):
+        """
+        The view should return a 403 response if the user cannot delete the field
+        """
+        self.user.user_permissions.remove(self.delete_charfield_permission)
+        self.user.save()
+        response = self.client.get(self.url)
+        self.assertEqual(403, response.status_code)
+
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
@@ -1252,6 +1354,20 @@ class DeleteHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
+    @patch(
+        'omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj',
+        Mock(return_value=True)
+    )
+    def test_user_can_edit_obj_false_without_perm(self):
+        """
+        The view should return a 403 response if the user cannot delete the handler
+        """
+        self.user.user_permissions.remove(self.delete_emailhandler_permission)
+        self.user.save()
+        response = self.client.get(self.url)
+        self.assertEqual(403, response.status_code)
+
+    @patch('django.contrib.auth.models.User.has_perm', Mock(return_value=True))
     @patch('omniforms.wagtail.wagtail_hooks.WagtailOmniFormPermissionHelper.user_can_edit_obj')
     def test_user_can_edit_obj_false(self, user_can_edit_obj):
         """
