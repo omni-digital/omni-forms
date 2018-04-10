@@ -27,8 +27,7 @@ class OmniFieldQuerySet(models.QuerySet):
     """
     Custom QuerySet class for the OmniField model
     """
-    @staticmethod
-    def field_models():
+    def field_models(self):
         """
         Method for retrtieving and returning a list of all field model classes
         that are not either abstract classes or the base OmniField class
@@ -957,8 +956,7 @@ class OmniFormHandlerQuerySet(models.QuerySet):
     """
     Custom queryset for OmniFormHandler model
     """
-    @staticmethod
-    def handler_models():
+    def handler_models(self):
         """
         Method for retrieving and returning a list of all handler model classes
         that are not either abstract classes or the base OmniFormHandler class
