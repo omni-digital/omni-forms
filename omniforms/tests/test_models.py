@@ -778,6 +778,16 @@ class OmniFieldTestCase(TestCase):
             )
         )
 
+    def test_field_models_manager_method(self):
+        """
+        The method should return the correct model classes
+        """
+        model_classes = OmniField.objects.field_models()
+        for model_class in model_classes:
+            self.assertTrue(issubclass(model_class, OmniField))
+            self.assertNotEqual(model_class, OmniField)
+            self.assertFalse(model_class._meta.abstract)
+
 
 class OmniFieldInstanceTestCase(OmniModelFormTestCaseStub):
     """
@@ -2088,6 +2098,16 @@ class OmniFormHandlerTestCase(TestCase):
             instance.get_edit_url(),
             reverse('admin:omniforms_omniform_updatehandler', args=[instance.object_id, instance.pk])
         )
+
+    def test_field_models_manager_method(self):
+        """
+        The method should return the correct model classes
+        """
+        model_classes = OmniFormHandler.objects.handler_models()
+        for model_class in model_classes:
+            self.assertTrue(issubclass(model_class, OmniFormHandler))
+            self.assertNotEqual(model_class, OmniFormHandler)
+            self.assertFalse(model_class._meta.abstract)
 
 
 class TemplateHelpTextLazyTestCase(OmniModelFormTestCaseStub):

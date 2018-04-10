@@ -23,6 +23,34 @@ from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
 import re
 
 
+class OmniFieldQuerySet(models.QuerySet):
+    """
+    Custom QuerySet class for the OmniField model
+    """
+    @staticmethod
+    def field_models():
+        """
+        Method for retrtieving and returning a list of all field model classes
+        that are not either abstract classes or the base OmniField class
+
+        :return: List of OmniField model classes
+        """
+        model_classes = []
+        for ctype in ContentType.objects.all():
+            model_class = ctype.model_class()
+            if not model_class:
+                continue
+
+            if model_class._meta.abstract:
+                continue
+
+            if model_class == OmniField or not issubclass(model_class, OmniField):
+                continue
+
+            model_classes.append(model_class)
+        return model_classes
+
+
 @python_2_unicode_compatible
 class OmniField(models.Model):
     """
@@ -78,6 +106,8 @@ class OmniField(models.Model):
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
+
+    objects = OmniFieldQuerySet.as_manager()
 
     class Meta(object):
         """
@@ -923,6 +953,34 @@ class OmniMultipleChoiceField(ChoiceFieldMixin, OmniField):
         verbose_name = 'Multiple Choice Field'
 
 
+class OmniFormHandlerQuerySet(models.QuerySet):
+    """
+    Custom queryset for OmniFormHandler model
+    """
+    @staticmethod
+    def handler_models():
+        """
+        Method for retrieving and returning a list of all handler model classes
+        that are not either abstract classes or the base OmniFormHandler class
+
+        :return: List of OmniFormHandler model classes
+        """
+        model_classes = []
+        for ctype in ContentType.objects.all():
+            model_class = ctype.model_class()
+            if not model_class:
+                continue
+
+            if model_class._meta.abstract:
+                continue
+
+            if model_class == OmniFormHandler or not issubclass(model_class, OmniFormHandler):
+                continue
+
+            model_classes.append(model_class)
+        return model_classes
+
+
 @python_2_unicode_compatible
 class OmniFormHandler(models.Model):
     """
@@ -934,6 +992,8 @@ class OmniFormHandler(models.Model):
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
+
+    objects = OmniFormHandlerQuerySet.as_manager()
 
     class Meta(object):
         """
