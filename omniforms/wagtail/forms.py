@@ -1,6 +1,11 @@
+import django
 from django import forms
+from django.contrib.auth.models import Permission, Group
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.query import Q
+from django.template.loader import render_to_string
 
-from omniforms.models import OmniForm
+from omniforms.models import OmniForm, OmniField, OmniFormHandler
 
 
 class WagtailOmniFormCloneForm(forms.ModelForm):
@@ -52,3 +57,119 @@ class WagtailOmniFormCloneForm(forms.ModelForm):
             handler.save()
 
         return instance
+
+
+class OmniPermissionFormBase(forms.ModelForm):
+    """
+    Custom form class for rendering omniform permissions in the wagtail admin
+    """
+    class Meta(object):
+        """
+        Django properties
+        """
+        model = Group
+        fields = ("permissions",)
+        widgets = {'permissions': forms.CheckboxSelectMultiple()}
+
+    @staticmethod
+    def _checkboxes_by_id(bound_field):
+        """
+        Generates and returns a dict of checkbox fields keyed by permission ID
+
+        :param bound_field: The bound form field to get permission checkboxes from
+        :return: Dict of checkboxes keyed by permission ID
+        """
+        if django.VERSION < (1, 11):
+            return {int(checkbox.choice_value): checkbox for checkbox in bound_field}
+        return {int(checkbox.data['value']): checkbox for checkbox in bound_field}
+
+    def as_admin_panel(self):
+        """
+        Required by the wagtail so that it can render the panel html when this
+        form is registered using the register_group_permission_panel hook
+
+        This code is basically taken from wagtails own 'format_permissions' template
+        tag and modified/reduced to work with our specific use case
+
+        :return: Rendered form panel
+        """
+        permissions = self.fields['permissions'].queryset
+        checkboxes_by_id = self._checkboxes_by_id(self['permissions'])
+        object_perms = []
+
+        for content_type in ContentType.objects.filter(permission__in=permissions).distinct():
+            content_perms_dict = {'object': content_type.name}
+            for perm in permissions.filter(content_type=content_type):
+                permission_action = perm.codename.split('_')[0]
+                if permission_action in ['add', 'change', 'delete']:
+                    content_perms_dict[permission_action] = checkboxes_by_id[perm.id]
+
+            if content_perms_dict:
+                object_perms.append(content_perms_dict)
+
+        return render_to_string(
+            'modeladmin/omniforms/wagtail/includes/permissions.html',
+            {'title': self.admin_panel_title, 'object_perms': object_perms}
+        )
+
+    def save(self, commit=True):
+        """
+        We need to make sure we preserve permissions which are not managed by this form
+        as such we get a queryset of all permissions associated with the forms model instance
+        before calling super so that we may re-associate them with the instance after the form
+        has been saved
+
+        :param commit: Whether or not to commit the changes to the database
+        :return: The saved group instance
+        """
+        # We go back to the object to read (in order to reapply) the
+        # permissions which were set on this group, but which are not
+        # accessible in the wagtail admin interface, as otherwise these would
+        # be clobbered by this form.
+        try:
+            untouchable_permissions = self.instance.permissions.exclude(pk__in=self.fields['permissions'].queryset)
+            bool(untouchable_permissions)  # force this to be evaluated, as it's about to change
+        except ValueError:
+            # this form is not bound; we're probably creating a new group
+            untouchable_permissions = []
+        group = super(OmniPermissionFormBase, self).save()
+        group.permissions.add(*untouchable_permissions)
+        if commit:
+            group.save()
+        return group
+
+
+class OmniFieldPermissionForm(OmniPermissionFormBase):
+    """
+    Custom form class for rendering omniform field permissions in the wagtail admin
+    """
+    admin_panel_title = 'OmniForm Fields'
+    prefix = 'omnifield_permission'
+
+    def __init__(self, *args, **kwargs):
+        super(OmniFieldPermissionForm, self).__init__(*args, **kwargs)
+        query = Q()
+        for model_class in OmniField.objects.field_models():
+            query |= Q(
+                content_type__app_label=model_class._meta.app_label,
+                content_type__model=model_class._meta.model_name
+            )
+        self.fields['permissions'].queryset = Permission.objects.filter(query).select_related('content_type')
+
+
+class OmniHandlerPermissionForm(OmniPermissionFormBase):
+    """
+    Custom form class for rendering omniform field permissions in the wagtail admin
+    """
+    admin_panel_title = 'OmniForm Handlers'
+    prefix = 'omnihandler_permission'
+
+    def __init__(self, *args, **kwargs):
+        super(OmniHandlerPermissionForm, self).__init__(*args, **kwargs)
+        query = Q()
+        for model_class in OmniFormHandler.objects.handler_models():
+            query |= Q(
+                content_type__app_label=model_class._meta.app_label,
+                content_type__model=model_class._meta.model_name
+            )
+        self.fields['permissions'].queryset = Permission.objects.filter(query).select_related('content_type')
