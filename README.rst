@@ -136,7 +136,7 @@ ImproperlyConfigured exception will be raised.
 Wagtail Integration
 -------------------
 
-If you would like to integrate the form builder with [Wagtail](https://wagtail.io/) you will need to add the
+If you would like to integrate the form builder with https://wagtail.io/ you will need to add the
 ``omniforms.wagtail`` submodule to your applications ``INSTALLED_APPS`` setting as well as the ``omniforms``
 module e.g.
 

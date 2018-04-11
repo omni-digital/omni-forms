@@ -1,4 +1,4 @@
-[![Omni Forms on pypi](https://img.shields.io/badge/pypi-0.2.0-green.svg)](https://pypi.python.org/pypi/omniforms)
+[![Omni Forms on pypi](https://img.shields.io/badge/pypi-0.3.0-green.svg)](https://pypi.python.org/pypi/omniforms)
 ![MIT license](https://img.shields.io/badge/licence-MIT-blue.svg)
 ![Build status](https://travis-ci.org/omni-digital/omni-forms.svg?branch=master)
 
