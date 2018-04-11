@@ -10,6 +10,7 @@ from wagtail.wagtailcore import hooks
 
 from omniforms.models import OmniForm
 from omniforms.wagtail import model_admin_views
+from omniforms.wagtail.forms import OmniFieldPermissionForm, OmniHandlerPermissionForm
 
 
 @hooks.register('register_permissions')
@@ -23,6 +24,28 @@ def add_omniforms_permissions():
         content_type__app_label="omniforms",
         content_type__model="omniform"
     )
+
+
+@hooks.register('register_group_permission_panel')
+def add_omnifields_permissions():
+    """
+    Registers a group permission panel in the wagtail admin
+    for the management of OmniField model permissions
+
+    :return: Form class for managing OmniField permissions
+    """
+    return OmniFieldPermissionForm
+
+
+@hooks.register('register_group_permission_panel')
+def add_omnihandlers_permissions():
+    """
+    Registers a group permission panel in the wagtail admin
+    for the management of OmniFormHandler model permissions
+
+    :return: Form class for managing OmniFormHandler permissions
+    """
+    return OmniHandlerPermissionForm
 
 
 class WagtailOmniFormURLHelper(AdminURLHelper):
