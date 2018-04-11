@@ -1,0 +1,47 @@
+{% extends "wagtailadmin/base.html" %}{% load wagtail_omni_forms_tags %}
+
+
+{% block titletag %}{{ view.get_meta_title }}{% endblock %}
+
+
+{% block extra_css %}
+    {% include "wagtailadmin/pages/_editor_css.html" %}
+    {{ view.media.css }}
+{% endblock %}
+
+
+{% block extra_js %}
+    {% include "wagtailadmin/pages/_editor_js.html" %}
+    {{ view.media.js }}
+{% endblock %}
+
+
+{% block content %}
+    {% block header %}
+        {% include "wagtailadmin/shared/header.html" with title=view.get_page_title subtitle=view.get_page_subtitle icon=view.header_icon tabbed=1 merged=1 %}
+    {% endblock %}
+
+    <form action="." method="POST" novalidate>
+        {% csrf_token %}
+
+        <ul class="objects">
+            {% for field in form %}
+                {% include 'modeladmin/omniforms/wagtail/includes/form_field.html' %}
+            {% endfor %}
+        </ul>
+
+        <footer>
+            <ul>
+                <li class="actions">
+                    <div class="dropdown dropup dropdown-button match-width">
+                        <button type="submit" class="button action-save" tabindex="3">
+                            <em>
+                                Clone
+                            </em>
+                        </button>
+                    </div>
+                </li>
+            </ul>
+        </footer>
+    </form>
+{% endblock %}

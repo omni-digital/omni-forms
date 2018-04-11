@@ -1,0 +1,24 @@
+{% if edit_url or delete_url %}
+    <div class="c-dropdown" data-dropdown="">
+        <a class="c-dropdown__button  u-btn-current">
+            {{ button_text }}
+            <div data-dropdown-toggle="" class="o-icon  c-dropdown__toggle  [ icon icon-arrow-down ]"></div>
+        </a>
+        <div class="t-dark">
+            <ul role="menu" class="c-dropdown__menu  u-toggle  u-arrow u-arrow--tl u-background">
+                {% if edit_url %}
+                    <li class="c-dropdown__item">
+                        <a href="{{ edit_url }}" class="u-link is-live">Edit</a>
+                    </li>
+                {% endif %}
+                {% if delete_url %}
+                    <li class="c-dropdown__item">
+                        <a href="{{ delete_url }}" class="u-link is-live">Delete</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+{% else %}
+    <p>{{ button_text }}</p>
+{% endif %}

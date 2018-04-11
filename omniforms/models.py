@@ -23,6 +23,61 @@ from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
 import re
 
 
+class OmniFormRelatedQuerySet(models.QuerySet):
+    """
+    Custom queryset for OmniFormHandler model
+    """
+    def _get_concrete_models(self, base_model_class):
+        """
+        Method for retrieving and returning a list of all handler model classes
+        that are not either abstract classes or the base OmniFormHandler class
+
+        :return: List of OmniFormHandler model classes
+        """
+        model_classes = []
+        for ctype in ContentType.objects.all():
+            model_class = ctype.model_class()
+            if not model_class:
+                continue
+
+            if model_class._meta.abstract:
+                continue
+
+            if model_class == base_model_class or not issubclass(model_class, base_model_class):
+                continue
+
+            model_classes.append(model_class)
+        return model_classes
+
+
+class OmniFieldQuerySet(OmniFormRelatedQuerySet):
+    """
+    Custom QuerySet class for the OmniField model
+    """
+    def get_concrete_models(self):
+        """
+        Method for retrtieving and returning a list of all field model classes
+        that are not either abstract classes or the base OmniField class
+
+        :return: List of OmniField model classes
+        """
+        return self._get_concrete_models(OmniField)
+
+
+class OmniFormHandlerQuerySet(OmniFormRelatedQuerySet):
+    """
+    Custom queryset for OmniFormHandler model
+    """
+    def get_concrete_models(self):
+        """
+        Method for retrieving and returning a list of all handler model classes
+        that are not either abstract classes or the base OmniFormHandler class
+
+        :return: List of OmniFormHandler model classes
+        """
+        return self._get_concrete_models(OmniFormHandler)
+
+
 @python_2_unicode_compatible
 class OmniField(models.Model):
     """
@@ -78,6 +133,8 @@ class OmniField(models.Model):
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
+
+    objects = OmniFieldQuerySet.as_manager()
 
     class Meta(object):
         """
@@ -934,6 +991,8 @@ class OmniFormHandler(models.Model):
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     form = GenericForeignKey()
+
+    objects = OmniFormHandlerQuerySet.as_manager()
 
     class Meta(object):
         """

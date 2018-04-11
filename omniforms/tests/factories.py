@@ -3,11 +3,29 @@
 Factories for omniforms models
 """
 from __future__ import unicode_literals
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from omniforms.models import OmniForm, OmniModelForm, OmniFormEmailHandler, OmniCharField
+from omniforms.models import OmniForm, OmniModelForm, OmniFormEmailHandler, OmniCharField, OmniBooleanField
 from omniforms.tests.models import DummyModel
 import factory
+
+
+class UserFactory(factory.DjangoModelFactory):
+    """
+    Factory for generating user model instances
+    """
+    username = factory.Sequence('user{0}'.format)
+    email = factory.Sequence('user{0}@example.com'.format)
+    is_staff = False
+    is_superuser = False
+    is_active = True
+
+    class Meta(object):
+        """
+        FactoryBoy properties
+        """
+        model = get_user_model()
 
 
 class OmniFormFactory(factory.DjangoModelFactory):
@@ -68,6 +86,20 @@ class OmniCharFieldFactory(factory.DjangoModelFactory):
         FactoryBoy properties
         """
         model = OmniCharField
+
+
+class OmniBooleanFieldFactory(factory.DjangoModelFactory):
+    """
+    Model factory for generating OmniBooleanField instances
+    """
+    name = factory.Sequence('boolean_field_{0}'.format)
+    label = factory.Sequence('Boolean field {0}'.format)
+    widget_class = 'django.forms.widgets.CheckboxInput'
+    order = factory.Sequence(lambda n: n)
+    form = factory.SubFactory(OmniFormFactory)
+
+    class Meta(object):
+        model = OmniBooleanField
 
 
 class DummyModelFactory(factory.DjangoModelFactory):
