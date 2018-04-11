@@ -23,16 +23,16 @@ from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
 import re
 
 
-class OmniFieldQuerySet(models.QuerySet):
+class OmniFormRelatedQuerySet(models.QuerySet):
     """
-    Custom QuerySet class for the OmniField model
+    Custom queryset for OmniFormHandler model
     """
-    def field_models(self):
+    def _get_concrete_models(self, base_model_class):
         """
-        Method for retrtieving and returning a list of all field model classes
-        that are not either abstract classes or the base OmniField class
+        Method for retrieving and returning a list of all handler model classes
+        that are not either abstract classes or the base OmniFormHandler class
 
-        :return: List of OmniField model classes
+        :return: List of OmniFormHandler model classes
         """
         model_classes = []
         for ctype in ContentType.objects.all():
@@ -43,11 +43,39 @@ class OmniFieldQuerySet(models.QuerySet):
             if model_class._meta.abstract:
                 continue
 
-            if model_class == OmniField or not issubclass(model_class, OmniField):
+            if model_class == base_model_class or not issubclass(model_class, base_model_class):
                 continue
 
             model_classes.append(model_class)
         return model_classes
+
+
+class OmniFieldQuerySet(OmniFormRelatedQuerySet):
+    """
+    Custom QuerySet class for the OmniField model
+    """
+    def get_concrete_models(self):
+        """
+        Method for retrtieving and returning a list of all field model classes
+        that are not either abstract classes or the base OmniField class
+
+        :return: List of OmniField model classes
+        """
+        return self._get_concrete_models(OmniField)
+
+
+class OmniFormHandlerQuerySet(OmniFormRelatedQuerySet):
+    """
+    Custom queryset for OmniFormHandler model
+    """
+    def get_concrete_models(self):
+        """
+        Method for retrieving and returning a list of all handler model classes
+        that are not either abstract classes or the base OmniFormHandler class
+
+        :return: List of OmniFormHandler model classes
+        """
+        return self._get_concrete_models(OmniFormHandler)
 
 
 @python_2_unicode_compatible
@@ -950,33 +978,6 @@ class OmniMultipleChoiceField(ChoiceFieldMixin, OmniField):
         Django properties
         """
         verbose_name = 'Multiple Choice Field'
-
-
-class OmniFormHandlerQuerySet(models.QuerySet):
-    """
-    Custom queryset for OmniFormHandler model
-    """
-    def handler_models(self):
-        """
-        Method for retrieving and returning a list of all handler model classes
-        that are not either abstract classes or the base OmniFormHandler class
-
-        :return: List of OmniFormHandler model classes
-        """
-        model_classes = []
-        for ctype in ContentType.objects.all():
-            model_class = ctype.model_class()
-            if not model_class:
-                continue
-
-            if model_class._meta.abstract:
-                continue
-
-            if model_class == OmniFormHandler or not issubclass(model_class, OmniFormHandler):
-                continue
-
-            model_classes.append(model_class)
-        return model_classes
 
 
 @python_2_unicode_compatible

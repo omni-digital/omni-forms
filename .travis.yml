@@ -26,4 +26,3 @@ env:
   - TOXENV=py36-django111-wagtail112
   - TOXENV=py36-django111-wagtail113
   - TOXENV=flake8
-

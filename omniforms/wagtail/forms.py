@@ -149,7 +149,7 @@ class OmniFieldPermissionForm(OmniPermissionFormBase):
     def __init__(self, *args, **kwargs):
         super(OmniFieldPermissionForm, self).__init__(*args, **kwargs)
         query = Q()
-        for model_class in OmniField.objects.field_models():
+        for model_class in OmniField.objects.get_concrete_models():
             query |= Q(
                 content_type__app_label=model_class._meta.app_label,
                 content_type__model=model_class._meta.model_name
@@ -167,7 +167,7 @@ class OmniHandlerPermissionForm(OmniPermissionFormBase):
     def __init__(self, *args, **kwargs):
         super(OmniHandlerPermissionForm, self).__init__(*args, **kwargs)
         query = Q()
-        for model_class in OmniFormHandler.objects.handler_models():
+        for model_class in OmniFormHandler.objects.get_concrete_models():
             query |= Q(
                 content_type__app_label=model_class._meta.app_label,
                 content_type__model=model_class._meta.model_name
