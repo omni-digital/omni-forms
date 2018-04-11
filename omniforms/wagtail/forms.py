@@ -122,18 +122,21 @@ class OmniPermissionFormBase(forms.ModelForm):
         :param commit: Whether or not to commit the changes to the database
         :return: The saved group instance
         """
-        # We go back to the object to read (in order to reapply) the
-        # permissions which were set on this group, but which are not
-        # accessible in the wagtail admin interface, as otherwise these would
-        # be clobbered by this form.
+        # We need to read the permissions that:
+        #  - have been applied to this group
+        #  - are not managed by this form
+        # We do this so that we can re-apply the original permissions once the permissions
+        # that _are_ managed by this form are updated. Not doing this will mean we accidentally
+        # blat out certain permissions on save.
         try:
-            untouchable_permissions = self.instance.permissions.exclude(pk__in=self.fields['permissions'].queryset)
-            bool(untouchable_permissions)  # force this to be evaluated, as it's about to change
+            # Convert the permissions to a list as the queryset is evaluated lazily
+            # and we need the permissions as they existed before the super classes
+            # save method is called
+            unmanaged_permissions = list(self.instance.permissions.exclude(pk__in=self.fields['permissions'].queryset))
         except ValueError:
-            # this form is not bound; we're probably creating a new group
-            untouchable_permissions = []
+            unmanaged_permissions = []
         group = super(OmniPermissionFormBase, self).save()
-        group.permissions.add(*untouchable_permissions)
+        group.permissions.add(*unmanaged_permissions)
         if commit:
             group.save()
         return group
