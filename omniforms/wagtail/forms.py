@@ -68,7 +68,7 @@ class OmniPermissionFormBase(forms.ModelForm):
         Django properties
         """
         model = Group
-        fields = ("permissions",)
+        fields = ('permissions',)
         widgets = {'permissions': forms.CheckboxSelectMultiple()}
 
     @staticmethod
