@@ -12,7 +12,7 @@ Installation
 Once the package has been installed just add ``omni_forms`` to
 ``INSTALLED_APPS`` in your settings file:
 
-``INSTALLED_APPS += ('omni_forms',)``
+``INSTALLED_APPS = ['omniforms', ...]``
 
 Once you've done this run ``python manage.py migrate`` to migrate your
 database.
@@ -133,16 +133,37 @@ It is important to note that the dictionary values defined within the
 handlers that do not subclass ``omniforms.models.OmniField`` an
 ImproperlyConfigured exception will be raised.
 
+Wagtail Integration
+-------------------
+
+If you would like to integrate the form builder with [Wagtail](https://wagtail.io/) you will need to add the
+``omniforms.wagtail`` submodule to your applications ``INSTALLED_APPS`` setting as well as the ``omniforms``
+module e.g.
+
+::
+
+    INSTALLED_APPS = [
+        'omniforms',
+        'omniforms.wagtail',
+        ...
+    ]
+
+Once this has been done, run database migrations ``python manage.py migrate`` and away you go.
+
 Compatibility
 -------------
 
 Django
 ~~~~~~
 
--  Django 1.8.x
--  Django 1.9.x
--  Django 1.10.x
 -  Django 1.11.x
+
+Wagtail
+~~~~~~~
+
+- Wagtail 1.11.x
+- Wagtail 1.12.x
+- Wagtail 1.13.x
 
 Python
 ~~~~~~
@@ -157,4 +178,4 @@ ChangeLog
 
 -  0.1 - Initial Build
 -  0.2 - Adds ability to create arbitrary non model form instances
--  0.3 - Adds OmniChoiceField and OmniMultipleChoiceField form field types
+-  0.3 - Adds OmniChoiceField and OmniMultipleChoiceField form field types and wagtail integration
