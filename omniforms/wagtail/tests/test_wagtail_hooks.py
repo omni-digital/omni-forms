@@ -1,7 +1,8 @@
-from mock import patch
+from mock import Mock, patch
 
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import Permission
+from django.core.exceptions import PermissionDenied
 from django.template.loader import render_to_string
 from django.test import RequestFactory, TestCase
 from wagtail.contrib.modeladmin.helpers.button import ButtonHelper
@@ -341,6 +342,15 @@ class WagtailOmniFormPermissionHelperTestCase(TestCase):
         """
         self.assertFalse(self.permission_helper.user_can_edit_obj(self.user, self.form))
 
+    @patch('omniforms.wagtail.wagtail_hooks.hooks.get_hooks')
+    def test_user_can_edit_obj_false_with_permission_error(self, get_hooks):
+        """
+        The user should not be able to edit the form if an omniform_permission_check hook raises permission error
+        """
+        dummy_hook = Mock(side_effect=PermissionDenied)
+        get_hooks.return_value = [dummy_hook]
+        self.assertFalse(self.permission_helper.user_can_edit_obj(self.user, self.form))
+
     def test_user_can_delete_obj_true(self):
         """
         The user should be able to delete the form
@@ -354,6 +364,15 @@ class WagtailOmniFormPermissionHelperTestCase(TestCase):
         """
         self.assertFalse(self.permission_helper.user_can_delete_obj(self.user, self.form))
 
+    @patch('omniforms.wagtail.wagtail_hooks.hooks.get_hooks')
+    def test_user_can_delete_obj_false_with_permission_error(self, get_hooks):
+        """
+        The user should not be able to delete the form if an omniform_permission_check hook raises permission error
+        """
+        dummy_hook = Mock(side_effect=PermissionDenied)
+        get_hooks.return_value = [dummy_hook]
+        self.assertFalse(self.permission_helper.user_can_delete_obj(self.user, self.form))
+
     def test_user_can_clone_obj_true(self):
         """
         The user should be able to clone the form
@@ -365,6 +384,15 @@ class WagtailOmniFormPermissionHelperTestCase(TestCase):
         """
         The user should not be able to clone the form without the appropriate permission
         """
+        self.assertFalse(self.permission_helper.user_can_clone_obj(self.user, self.form))
+
+    @patch('omniforms.wagtail.wagtail_hooks.hooks.get_hooks')
+    def test_user_can_clone_obj_false_with_permission_error(self, get_hooks):
+        """
+        The user should not be able to delete the form if an omniform_permission_check hook raises permission error
+        """
+        dummy_hook = Mock(side_effect=PermissionDenied)
+        get_hooks.return_value = [dummy_hook]
         self.assertFalse(self.permission_helper.user_can_clone_obj(self.user, self.form))
 
 

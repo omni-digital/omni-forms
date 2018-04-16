@@ -1,5 +1,6 @@
 from django.conf.urls import url
 from django.contrib.auth.models import Permission
+from django.core.exceptions import PermissionDenied
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from wagtail.contrib.modeladmin.helpers.button import ButtonHelper
@@ -218,6 +219,24 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
     """
     Custom permission helper class for Wagtail Omni forms
     """
+    @staticmethod
+    def _run_permission_hooks(action, instance, user):
+        """
+        Simple method that runs permission hooks for the given instance
+        Loops through all 'omniform_permission_check' hooks and calls each
+        in turn passing:
+
+         - action: The action being performed (create, update, delete, clone)
+         - instance: The instance being operated on
+         - user: The currently logged in user
+
+        :param action: The action being performed
+        :param instance: The model instance being worked on
+        :param user: The currently logged in user
+        """
+        for hook in hooks.get_hooks('omniform_permission_check'):
+            hook(action, instance, user)
+
     def user_can_clone_obj(self, user, obj):
         """
         Checks that the user has permission to clone a form in the system
@@ -226,8 +245,37 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         :param obj: OmniForm model instance
         :return: bool - True if the user can create a form instance, otherwise false
         """
-        perm_codename = self.get_perm_codename('add')
-        return self.user_has_specific_permission(user, perm_codename)
+        try:
+            self._run_permission_hooks('create', obj, user)
+        except PermissionDenied:
+            return False
+        else:
+            perm_codename = self.get_perm_codename('add')
+            return self.user_has_specific_permission(user, perm_codename)
+
+    def user_can_edit_obj(self, user, obj):
+        """
+        Return a boolean to indicate whether `user` is permitted to 'change'
+        a specific `self.model` instance.
+        """
+        try:
+            self._run_permission_hooks('update', obj, user)
+        except PermissionDenied:
+            return False
+        else:
+            return super(WagtailOmniFormPermissionHelper, self).user_can_edit_obj(user, obj)
+
+    def user_can_delete_obj(self, user, obj):
+        """
+        Return a boolean to indicate whether `user` is permitted to 'delete'
+        a specific `self.model` instance.
+        """
+        try:
+            self._run_permission_hooks('delete', obj, user)
+        except PermissionDenied:
+            return False
+        else:
+            return super(WagtailOmniFormPermissionHelper, self).user_can_delete_obj(user, obj)
 
 
 class WagtailOmniFormModelAdmin(ModelAdmin):
