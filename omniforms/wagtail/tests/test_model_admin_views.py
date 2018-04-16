@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.admin.utils import quote
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.test import override_settings, TestCase
 from wagtail.wagtailcore.models import Page
@@ -14,7 +15,7 @@ from omniforms.models import OmniCharField, OmniField, OmniFormHandler, OmniForm
 from omniforms.tests.factories import OmniFormFactory, OmniCharFieldFactory, OmniFormEmailHandlerFactory, UserFactory
 from omniforms.wagtail import model_admin_views
 from omniforms.wagtail.forms import WagtailOmniFormCloneForm
-from omniforms.wagtail.model_admin_views import OmniFormBaseView
+from omniforms.wagtail.model_admin_views import OmniFormBaseView, RelatedFormView
 from omniforms.wagtail.wagtail_hooks import WagtailOmniFormModelAdmin
 
 
@@ -267,6 +268,48 @@ class SelectHandlerViewTestCase(ModelAdminTestCaseStub):
         )
 
 
+class RelatedFormViewTestCase(ModelAdminTestCaseStub):
+    """
+    Tests the RelatedFormView class
+    """
+    def setUp(self):
+        super(RelatedFormViewTestCase, self).setUp()
+        self.view = RelatedFormView(self.model_admin, str(self.form.pk))
+
+    def test_get_base_form_class_default(self):
+        """
+        The method should return a basic model form by default
+        """
+        self.view.related_object_model_class = OmniFormEmailHandler
+        self.assertEqual(self.view._get_base_form_class(), forms.ModelForm)
+
+    def test_get_base_form_class_override(self):
+        """
+        The method should return the custom model form
+        """
+        class SomeForm(forms.ModelForm):
+            pass
+
+        class SomeModel(object):
+            base_form_class = SomeForm
+
+        self.view.related_object_model_class = SomeModel
+        self.assertEqual(self.view._get_base_form_class(), SomeForm)
+
+    def test_get_base_form_class_raises_exception(self):
+        """
+        The method should raise an ImproperlyConfigured exception
+        """
+        class SomeForm(forms.Form):
+            pass
+
+        class SomeModel(object):
+            base_form_class = SomeForm
+
+        self.view.related_object_model_class = SomeModel
+        self.assertRaises(ImproperlyConfigured, self.view._get_base_form_class)
+
+
 class CloneFormViewTestCase(ModelAdminTestCaseStub):
     """
     Tests the CloneForm view
@@ -356,6 +399,18 @@ class AddFieldViewTestCase(ModelAdminTestCaseStub):
             response.context['view'].get_page_title(),
             'Add {0} to form'.format(self.field_content_type.name)
         )
+
+    @patch('omniforms.wagtail.model_admin_views.AddFieldView._get_base_form_class')
+    def test_uses_correct_form_class(self, get_base_form_class):
+        """
+        The view should use the correct base form class
+        """
+        class MyForm(forms.ModelForm):
+            pass
+        get_base_form_class.return_value = MyForm
+        response = self.client.get(self.url)
+        self.assertIsInstance(response.context['form'], MyForm)
+        self.assertIsInstance(response.context['form'], forms.ModelForm)
 
     def test_form(self):
         """
@@ -602,6 +657,18 @@ class AddHandlerViewTestCase(ModelAdminTestCaseStub):
             response.context['view'].get_page_title(),
             'Add {0} to form'.format(self.handler_content_type.name)
         )
+
+    @patch('omniforms.wagtail.model_admin_views.AddHandlerView._get_base_form_class')
+    def test_uses_correct_form_class(self, get_base_form_class):
+        """
+        The view should use the correct base form class
+        """
+        class MyForm(forms.ModelForm):
+            pass
+        get_base_form_class.return_value = MyForm
+        response = self.client.get(self.url)
+        self.assertIsInstance(response.context['form'], MyForm)
+        self.assertIsInstance(response.context['form'], forms.ModelForm)
 
     def test_form(self):
         """

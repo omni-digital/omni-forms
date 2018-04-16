@@ -112,6 +112,23 @@ INSTALLED_APPS = [
 
 Once this has been done, run database migrations `python manage.py migrate` and away you go.
 
+### Customizing wagtail admin forms
+
+In some cases it may be desirable to customize the form class that wagtail uses for a custom related model type (i.e. an OmniForm Field or OmniForm Handler model). If this is desirable, the custom form class needs to be assigned to a `base_form_class` property on the model. e.g.
+
+```
+class MyOmniFieldForm(forms.ModelForm):
+    def clean_name(self, value):
+        if value.contains("something"):
+            raise ValidationError("The field name cannot contain the word 'something'")
+        return value
+
+class MyOmniField(OmniField):
+    base_form_class = MyOmniFieldForm
+```
+
+It is worth noting that the `base_form_class` _must_ subclass `django.forms.ModelForm`.  You do _not_ need to specify the model that the form is for (using the forms meta class) as this will be generated dynamically when the form class is created.
+
 ## Compatibility
 
 ### Django
