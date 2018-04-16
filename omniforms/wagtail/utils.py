@@ -1,7 +1,7 @@
 from wagtail.wagtailcore import hooks
 
 
-def _run_permission_hooks(action, instance, user):
+def run_permission_hooks(action, instance, user):
     """
     Simple method that runs permission hooks for the given instance
     Loops through all 'omniform_permission_check' hooks and calls each
