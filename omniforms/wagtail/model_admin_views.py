@@ -255,7 +255,7 @@ class RelatedFormView(OmniFormBaseView):
 
         :return: base form class
         """
-        form_class = getattr(self.related_object_model_class, 'wagtail_base_form_class', self.base_form_class)
+        form_class = getattr(self.related_object_model_class, 'base_form_class', self.base_form_class)
         if not issubclass(form_class, forms.ModelForm):
             raise ImproperlyConfigured(
                 '{0}._get_base_form_class must return a ModelForm or '

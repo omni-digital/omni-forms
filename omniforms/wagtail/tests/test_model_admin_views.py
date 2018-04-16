@@ -291,7 +291,7 @@ class RelatedFormViewTestCase(ModelAdminTestCaseStub):
             pass
 
         class SomeModel(object):
-            wagtail_base_form_class = SomeForm
+            base_form_class = SomeForm
 
         self.view.related_object_model_class = SomeModel
         self.assertEqual(self.view._get_base_form_class(), SomeForm)
@@ -304,7 +304,7 @@ class RelatedFormViewTestCase(ModelAdminTestCaseStub):
             pass
 
         class SomeModel(object):
-            wagtail_base_form_class = SomeForm
+            base_form_class = SomeForm
 
         self.view.related_object_model_class = SomeModel
         self.assertRaises(ImproperlyConfigured, self.view._get_base_form_class)
