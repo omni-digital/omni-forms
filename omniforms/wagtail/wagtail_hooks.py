@@ -12,6 +12,7 @@ from wagtail.wagtailcore import hooks
 from omniforms.models import OmniForm
 from omniforms.wagtail import model_admin_views
 from omniforms.wagtail.forms import OmniFieldPermissionForm, OmniHandlerPermissionForm
+from omniforms.wagtail.utils import run_permission_hooks
 
 
 @hooks.register('register_permissions')
@@ -219,24 +220,6 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
     """
     Custom permission helper class for Wagtail Omni forms
     """
-    @staticmethod
-    def _run_permission_hooks(action, instance, user):
-        """
-        Simple method that runs permission hooks for the given instance
-        Loops through all 'omniform_permission_check' hooks and calls each
-        in turn passing:
-
-         - action: The action being performed (create, update, delete, clone)
-         - instance: The instance being operated on
-         - user: The currently logged in user
-
-        :param action: The action being performed
-        :param instance: The model instance being worked on
-        :param user: The currently logged in user
-        """
-        for hook in hooks.get_hooks('omniform_permission_check'):
-            hook(action, instance, user)
-
     def user_can_clone_obj(self, user, obj):
         """
         Checks that the user has permission to clone a form in the system
@@ -246,7 +229,7 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         :return: bool - True if the user can create a form instance, otherwise false
         """
         try:
-            self._run_permission_hooks('clone', obj, user)
+            run_permission_hooks('clone', obj, user)
         except PermissionDenied:
             return False
         else:
@@ -259,7 +242,7 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         a specific `self.model` instance.
         """
         try:
-            self._run_permission_hooks('update', obj, user)
+            run_permission_hooks('update', obj, user)
         except PermissionDenied:
             return False
         else:
@@ -271,7 +254,7 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         a specific `self.model` instance.
         """
         try:
-            self._run_permission_hooks('delete', obj, user)
+            run_permission_hooks('delete', obj, user)
         except PermissionDenied:
             return False
         else:

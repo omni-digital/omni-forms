@@ -144,7 +144,7 @@ class SelectFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -251,7 +251,7 @@ class SelectHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -382,7 +382,7 @@ class CloneFormViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -598,7 +598,7 @@ class AddFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -833,7 +833,7 @@ class AddHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -1064,7 +1064,7 @@ class ChangeFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -1265,7 +1265,7 @@ class ChangeHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -1402,7 +1402,7 @@ class DeleteFieldViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError
@@ -1511,7 +1511,7 @@ class DeleteHandlerViewTestCase(ModelAdminTestCaseStub):
         response = self.client.get(self.url)
         self.assertEqual(403, response.status_code)
 
-    @patch('omniforms.wagtail.model_admin_views.hooks.get_hooks')
+    @patch('omniforms.wagtail.utils.hooks.get_hooks')
     def test_permission_required_permission_hooks(self, get_hooks):
         """
         The view should not be accessible if one of the omniform_permission_check hooks raises PermissionError

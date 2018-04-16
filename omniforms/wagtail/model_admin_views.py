@@ -9,9 +9,9 @@ from omniforms.admin_forms import AddRelatedForm, FieldForm
 from omniforms.models import OmniField, OmniFormHandler
 from wagtail.contrib.modeladmin.views import ModelFormView, InstanceSpecificView
 from wagtail.wagtailadmin import messages
-from wagtail.wagtailcore import hooks
 
 from omniforms.wagtail.forms import WagtailOmniFormCloneForm
+from omniforms.wagtail.utils import run_permission_hooks
 
 
 class OmniFormBaseView(ModelFormView, InstanceSpecificView):
@@ -34,24 +34,6 @@ class OmniFormBaseView(ModelFormView, InstanceSpecificView):
             model_class._meta.model_name
         )
 
-    @staticmethod
-    def _run_permission_hooks(action, instance, user):
-        """
-        Simple method that runs permission hooks for the given instance
-        Loops through all 'omniform_permission_check' hooks and calls each
-        in turn passing:
-
-         - action: The action being performed (create, update, delete, clone)
-         - instance: The instance being operated on
-         - user: The currently logged in user
-
-        :param action: The action being performed
-        :param instance: The model instance being worked on
-        :param user: The currently logged in user
-        """
-        for hook in hooks.get_hooks('omniform_permission_check'):
-            hook(action, instance, user)
-
     def check_action_permitted(self, user):
         """
         Ensures that the user has permission to edit the omni form
@@ -60,7 +42,7 @@ class OmniFormBaseView(ModelFormView, InstanceSpecificView):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            self._run_permission_hooks('update', self.instance, user)
+            run_permission_hooks('update', self.instance, user)
         except PermissionDenied:
             return False
         else:
@@ -105,7 +87,7 @@ class CloneFormView(OmniFormBaseView):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            self._run_permission_hooks('clone', self.instance, user)
+            run_permission_hooks('clone', self.instance, user)
         except PermissionDenied:
             return False
         else:
@@ -389,7 +371,7 @@ class AddRelatedMixin(object):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            self._run_permission_hooks('create', self.instance, user)
+            run_permission_hooks('create', self.instance, user)
         except PermissionDenied:
             return False
         else:
@@ -525,7 +507,7 @@ class ChangeRelatedObjectInstanceMixin(RelatedObjectInstanceMixin):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            self._run_permission_hooks('update', self.instance, user)
+            run_permission_hooks('update', self.instance, user)
         except PermissionDenied:
             return False
         else:
@@ -609,7 +591,7 @@ class DeleteRelatedObjectView(RelatedObjectInstanceMixin, OmniFormBaseView):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            self._run_permission_hooks('delete', self.instance, user)
+            run_permission_hooks('delete', self.instance, user)
         except PermissionDenied:
             return False
         else:
