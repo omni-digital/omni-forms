@@ -349,6 +349,7 @@ class AddFieldViewTestCase(ModelAdminTestCaseStub):
         self.assertTemplateUsed(response, 'modeladmin/omniforms/wagtail/related_form.html')
         self.assertIsInstance(response.context['view'], model_admin_views.AddFieldView)
         self.assertIsInstance(response.context['form'], forms.ModelForm)
+        self.assertEqual(response.context['form'].instance.form, self.form)
         self.assertIsInstance(response.context['model_admin'], WagtailOmniFormModelAdmin)
         self.assertEqual(response.context['instance'], self.form)
         self.assertEqual(
@@ -594,6 +595,7 @@ class AddHandlerViewTestCase(ModelAdminTestCaseStub):
         self.assertTemplateUsed(response, 'modeladmin/omniforms/wagtail/related_form.html')
         self.assertIsInstance(response.context['view'], model_admin_views.AddHandlerView)
         self.assertIsInstance(response.context['form'], forms.ModelForm)
+        self.assertEqual(response.context['form'].instance.form, self.form)
         self.assertIsInstance(response.context['model_admin'], WagtailOmniFormModelAdmin)
         self.assertEqual(response.context['instance'], self.form)
         self.assertEqual(

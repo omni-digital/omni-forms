@@ -384,7 +384,7 @@ class AddRelatedMixin(object):
         :return: Dict of form kwargs
         """
         form_kwargs = super(AddRelatedMixin, self).get_form_kwargs()
-        form_kwargs['instance'] = self.related_object_model_class()
+        form_kwargs['instance'] = self.related_object_model_class(form=self.instance)
         return form_kwargs
 
 
