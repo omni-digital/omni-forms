@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.admin.utils import quote
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponseBadRequest, Http404
 from django.shortcuts import get_object_or_404, redirect
 from omniforms.admin_forms import AddRelatedForm, FieldForm
@@ -245,6 +246,23 @@ class RelatedFormView(OmniFormBaseView):
             for field in self.related_object_model_class._meta.fields
         }
 
+    def _get_base_form_class(self):
+        """
+        Returns the base form class to use when constructing the model form for the
+        related model type. Uses the form specified on the model class under the
+        wagtail_base_model_class attribute (if it exists). Otherwise, falls back to
+        use the base form class specified on the view
+
+        :return: base form class
+        """
+        form_class = getattr(self.related_object_model_class, 'wagtail_base_form_class', self.base_form_class)
+        if not issubclass(form_class, forms.ModelForm):
+            raise ImproperlyConfigured(
+                '{0}._get_base_form_class must return a ModelForm or '
+                'ModelForm subclass'.format(self.__class__.__name__)
+            )
+        return form_class
+
     def get_form_class(self):
         """
         Method for generating a form class for the view
@@ -254,7 +272,7 @@ class RelatedFormView(OmniFormBaseView):
         return forms.modelform_factory(
             self.related_object_model_class,
             exclude=['real_type'],
-            form=self.base_form_class,
+            form=self._get_base_form_class(),
             widgets=self._get_form_widgets(),
             help_texts=self._get_help_texts(),
         )
