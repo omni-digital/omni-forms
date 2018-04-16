@@ -2,13 +2,14 @@ from django import forms
 from django.conf import settings
 from django.contrib.admin.utils import quote
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.http import HttpResponseBadRequest, Http404
 from django.shortcuts import get_object_or_404, redirect
 from omniforms.admin_forms import AddRelatedForm, FieldForm
 from omniforms.models import OmniField, OmniFormHandler
 from wagtail.contrib.modeladmin.views import ModelFormView, InstanceSpecificView
 from wagtail.wagtailadmin import messages
+from wagtail.wagtailcore import hooks
 
 from omniforms.wagtail.forms import WagtailOmniFormCloneForm
 
@@ -33,6 +34,24 @@ class OmniFormBaseView(ModelFormView, InstanceSpecificView):
             model_class._meta.model_name
         )
 
+    @staticmethod
+    def _run_permission_hooks(action, instance, user):
+        """
+        Simple method that runs permission hooks for the given instance
+        Loops through all 'omniform_permission_check' hooks and calls each
+        in turn passing:
+
+         - action: The action being performed (create, update, delete, clone)
+         - instance: The instance being operated on
+         - user: The currently logged in user
+
+        :param action: The action being performed
+        :param instance: The model instance being worked on
+        :param user: The currently logged in user
+        """
+        for hook in hooks.get_hooks('omniform_permission_check'):
+            hook(action, instance, user)
+
     def check_action_permitted(self, user):
         """
         Ensures that the user has permission to edit the omni form
@@ -40,7 +59,12 @@ class OmniFormBaseView(ModelFormView, InstanceSpecificView):
         :param user: Logged in user instance
         :return: boolean - whether of not the user has permission to edit the instance
         """
-        return self.permission_helper.user_can_edit_obj(user, self.instance)
+        try:
+            self._run_permission_hooks('update', self.instance, user)
+        except PermissionDenied:
+            return False
+        else:
+            return self.permission_helper.user_can_edit_obj(user, self.instance)
 
     def get_context_data(self, **kwargs):
         """
@@ -78,9 +102,14 @@ class CloneFormView(OmniFormBaseView):
         Ensures that the user has permission to clone the omni form
 
         :param user: Logged in user instance
-        :return: boolean - whether of not the user has permission to clone the instance
+        :return: boolean - whether of not the user has permission to edit the instance
         """
-        return self.permission_helper.user_can_clone_obj(user, self.instance)
+        try:
+            self._run_permission_hooks('clone', self.instance, user)
+        except PermissionDenied:
+            return False
+        else:
+            return self.permission_helper.user_can_clone_obj(user, self.instance)
 
     def get_form_class(self):
         """
@@ -357,12 +386,17 @@ class AddRelatedMixin(object):
         Ensures that the user has permission to create the related object
 
         :param user: Logged in user instance
-        :return: boolean - whether of not the user has permission to add the instance
+        :return: boolean - whether of not the user has permission to edit the instance
         """
-        return all([
-            user.has_perm(self._get_model_permission(self.related_object_model_class, 'add')),
-            self.permission_helper.user_can_edit_obj(user, self.instance)
-        ])
+        try:
+            self._run_permission_hooks('create', self.instance, user)
+        except PermissionDenied:
+            return False
+        else:
+            return all([
+                user.has_perm(self._get_model_permission(self.related_object_model_class, 'add')),
+                self.permission_helper.user_can_edit_obj(user, self.instance)
+            ])
 
     def get_page_title(self):
         """
@@ -488,12 +522,17 @@ class ChangeRelatedObjectInstanceMixin(RelatedObjectInstanceMixin):
         Ensures that the user has permission to change the related object
 
         :param user: Logged in user instance
-        :return: boolean - whether of not the user has permission to change the instance
+        :return: boolean - whether of not the user has permission to edit the instance
         """
-        return all([
-            user.has_perm(self._get_model_permission(self.related_object_model_class, 'change')),
-            self.permission_helper.user_can_edit_obj(user, self.instance)
-        ])
+        try:
+            self._run_permission_hooks('update', self.instance, user)
+        except PermissionDenied:
+            return False
+        else:
+            return all([
+                user.has_perm(self._get_model_permission(self.related_object_model_class, 'change')),
+                self.permission_helper.user_can_edit_obj(user, self.instance)
+            ])
 
     def get_form_kwargs(self):
         """
@@ -564,15 +603,20 @@ class DeleteRelatedObjectView(RelatedObjectInstanceMixin, OmniFormBaseView):
 
     def check_action_permitted(self, user):
         """
-        Ensures that the user has permission to delete the related object
+        Ensures that the user has permission to change the related object
 
         :param user: Logged in user instance
-        :return: boolean - whether of not the user has permission to delete the instance
+        :return: boolean - whether of not the user has permission to edit the instance
         """
-        return all([
-            user.has_perm(self._get_model_permission(self.related_object_model_class, 'delete')),
-            self.permission_helper.user_can_edit_obj(user, self.instance)
-        ])
+        try:
+            self._run_permission_hooks('delete', self.instance, user)
+        except PermissionDenied:
+            return False
+        else:
+            return all([
+                user.has_perm(self._get_model_permission(self.related_object_model_class, 'delete')),
+                self.permission_helper.user_can_edit_obj(user, self.instance)
+            ])
 
     def get_form_class(self):
         """
