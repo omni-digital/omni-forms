@@ -129,6 +129,27 @@ class MyOmniField(OmniField):
 
 It is worth noting that the `base_form_class` _must_ subclass `django.forms.ModelForm`.  You do _not_ need to specify the model that the form is for (using the forms meta class) as this will be generated dynamically when the form class is created.
 
+### Preventing forms from being changed or cloned
+
+It may be desirable for forms to be locked under certain conditions.  For example, if a form has been set up for data collection, and has already collected data, you may want to prevent the form from being modified or deleted.  For this purpose we have added a custom wagtail hook which can be used to implement logic to prevent the form from being edited further.
+
+The hook name is 'omniform_permission_check' and is registered like any other wagtail hook. The hook takes 3 positional arguments:
+
+ - action: The type of action being performed on the form (clone, update, delete);
+ - instance: The form instance
+ - user: The currently logged in user
+
+Example:
+
+```
+from wagtail.wagtailcore import hooks
+
+@hooks.register('omniform_permission_check')
+def lock_form(action, form, user):
+    if action in ['update', 'delete'] and form.some_relationship.count() > 0:
+        raise PermissionDenied
+```
+
 ## Compatibility
 
 ### Django

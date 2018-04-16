@@ -246,7 +246,7 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         :return: bool - True if the user can create a form instance, otherwise false
         """
         try:
-            self._run_permission_hooks('create', obj, user)
+            self._run_permission_hooks('clone', obj, user)
         except PermissionDenied:
             return False
         else:
