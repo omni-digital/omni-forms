@@ -1,20 +1,30 @@
-.. omniforms documentation master file, created by
-   sphinx-quickstart on Tue Apr 17 10:55:30 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to omniforms's documentation!
 =====================================
 
+Omniforms is an admin based form builder written in `Python <https://www.python.org/>`_ and built on the `Django web framework <https://www.djangoproject.com/>`_.
+
+Omniforms ships with admin integrations for the `Django <https://www.djangoproject.com/>`_ and `WagtailCMS <https://wagtail.io/>`_ admin interfaces.
+
+Below are some useful links to help you get started with Omniforms.
+
+
+* **Usage**
+
+  * :doc:`getting_started/index`
+  * :doc:`extending/index`
+  * :doc:`django/index`
+  * :doc:`wagtail/index`
+
+
+Index
+-----
+
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :titlesonly:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   getting_started/index
+   extending/index
+   django/index
+   wagtail/index
