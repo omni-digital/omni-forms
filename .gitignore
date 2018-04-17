@@ -5,3 +5,4 @@ omniforms.egg-info/
 *.sqlite3
 *.db
 dist/
+docs/_build
