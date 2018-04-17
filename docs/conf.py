@@ -5,6 +5,12 @@
 # This file does only contain a selection of the most common options. For a
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
+import os
+import sys
+
+import sphinx_rtd_theme
+
+from datetime import datetime
 from recommonmark.parser import CommonMarkParser
 
 # -- Path setup --------------------------------------------------------------
@@ -12,22 +18,17 @@ from recommonmark.parser import CommonMarkParser
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
+import omniforms
 
 project = u'omniforms'
-copyright = u'2018, Omni Digital'
+copyright = u'{0}, Omni Digital'.format(datetime.now().year)
 author = u'Omni Digital'
 
-# The short X.Y version
-version = u''
-# The full version, including alpha/beta/rc tags
-release = u'0.4.0'
+version = u'{0}.{1}'.format(omniforms.VERSION[0], omniforms.VERSION[1])  # The short X.Y version
+release = omniforms.get_version()  # The full version, including alpha/beta/rc tags
 
 
 # -- General configuration ---------------------------------------------------
@@ -79,7 +80,8 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
