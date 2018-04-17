@@ -13,6 +13,7 @@ The Omniforms application aims to provide functionality by which user facing for
 The application aims to be user friendly, developer friendly, extensible and pragmatic. All forms generated using this application are subclasses of either ``django.forms.Form`` or ``django.forms.ModelForm`` meaning developers are ultimately working with a forms library that is both familiar and predictable.
 
 Basic form example:
+~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -33,6 +34,7 @@ Basic form example:
       form.handle()
 
 Model form example:
+~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
