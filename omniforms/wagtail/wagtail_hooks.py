@@ -1,5 +1,6 @@
 from django.conf.urls import url
 from django.contrib.auth.models import Permission
+from django.core.exceptions import PermissionDenied
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from wagtail.contrib.modeladmin.helpers.button import ButtonHelper
@@ -11,6 +12,7 @@ from wagtail.wagtailcore import hooks
 from omniforms.models import OmniForm
 from omniforms.wagtail import model_admin_views
 from omniforms.wagtail.forms import OmniFieldPermissionForm, OmniHandlerPermissionForm
+from omniforms.wagtail.utils import run_permission_hooks
 
 
 @hooks.register('register_permissions')
@@ -226,8 +228,37 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         :param obj: OmniForm model instance
         :return: bool - True if the user can create a form instance, otherwise false
         """
-        perm_codename = self.get_perm_codename('add')
-        return self.user_has_specific_permission(user, perm_codename)
+        try:
+            run_permission_hooks('clone', obj, user)
+        except PermissionDenied:
+            return False
+        else:
+            perm_codename = self.get_perm_codename('add')
+            return self.user_has_specific_permission(user, perm_codename)
+
+    def user_can_edit_obj(self, user, obj):
+        """
+        Return a boolean to indicate whether `user` is permitted to 'change'
+        a specific `self.model` instance.
+        """
+        try:
+            run_permission_hooks('update', obj, user)
+        except PermissionDenied:
+            return False
+        else:
+            return super(WagtailOmniFormPermissionHelper, self).user_can_edit_obj(user, obj)
+
+    def user_can_delete_obj(self, user, obj):
+        """
+        Return a boolean to indicate whether `user` is permitted to 'delete'
+        a specific `self.model` instance.
+        """
+        try:
+            run_permission_hooks('delete', obj, user)
+        except PermissionDenied:
+            return False
+        else:
+            return super(WagtailOmniFormPermissionHelper, self).user_can_delete_obj(user, obj)
 
 
 class WagtailOmniFormModelAdmin(ModelAdmin):
