@@ -18,7 +18,7 @@ Once Omniforms is installed into your python environment, you will need to add t
 
 .. code-block:: python
 
-    INSTALLED_APPS += ['omni_forms']
+    INSTALLED_APPS += ['omniforms']
 
 Once you've done this you will need to run the database migrations that come bundled with the omniforms app.
 

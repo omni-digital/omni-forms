@@ -8,7 +8,7 @@ In addition to the steps outlined in the 'Getting started' section you will need
 
 .. code-block:: python
 
-    INSTALLED_APPS += ['omni_forms', 'omni_forms.wagtail']
+    INSTALLED_APPS += ['omniforms', 'omniforms.wagtail']
 
 Once you've done this you will need to run the database migrations that come bundled with the omniforms app.
 
