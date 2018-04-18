@@ -12,6 +12,21 @@ The Omniforms application aims to provide functionality by which user facing for
 
 The application aims to be user friendly, developer friendly, extensible and pragmatic. All forms generated using this application are subclasses of either ``django.forms.Form`` or ``django.forms.ModelForm`` meaning developers are ultimately working with a forms library that is both familiar and predictable.
 
+Overview
+--------
+
+The Omniforms application ships with 2 concrete ``OmniForm`` model classes:
+
+ - ``omniforms.models.OmniForm``
+ - ``omniforms.models.OmniModelForm``
+
+Each of these models contains a ``title`` field (used for administration) and references to zero of more ``OmniField`` and ``OmniFormHandler`` model instances. In addition to these fields the ``OmniModelForm`` model holds a reference to the ``ContentType`` that the form manages.
+
+Each of the concrete ``OmniForm`` models provides a ``get_form_class`` instance method which will generate and return an appropriate form class. This form classes fields will be built from all of the associated ``OmniField`` instances.  In addition the form will be constructed in such a way that all associated ``OmniFormHandler`` instances will be run when the form instances ``handle`` method is called.
+
+Usage
+-----
+
 Basic form example:
 ~~~~~~~~~~~~~~~~~~~
 
@@ -55,26 +70,6 @@ Model form example:
       form.handle()
 
 The library does not intend to dictate how generated forms should be *used*. This is left as an exercise for developers.
-
-Overview
---------
-
-TODO: POPULATE
-
-Forms
-~~~~~
-
-TODO: POPULATE
-
-Fields
-~~~~~~
-
-TODO: POPULATE
-
-Handlers
-~~~~~~~~
-
-TODO: POPULATE
 
 Compatibility
 -------------
