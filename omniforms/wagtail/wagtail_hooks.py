@@ -229,7 +229,7 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         :return: bool - True if the user can create a form instance, otherwise false
         """
         try:
-            run_permission_hooks('clone', obj, user)
+            run_permission_hooks('clone', obj)
         except PermissionDenied:
             return False
         else:
@@ -242,7 +242,7 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         a specific `self.model` instance.
         """
         try:
-            run_permission_hooks('update', obj, user)
+            run_permission_hooks('update', obj)
         except PermissionDenied:
             return False
         else:
@@ -254,7 +254,7 @@ class WagtailOmniFormPermissionHelper(PermissionHelper):
         a specific `self.model` instance.
         """
         try:
-            run_permission_hooks('delete', obj, user)
+            run_permission_hooks('delete', obj)
         except PermissionDenied:
             return False
         else:
@@ -288,6 +288,49 @@ class WagtailOmniFormModelAdmin(ModelAdmin):
     change_handler_view_class = model_admin_views.ChangeHandlerView
     delete_handler_view_class = model_admin_views.DeleteHandlerView
 
+    def _omni_form_related(self, form, related_qs, change_action, delete_action):
+        """
+        Returns a comma delimited list of links for editing and deleting the related form objects
+
+        :param form: OmniForm model instance
+        :param related_qs: Queryset of related fields or handlers
+        :param change_action: The name of the url change action
+        :param delete_action: The name of the url delete action
+        :return: comma delimited list of field links
+        """
+        links = []
+
+        try:
+            run_permission_hooks('update', form)
+        except PermissionDenied:
+            form_locked = True
+        else:
+            form_locked = False
+
+        for related in related_qs:
+            edit_url = self.url_helper.get_action_url(
+                change_action,
+                str(form.pk),
+                str(related.pk)
+            )
+
+            delete_url = self.url_helper.get_action_url(
+                delete_action,
+                str(form.pk),
+                str(related.pk)
+            )
+
+            links.append(render_to_string(
+                'modeladmin/omniforms/wagtail/includes/related_controls.html',
+                {
+                    'button_text': related,
+                    'edit_url': edit_url,
+                    'delete_url': delete_url,
+                    'form_locked': form_locked
+                }
+            ))
+        return mark_safe(''.join(links))
+
     def omni_form_fields(self, instance):
         """
         Returns a comma delimited list of edit field links for the fields associated with the form
@@ -295,29 +338,12 @@ class WagtailOmniFormModelAdmin(ModelAdmin):
         :param instance: OmniForm model instance
         :return: comma delimited list of field links
         """
-        links = []
-        for field in instance.fields.all():
-            edit_url = self.url_helper.get_action_url(
-                'change_field',
-                str(instance.pk),
-                str(field.pk)
-            )
-
-            delete_url = self.url_helper.get_action_url(
-                'delete_field',
-                str(instance.pk),
-                str(field.pk)
-            )
-
-            links.append(render_to_string(
-                'modeladmin/omniforms/wagtail/includes/related_controls.html',
-                {
-                    'button_text': field.label,
-                    'edit_url': edit_url,
-                    'delete_url': delete_url
-                }
-            ))
-        return mark_safe(''.join(links))
+        return self._omni_form_related(
+            instance,
+            instance.fields.all(),
+            'change_field',
+            'delete_field'
+        )
 
     def omni_form_handlers(self, instance):
         """
@@ -326,29 +352,12 @@ class WagtailOmniFormModelAdmin(ModelAdmin):
         :param instance: OmniForm model instance
         :return: comma delimited list of field links
         """
-        links = []
-        for handler in instance.handlers.all():
-            edit_url = self.url_helper.get_action_url(
-                'change_handler',
-                str(instance.pk),
-                str(handler.pk)
-            )
-
-            delete_url = self.url_helper.get_action_url(
-                'delete_handler',
-                str(instance.pk),
-                str(handler.pk)
-            )
-
-            links.append(render_to_string(
-                'modeladmin/omniforms/wagtail/includes/related_controls.html',
-                {
-                    'button_text': handler.name,
-                    'edit_url': edit_url,
-                    'delete_url': delete_url
-                }
-            ))
-        return mark_safe(''.join(links))
+        return self._omni_form_related(
+            instance,
+            instance.handlers.all(),
+            'change_handler',
+            'delete_handler'
+        )
 
     def clone_form_view(self, request, instance_pk):
         """
