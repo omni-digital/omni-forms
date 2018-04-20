@@ -1,4 +1,6 @@
-{% if edit_url or delete_url %}
+{% firstof edit_url delete_url None as has_url %}
+
+{% if has_url and not form_locked %}
     <div class="c-dropdown" data-dropdown="">
         <a class="c-dropdown__button  u-btn-current">
             {{ button_text }}

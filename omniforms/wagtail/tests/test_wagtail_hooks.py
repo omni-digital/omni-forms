@@ -169,6 +169,7 @@ class WagtailOmniFormModelAdminTestCase(TestCase):
         self.assertIn('title', WagtailOmniFormModelAdmin.list_display)
         self.assertIn('omni_form_fields', WagtailOmniFormModelAdmin.list_display)
         self.assertIn('omni_form_handlers', WagtailOmniFormModelAdmin.list_display)
+        self.assertIn('omni_form_locked', WagtailOmniFormModelAdmin.list_display)
 
     def test_search_fields(self):
         """
@@ -409,7 +410,25 @@ class FieldControlsRenderingTestCase(TestCase):
             {
                 'button_text': 'Some field',
                 'edit_url': None,
-                'delete_url': None
+                'delete_url': None,
+                'form_locked': False
+            }
+        )
+        soup = BeautifulSoup(rendered, "lxml")
+        self.assertIn('<p>Some field</p>', rendered)
+        self.assertEqual(0, len(soup.find_all('a')))
+
+    def test_renders_paragraph_if_form_locked(self):
+        """
+        The template should just render a paragraph
+        """
+        rendered = render_to_string(
+            'modeladmin/omniforms/wagtail/includes/related_controls.html',
+            {
+                'button_text': 'Some field',
+                'edit_url': '/dummy-path/edit/',
+                'delete_url': '/dummy-path/delete/',
+                'form_locked': True
             }
         )
         soup = BeautifulSoup(rendered, "lxml")
@@ -425,7 +444,8 @@ class FieldControlsRenderingTestCase(TestCase):
             {
                 'button_text': 'Some field',
                 'edit_url': '/some/path/',
-                'delete_url': None
+                'delete_url': None,
+                'form_locked': False
             }
         )
         soup = BeautifulSoup(rendered, "lxml")
@@ -445,7 +465,8 @@ class FieldControlsRenderingTestCase(TestCase):
             {
                 'button_text': 'Some field',
                 'edit_url': None,
-                'delete_url': '/some/path/'
+                'delete_url': '/some/path/',
+                'form_locked': False
             }
         )
         soup = BeautifulSoup(rendered, "lxml")

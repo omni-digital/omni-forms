@@ -42,7 +42,7 @@ class OmniFormBaseView(ModelFormView, InstanceSpecificView):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            run_permission_hooks('update', self.instance, user)
+            run_permission_hooks('update', self.instance)
         except PermissionDenied:
             return False
         else:
@@ -87,7 +87,7 @@ class CloneFormView(OmniFormBaseView):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            run_permission_hooks('clone', self.instance, user)
+            run_permission_hooks('clone', self.instance)
         except PermissionDenied:
             return False
         else:
@@ -371,7 +371,7 @@ class AddRelatedMixin(object):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            run_permission_hooks('create', self.instance, user)
+            run_permission_hooks('create', self.instance)
         except PermissionDenied:
             return False
         else:
@@ -507,7 +507,7 @@ class ChangeRelatedObjectInstanceMixin(RelatedObjectInstanceMixin):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            run_permission_hooks('update', self.instance, user)
+            run_permission_hooks('update', self.instance)
         except PermissionDenied:
             return False
         else:
@@ -591,7 +591,7 @@ class DeleteRelatedObjectView(RelatedObjectInstanceMixin, OmniFormBaseView):
         :return: boolean - whether of not the user has permission to edit the instance
         """
         try:
-            run_permission_hooks('delete', self.instance, user)
+            run_permission_hooks('delete', self.instance)
         except PermissionDenied:
             return False
         else:
