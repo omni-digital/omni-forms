@@ -41,11 +41,10 @@ Locking forms
 
 It may be desirable for forms to be locked under certain conditions. For example, if a form has been set up for data collection, and has already collected data, you may want to prevent the form from being modified or deleted. For this purpose we have added a custom wagtail hook which can be used to implement logic to prevent the form from being edited further.
 
-The hook name is ``omniform_permission_check`` and is registered like any other wagtail hook. The hook takes 3 positional arguments:
+The hook name is ``omniform_permission_check`` and is registered like any other wagtail hook. The hook takes 2 positional arguments:
 
  - ``action``: The type of action being performed on the form (clone, update, delete);
  - ``instance``: The form instance
- - ``user``: The currently logged in user
 
 Example
 ~~~~~~~
@@ -55,6 +54,6 @@ Example
     from wagtail.wagtailcore import hooks
 
     @hooks.register('omniform_permission_check')
-    def lock_form(action, form, user):
+    def lock_form(action, form):
         if action in ['update', 'delete'] and form.some_relationship.count() > 0:
             raise PermissionDenied
