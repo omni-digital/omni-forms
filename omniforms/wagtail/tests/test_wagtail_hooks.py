@@ -169,6 +169,7 @@ class WagtailOmniFormModelAdminTestCase(TestCase):
         self.assertIn('title', WagtailOmniFormModelAdmin.list_display)
         self.assertIn('omni_form_fields', WagtailOmniFormModelAdmin.list_display)
         self.assertIn('omni_form_handlers', WagtailOmniFormModelAdmin.list_display)
+        self.assertIn('omni_form_locked', WagtailOmniFormModelAdmin.list_display)
 
     def test_search_fields(self):
         """

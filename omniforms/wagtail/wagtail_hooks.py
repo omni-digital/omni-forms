@@ -271,7 +271,7 @@ class WagtailOmniFormModelAdmin(ModelAdmin):
     menu_order = 1200
     add_to_settings_menu = False
     exclude_from_explorer = True
-    list_display = ('title', 'omni_form_fields', 'omni_form_handlers', )
+    list_display = ('title', 'omni_form_fields', 'omni_form_handlers', 'omni_form_locked', )
     search_fields = ('title', )
     form_fields_exclude = ('fields', 'handlers', )
     button_helper_class = WagtailOmniFormButtonHelper
@@ -358,6 +358,22 @@ class WagtailOmniFormModelAdmin(ModelAdmin):
             'change_handler',
             'delete_handler'
         )
+
+    @staticmethod
+    def omni_form_locked(instance):
+        """
+        Determines if the omni form is locked and returns a string identifying this
+
+        :param instance: The form instance
+        :return: string
+        """
+        try:
+            run_permission_hooks('update', instance)
+            run_permission_hooks('delete', instance)
+        except PermissionDenied:
+            return 'yes'
+        else:
+            return 'no'
 
     def clone_form_view(self, request, instance_pk):
         """
