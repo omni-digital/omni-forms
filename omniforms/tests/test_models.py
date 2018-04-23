@@ -7,15 +7,17 @@ from django import forms
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core import mail
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
+from django.db.models.deletion import ProtectedError
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.module_loading import import_string
 from mock import Mock, patch, PropertyMock
-from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
+from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm, EmailConfirmationHandlerBaseFormClass
 from omniforms.models import (
     OmniFormBase,
     OmniModelFormBase,
@@ -43,6 +45,7 @@ from omniforms.models import (
     OmniChoiceField,
     OmniFormHandler,
     OmniFormEmailHandler,
+    OmniFormEmailConfirmationHandler,
     OmniFormSaveInstanceHandler,
     TemplateHelpTextLazy
 )
@@ -50,6 +53,8 @@ from omniforms.tests.factories import (
     DummyModelFactory,
     OmniFormFactory,
     OmniModelFormFactory,
+    OmniEmailFieldFactory,
+    OmniFormEmailConfirmationHandlerFactory,
     OmniFormEmailHandlerFactory
 )
 from omniforms.tests.models import TaggableManagerField, DummyModel2
@@ -2304,6 +2309,90 @@ class OmniFormEmailHandlerTestCase(TestCase):
         instance.handle(form)
         patched_method.assert_any_call('test.pdf', 'Content', 'application/pdf')
         patched_method.assert_any_call('test.gif', 'Content', 'image/gif')
+
+
+class EmailConfirmationHandlerTestCase(TestCase):
+    """
+    Tests the EmailConfirmationHandler model
+    """
+    def setUp(self):
+        super(EmailConfirmationHandlerTestCase, self).setUp()
+        self.form = OmniFormFactory.create()
+        self.email_field = OmniEmailFieldFactory.create(
+            form=self.form,
+            name='email'
+        )
+        self.handler = OmniFormEmailConfirmationHandlerFactory.create(
+            form=self.form,
+            recipient_field=self.email_field,
+            template='Dear {{ email }}\nThanks for contacting us'
+        )
+
+    def test_inheritance(self):
+        """
+        The model should inherit from OmniFormHandler
+        """
+        self.assertTrue(issubclass(OmniFormEmailConfirmationHandler, OmniFormHandler))
+
+    def test_subject_field(self):
+        """
+        The model should have a subject field
+        """
+        field = OmniFormEmailConfirmationHandler._meta.get_field('subject')
+        self.assertIsInstance(field, models.CharField)
+        self.assertEqual(field.max_length, 255)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_recipient_field_field(self):
+        """
+        The model should have a recipient_field field
+        """
+        field = OmniFormEmailConfirmationHandler._meta.get_field('recipient_field')
+        self.assertIsInstance(field, models.ForeignKey)
+        self.assertEqual(field.rel.to, OmniEmailField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_template_field(self):
+        """
+        The model should have a template field
+        """
+        field = OmniFormEmailConfirmationHandler._meta.get_field('template')
+        self.assertIsInstance(field, models.TextField)
+        self.assertFalse(field.blank)
+        self.assertFalse(field.null)
+
+    def test_base_form_class(self):
+        """
+        The model should define the correct base form class
+        """
+        self.assertEqual(
+            OmniFormEmailConfirmationHandler.base_form_class,
+            EmailConfirmationHandlerBaseFormClass
+        )
+
+    def test_cannot_delete_email_field_if_referenced_by_handler(self):
+        """
+        It should not be possible to delete the email field if it is referenced by the handler
+        """
+        self.assertRaises(ProtectedError, self.email_field.delete)
+
+    def test_handle_sends_email(self):
+        """
+        The handle method should send an email
+        """
+        form_class = self.form.get_form_class()
+        form = form_class({'email': 'someone@example.com'})
+        self.assertTrue(form.is_valid())
+        self.handler.handle(form)
+
+        msg = mail.outbox[0]
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertListEqual(msg.recipients(), ['someone@example.com'])
+        self.assertEqual(msg.subject, self.handler.subject)
+        self.assertEqual('Dear someone@example.com\nThanks for contacting us', msg.body)
 
 
 class OmniFormSaveInstanceHandlerTestCase(OmniModelFormTestCaseStub):

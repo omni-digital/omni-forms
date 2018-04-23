@@ -6,7 +6,15 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from omniforms.models import OmniForm, OmniModelForm, OmniFormEmailHandler, OmniCharField, OmniBooleanField
+from omniforms.models import (
+    OmniForm,
+    OmniModelForm,
+    OmniFormEmailHandler,
+    OmniFormEmailConfirmationHandler,
+    OmniCharField,
+    OmniBooleanField,
+    OmniEmailField
+)
 from omniforms.tests.models import DummyModel
 import factory
 
@@ -73,6 +81,23 @@ class OmniFormEmailHandlerFactory(factory.DjangoModelFactory):
         model = OmniFormEmailHandler
 
 
+class OmniFormEmailConfirmationHandlerFactory(factory.DjangoModelFactory):
+    """
+    Factory for creating OmniFormEmailConfirmationHandler instances
+    """
+    name = factory.Sequence('Email confirmation handler name {0}'.format)
+    order = 0
+    subject = factory.Sequence('Email confirmation handler subject {0}'.format)
+    template = factory.Sequence('Email confirmation handler template {0}'.format)
+    form = factory.SubFactory(OmniFormFactory)
+
+    class Meta:
+        """
+        Factory boy properties.
+        """
+        model = OmniFormEmailConfirmationHandler
+
+
 class OmniCharFieldFactory(factory.DjangoModelFactory):
     """
     Factory for creating OmniCharField instances
@@ -100,6 +125,20 @@ class OmniBooleanFieldFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = OmniBooleanField
+
+
+class OmniEmailFieldFactory(factory.DjangoModelFactory):
+    """
+    Model factory for generating OmniEmailField instances
+    """
+    name = factory.Sequence('email_field_{0}'.format)
+    label = factory.Sequence('Email field {0}'.format)
+    widget_class = 'django.forms.widgets.EmailInput'
+    order = factory.Sequence(lambda n: n)
+    form = factory.SubFactory(OmniFormFactory)
+
+    class Meta(object):
+        model = OmniEmailField
 
 
 class DummyModelFactory(factory.DjangoModelFactory):

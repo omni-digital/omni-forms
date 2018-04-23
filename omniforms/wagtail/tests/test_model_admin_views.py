@@ -41,6 +41,10 @@ class ModelAdminTestCaseStub(TestCase):
         cls.add_emailhandler_permission = Permission.objects.get(codename='add_omniformemailhandler')
         cls.change_emailhandler_permission = Permission.objects.get(codename='change_omniformemailhandler')
         cls.delete_emailhandler_permission = Permission.objects.get(codename='delete_omniformemailhandler')
+        # Handler permissions
+        cls.add_emailconfirmationhandler_permission = Permission.objects.get(codename='add_omniformemailconfirmationhandler')
+        cls.change_emailconfirmationhandler_permission = Permission.objects.get(codename='change_omniformemailconfirmationhandler')
+        cls.delete_emailconfirmationhandler_permission = Permission.objects.get(codename='delete_omniformemailconfirmationhandler')
         # Create a user to work with
         cls.user = UserFactory.create(is_staff=True)
 
@@ -57,6 +61,10 @@ class ModelAdminTestCaseStub(TestCase):
         self.user.user_permissions.add(self.add_emailhandler_permission)
         self.user.user_permissions.add(self.change_emailhandler_permission)
         self.user.user_permissions.add(self.delete_emailhandler_permission)
+        # Assign omni handlers permissions to user
+        self.user.user_permissions.add(self.add_emailconfirmationhandler_permission)
+        self.user.user_permissions.add(self.change_emailconfirmationhandler_permission)
+        self.user.user_permissions.add(self.delete_emailconfirmationhandler_permission)
         # Assign editor group to user
         self.user.groups.add(self.editor_group)
         # Save the user
