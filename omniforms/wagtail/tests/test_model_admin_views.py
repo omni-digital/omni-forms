@@ -42,9 +42,15 @@ class ModelAdminTestCaseStub(TestCase):
         cls.change_emailhandler_permission = Permission.objects.get(codename='change_omniformemailhandler')
         cls.delete_emailhandler_permission = Permission.objects.get(codename='delete_omniformemailhandler')
         # Handler permissions
-        cls.add_emailconfirmationhandler_permission = Permission.objects.get(codename='add_omniformemailconfirmationhandler')
-        cls.change_emailconfirmationhandler_permission = Permission.objects.get(codename='change_omniformemailconfirmationhandler')
-        cls.delete_emailconfirmationhandler_permission = Permission.objects.get(codename='delete_omniformemailconfirmationhandler')
+        cls.add_emailconfirmationhandler_permission = Permission.objects.get(
+            codename='add_omniformemailconfirmationhandler'
+        )
+        cls.change_emailconfirmationhandler_permission = Permission.objects.get(
+            codename='change_omniformemailconfirmationhandler'
+        )
+        cls.delete_emailconfirmationhandler_permission = Permission.objects.get(
+            codename='delete_omniformemailconfirmationhandler'
+        )
         # Create a user to work with
         cls.user = UserFactory.create(is_staff=True)
 
