@@ -150,6 +150,16 @@ def lock_form(action, form, user):
         raise PermissionDenied
 ```
 
+## Docs
+
+To generate the docs for this repo.
+
+```bash
+pip install -r requirements.txt
+cd ./docs
+make html
+```
+
 ## Compatibility
 
 ### Django

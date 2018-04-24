@@ -44,6 +44,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
-    keywords=['form builder', 'django'],
+    keywords=['form builder', 'django', 'wagtail'],
     install_requires=['django-braces==1.9.0']
 )
