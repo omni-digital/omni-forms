@@ -8,7 +8,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('omniforms', '0024_auto_20180423_0616'),
+        ('omniforms', '0024_rename_new_related_models'),
     ]
 
     operations = [
