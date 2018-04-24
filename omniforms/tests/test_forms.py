@@ -8,7 +8,9 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.utils import timezone
 from mock import Mock, patch
-from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
+from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm, EmailConfirmationHandlerBaseFormClass
+from omniforms.models import OmniFormEmailConfirmationHandler
+from omniforms.tests.factories import OmniFormFactory, OmniEmailFieldFactory
 from omniforms.tests.models import DummyModel
 
 
@@ -84,3 +86,51 @@ class OmniModelFormBaseFormTestCase(TestCase):
         form.full_clean()
         form.save()
         patched_method.assert_called_once()
+
+
+class EmailConfirmationHandlerBaseFormClassTestCase(TestCase):
+    """
+    Tests the EmailConfirmationHandlerBaseFormClass
+    """
+    class ConcreteEmailConfirmationHandlerForm(EmailConfirmationHandlerBaseFormClass):
+        """
+        Concrete model form class for testing purposes
+        """
+        class Meta:
+            model = OmniFormEmailConfirmationHandler
+            fields = '__all__'
+
+    def setUp(self):
+        super(EmailConfirmationHandlerBaseFormClassTestCase, self).setUp()
+        self.form_1 = OmniFormFactory.create()
+        self.email_field_1 = OmniEmailFieldFactory.create(form=self.form_1)
+        self.form_2 = OmniFormFactory.create()
+        self.email_field_2 = OmniEmailFieldFactory.create(form=self.form_2)
+
+    def test_restricts_queryset(self):
+        """
+        The form should restrict the queryset to include only those fields which belong to the same form
+        """
+        form = self.ConcreteEmailConfirmationHandlerForm(
+            instance=OmniFormEmailConfirmationHandler(form=self.form_1)
+        )
+        self.assertIn(self.email_field_1, form.fields['recipient_field'].queryset)
+        self.assertNotIn(self.email_field_2, form.fields['recipient_field'].queryset)
+
+    def test_shows_all_options_if_missing_instance(self):
+        """
+        The form should show all available email fields if the EmailConfirmationHandler instance is missing
+        """
+        form = self.ConcreteEmailConfirmationHandlerForm()
+        self.assertIn(self.email_field_1, form.fields['recipient_field'].queryset)
+        self.assertIn(self.email_field_2, form.fields['recipient_field'].queryset)
+
+    def test_shows_all_options_if_instance_missing_form(self):
+        """
+        The form should show all available email fields if the EmailConfirmationHandler instance is missing its form
+        """
+        form = self.ConcreteEmailConfirmationHandlerForm(
+            instance=OmniFormEmailConfirmationHandler()
+        )
+        self.assertIn(self.email_field_1, form.fields['recipient_field'].queryset)
+        self.assertIn(self.email_field_2, form.fields['recipient_field'].queryset)
