@@ -858,6 +858,9 @@ class OmniRelatedField(OmniField):
     related_type = models.ForeignKey(ContentType, related_name='+')
     initial_data = None
 
+    class Meta(object):
+        abstract = True
+
     def as_form_field(self):
         """
         Method for generating a form field instance from the
