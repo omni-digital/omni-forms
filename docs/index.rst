@@ -91,5 +91,6 @@ Index
 
    getting_started/index
    configuration/index
+   handlers/index
    extending/index
    wagtail/index
