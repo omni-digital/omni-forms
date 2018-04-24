@@ -19,7 +19,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.translation import ugettext_lazy as _
-from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm
+from omniforms.forms import OmniFormBaseForm, OmniModelFormBaseForm, EmailConfirmationHandlerBaseFormClass
 import re
 
 
@@ -1103,13 +1103,21 @@ class TemplateHelpTextLazy(object):
         return help_text
 
 
-class OmniFormEmailHandler(OmniFormHandler):
+class OmniFormEmailHandlerBase(OmniFormHandler):
     """
-    Email handler for the form builder
+    Base model class for email handlers
     """
-    subject = models.CharField(max_length=255)
-    recipients = models.TextField()
+    subject = models.CharField(
+        max_length=255,
+        help_text='The subject of the email that will be sent'
+    )
     template = models.TextField()
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        abstract = True
 
     def __init__(self, *args, **kwargs):
         """
@@ -1121,14 +1129,14 @@ class OmniFormEmailHandler(OmniFormHandler):
         :param kwargs: Default keyword args
         :type kwargs: {}
         """
-        super(OmniFormEmailHandler, self).__init__(*args, **kwargs)
+        super(OmniFormEmailHandlerBase, self).__init__(*args, **kwargs)
         self._meta.get_field('template').help_text = TemplateHelpTextLazy(self)
 
-    class Meta(object):
-        """
-        Django properties
-        """
-        verbose_name = 'Send Email'
+    def _get_recipients(self, form):
+        raise NotImplementedError(
+            "{0} must implement its own '_get_recipients' "
+            "method".format(self.__class__.__name__)
+        )
 
     def _render_template(self, context_data):
         """
@@ -1168,13 +1176,66 @@ class OmniFormEmailHandler(OmniFormHandler):
             self.subject,
             self._render_template(form.cleaned_data),
             settings.DEFAULT_FROM_EMAIL,
-            self.recipients.split(',')
+            self._get_recipients(form)
         )
 
         for file_object in self.get_files(form):
             message.attach(file_object.name, file_object.read(), file_object.content_type)
 
         message.send()
+
+
+class OmniFormEmailHandler(OmniFormEmailHandlerBase):
+    """
+    Email handler for the form builder
+    """
+    recipients = models.TextField()
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Send Static Email'
+
+    def _get_recipients(self, form):
+        """
+        Returns a list of recipient email addresses
+
+        :param form: Valid form instance
+        :return: list of email recipient addresses
+        """
+        return [recipient.strip() for recipient in self.recipients.split(',')]
+
+
+class OmniFormEmailConfirmationHandler(OmniFormEmailHandlerBase):
+    """
+    Form handler for sending a confirmation email to the person who filled out the form
+    """
+    recipient_field = models.ForeignKey(
+        'omniforms.OmniEmailField',
+        on_delete=models.PROTECT,
+        help_text='The field on the associated form used for collecting the users '
+                  'email address. Note that if this field is optional and not filled '
+                  'in by the user the confirmation email will not be sent'
+    )
+
+    base_form_class = EmailConfirmationHandlerBaseFormClass
+
+    class Meta(object):
+        """
+        Django properties
+        """
+        verbose_name = 'Send Email Confirmation'
+
+    def _get_recipients(self, form):
+        """
+        Returns a list containing the email address from the
+        specified field in the submitted form data
+
+        :param form: Valid form instance
+        :return: list containing the intended recipient of the email
+        """
+        return [form.cleaned_data.get(self.recipient_field.name)]
 
 
 class OmniFormSaveInstanceHandler(OmniFormHandler):
