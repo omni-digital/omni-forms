@@ -1,4 +1,4 @@
-[![Omni Forms on pypi](https://img.shields.io/badge/pypi-0.3.0-green.svg)](https://pypi.python.org/pypi/omniforms)
+[![Omni Forms on pypi](https://img.shields.io/badge/pypi-0.4.0-green.svg)](https://pypi.python.org/pypi/omniforms)
 ![MIT license](https://img.shields.io/badge/licence-MIT-blue.svg)
 ![Build status](https://travis-ci.org/omni-digital/omni-forms.svg?branch=master)
 
@@ -184,3 +184,4 @@ make html
  - 0.1 - Initial Build
  - 0.2 - Adds ability to create arbitrary non model form instances
  - 0.3 - Adds OmniChoiceField and OmniMultipleChoiceField form field types and wagtail integration
+ - 0.4 - Wagtail related improvements (see the full changelog in the release)
