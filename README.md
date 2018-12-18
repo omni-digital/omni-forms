@@ -11,7 +11,7 @@ Omni forms is a simple form builder with admin integration for django versions >
 
 Once the package has been installed just add `omni_forms` to `INSTALLED_APPS` in your settings file:
 
-`INSTALLED_APPS += ('omni_forms',)`
+`INSTALLED_APPS += ('omniforms',)`
 
 Once you've done this run `python manage.py migrate` to migrate your database.
 
